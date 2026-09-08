@@ -1,0 +1,38 @@
+name: market
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:55446:5432"
+    environment:
+      POSTGRES_USER: market
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: market_development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U market -d market_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:51559:1025"
+      - "127.0.0.1:55673:8025"
+    networks:
+      - default
+
+networks:
+  default:
+    name: market
+
+volumes:
+  postgres_data:
+    name: market_postgres

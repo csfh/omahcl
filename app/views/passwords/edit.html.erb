@@ -1,0 +1,15 @@
+<% page_title "Update password" %>
+
+<h1 class="text-3xl font-semibold">Update your password</h1>
+
+<%= form_with url: password_path(params[:token]), method: :put, class: "mt-6 max-w-md space-y-5" do |form| %>
+  <div>
+    <%= form.label :password, "New password", class: "text-sm text-muted" %>
+    <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72, class: field_class %>
+  </div>
+  <div>
+    <%= form.label :password_confirmation, "Repeat password", class: "text-sm text-muted" %>
+    <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72, class: field_class %>
+  </div>
+  <%= form.submit "Save", class: button_class %>
+<% end %>

@@ -1,0 +1,75 @@
+<%= form_with model: listing, url: url, class: "mt-6 max-w-xl space-y-5" do |form| %>
+  <% if listing.errors.any? %>
+    <div class="rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-200" role="alert">
+      <ul class="list-disc pl-5">
+        <% listing.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <fieldset>
+    <legend class="text-sm text-muted">Kind</legend>
+    <div class="mt-2 flex gap-4">
+      <label class="flex items-center gap-2"><%= form.radio_button :kind, "sale" %> Sale</label>
+      <label class="flex items-center gap-2"><%= form.radio_button :kind, "donation" %> Donation</label>
+    </div>
+  </fieldset>
+
+  <div>
+    <%= form.label :title, class: "text-sm text-muted" %>
+    <%= form.text_field :title, required: true, class: field_class %>
+  </div>
+
+  <div>
+    <%= form.label :description, class: "text-sm text-muted" %>
+    <%= form.text_area :description, rows: 6, class: field_class %>
+  </div>
+
+  <fieldset>
+    <legend class="text-sm text-muted">Sale details</legend>
+    <div class="mt-2 grid gap-4 sm:grid-cols-2">
+      <div>
+        <%= form.label :condition, class: "text-sm text-muted" %>
+        <%= form.select :condition, [["New", "new"], ["Used", "used"]], { include_blank: true }, class: field_class %>
+      </div>
+      <div>
+        <%= form.label :price_amount, "Price", class: "text-sm text-muted" %>
+        <%= form.text_field :price_amount, class: field_class %>
+      </div>
+      <div>
+        <%= form.label :currency, class: "text-sm text-muted" %>
+        <%= form.text_field :currency, class: field_class %>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= form.label :city, class: "text-sm text-muted" %>
+      <%= form.text_field :city, class: field_class %>
+    </div>
+    <div>
+      <%= form.label :country_code, "Country (ISO two letters)", class: "text-sm text-muted" %>
+      <%= form.text_field :country_code, maxlength: 2, class: field_class %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :donation_destination_id, "Donation destination", class: "text-sm text-muted" %>
+    <%= form.collection_select :donation_destination_id, DonationDestination.active, :id, :name, { include_blank: true }, class: field_class %>
+  </div>
+
+  <div>
+    <%= form.label :photos, class: "text-sm text-muted" %>
+    <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-2 block text-sm" %>
+  </div>
+
+  <div class="flex flex-wrap gap-3">
+    <%= form.submit "Publish", class: button_class %>
+    <% if listing.persisted? %>
+      <%= form.submit "Close listing", name: "close", class: ghost_button_class, data: { turbo_confirm: "Close this listing?" } %>
+    <% end %>
+  </div>
+<% end %>

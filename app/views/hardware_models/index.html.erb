@@ -1,0 +1,23 @@
+<% page_title "Models" %>
+
+<h1 class="text-3xl font-semibold">Verified models</h1>
+<p class="mt-2 text-muted">Search vendor or product names from machines that submitted Omarchy facts.</p>
+
+<%= form_with url: hardware_models_path, method: :get, class: "mt-6 flex max-w-xl gap-2" do |form| %>
+  <label class="sr-only" for="q">Search</label>
+  <%= form.search_field :q, value: @query, id: "q", class: field_class %>
+  <%= form.submit "Search", class: button_class %>
+<% end %>
+
+<% if @models.any? %>
+  <ul class="mt-8 divide-y divide-white/10 border-y border-white/10">
+    <% @models.each do |model| %>
+      <li class="flex items-baseline justify-between gap-4 py-3">
+        <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
+        <span class="text-sm text-muted"><%= pluralize(model.reports_count, "install") %> · <%= memory_label(model.min_memory_bytes) %>–<%= memory_label(model.max_memory_bytes) %></span>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="mt-8 text-muted">No matching machines yet. Submit facts from Omarchy, or try another name.</p>
+<% end %>

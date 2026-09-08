@@ -1,0 +1,29 @@
+<% page_title "My machines" %>
+
+<h1 class="text-3xl font-semibold">Verified machines</h1>
+<p class="mt-2 text-muted">Units you claimed after submitting facts from Omarchy.</p>
+
+<% if @machines.any? %>
+  <ul class="mt-8 divide-y divide-white/10 border-y border-white/10">
+    <% @machines.each do |machine| %>
+      <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
+        <div>
+          <p><%= machine.report.display_name %></p>
+          <p class="text-sm text-muted"><%= memory_label(machine.report.memory_bytes) %> · <%= machine.report.cpu_model %></p>
+        </div>
+        <div class="text-sm">
+          <% if machine.open_listing %>
+            <%= link_to machine.open_listing.title, listing_path(machine.open_listing) %>
+            ·
+            <%= link_to "Edit listing", edit_me_machine_listing_path(machine) %>
+          <% else %>
+            <%= link_to "List for sale or donation", new_me_machine_listing_path(machine) %>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="mt-8 text-muted">None yet. Run the collector on Omarchy, then open the claim link while signed in.</p>
+  <pre class="mt-3 overflow-x-auto rounded-md bg-panel p-4 text-sm"><code><%= collect_command %></code></pre>
+<% end %>

@@ -1,0 +1,31 @@
+Rails.application.routes.draw do
+  resource :session
+  resources :passwords, param: :token
+  resource :registration, only: %i[new create]
+
+  get "up" => "rails/health#show", as: :rails_health_check
+
+  get "collect", to: "collects#show"
+  post "reports", to: "reports#create"
+  get "reports/:public_id/claim", to: "claims#new", as: :claim_report
+  post "reports/:public_id/claim", to: "claims#create"
+
+  resources :hardware_models, path: "models", param: :slug, only: %i[index show]
+  resources :listings, only: %i[index show]
+  get "privacy", to: "pages#privacy", as: :privacy
+
+  namespace :me do
+    resources :machines, only: :index do
+      resource :listing, only: %i[new create edit update]
+    end
+  end
+
+  namespace :admin do
+    resources :donation_destinations
+    resources :listings, only: [] do
+      post :close, on: :member
+    end
+  end
+
+  root "pages#home"
+end

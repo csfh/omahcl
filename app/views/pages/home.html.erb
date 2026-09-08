@@ -1,0 +1,45 @@
+<% page_title "Omarchy hardware" %>
+
+<section class="max-w-2xl">
+  <h1 class="text-4xl font-semibold tracking-tight">Does this machine run Omarchy?</h1>
+  <p class="mt-4 text-muted">People already on Omarchy submit facts about their hardware. You can look up a vendor and model, then list a verified unit for sale or donation.</p>
+</section>
+
+<%= form_with url: hardware_models_path, method: :get, class: "mt-8 flex max-w-xl gap-2" do |form| %>
+  <label class="sr-only" for="q">Search by vendor or model</label>
+  <%= form.search_field :q, value: @query, id: "q", placeholder: "ThinkPad X220", class: field_class %>
+  <%= form.submit "Look up", class: button_class %>
+<% end %>
+
+<section class="mt-12">
+  <h2 class="text-lg font-medium">Submit from Omarchy</h2>
+  <p class="mt-2 text-sm text-muted">On a machine that already runs Omarchy:</p>
+  <pre class="mt-3 overflow-x-auto rounded-md bg-panel p-4 text-sm text-paper"><code><%= collect_command %></code></pre>
+  <p class="mt-2 text-sm text-muted">The script prints a claim link. Sign in, claim the machine, then list it.</p>
+</section>
+
+<% if @models.any? %>
+  <section class="mt-12">
+    <h2 class="text-lg font-medium">Verified models</h2>
+    <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
+      <% @models.each do |model| %>
+        <li class="flex items-baseline justify-between gap-4 py-3">
+          <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
+          <span class="text-sm text-muted"><%= pluralize(model.reports_count, "install") %></span>
+        </li>
+      <% end %>
+    </ul>
+    <p class="mt-4"><%= link_to "All models", hardware_models_path %></p>
+  </section>
+<% end %>
+
+<% if @listings.any? %>
+  <section class="mt-12">
+    <h2 class="text-lg font-medium">Latest listings</h2>
+    <ul class="mt-4 grid gap-4 sm:grid-cols-2">
+      <% @listings.each do |listing| %>
+        <%= render "listings/card", listing: listing %>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

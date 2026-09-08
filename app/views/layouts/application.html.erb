@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "Market · Omarchy" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="application-name" content="Market">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="min-h-screen">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:bg-accent focus:px-3 focus:py-2 focus:text-ink">Skip to content</a>
+    <header class="border-b border-white/10">
+      <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
+        <p class="text-sm tracking-wide">
+          <%= link_to "Market", root_path, class: "text-paper no-underline hover:text-accent" %>
+          <span class="text-muted"> for Omarchy</span>
+        </p>
+        <nav class="flex flex-wrap items-center gap-4 text-sm">
+          <%= link_to "Lookup", hardware_models_path, class: "text-paper no-underline hover:text-accent" %>
+          <%= link_to "Listings", listings_path, class: "text-paper no-underline hover:text-accent" %>
+          <% if authenticated? %>
+            <%= link_to "My machines", me_machines_path, class: "text-paper no-underline hover:text-accent" %>
+            <% if current_user.admin? %>
+              <%= link_to "Destinations", admin_donation_destinations_path, class: "text-paper no-underline hover:text-accent" %>
+            <% end %>
+            <%= button_to "Sign out", session_path, method: :delete, class: "cursor-pointer text-paper hover:text-accent" %>
+          <% else %>
+            <%= link_to "Sign in", new_session_path, class: "text-paper no-underline hover:text-accent" %>
+            <%= link_to "Sign up", new_registration_path, class: "text-paper no-underline hover:text-accent" %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="mx-auto max-w-5xl px-5 py-10">
+      <% if notice = flash[:notice] %>
+        <div class="mb-6 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-accent" role="status"><%= notice %></div>
+      <% end %>
+      <% if alert = flash[:alert] %>
+        <div class="mb-6 rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-200" role="alert"><%= alert %></div>
+      <% end %>
+      <%= yield %>
+    </main>
+    <footer class="mx-auto max-w-5xl px-5 pb-12 text-sm text-muted">
+      <%= link_to "Privacy", privacy_path, class: "text-muted hover:text-paper" %>
+      ·
+      <%= link_to "omarchy.org", "https://omarchy.org", class: "text-muted hover:text-paper" %>
+    </footer>
+  </body>
+</html>
