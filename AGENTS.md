@@ -14,8 +14,9 @@ Rails 8.1 app for Omarchy hardware compatibility and classifieds.
 
 ## Rules
 
-- Collector lives in `lib/collectors/omarchy.py` and is served at `GET /collect`.
-- Ingest is `POST /reports`. Allowlist-only JSON. Reject serial/MAC/hostname fields in `ReportSanitizer`.
+- Collector lives in `lib/collectors/omarchy.py` and is served at `GET /collect`. It fetches `GET /challenges` then `POST /reports`. Do not call Omarchy binaries.
+- Ingest is allowlist-only JSON with `nonce` and `instance_digest`. Reject serial/MAC/hostname fields in `ReportSanitizer`.
+- Public lookup counts distinct claiming users on claimed reports only. Unclaimed POSTs stay private.
 - Listing a machine requires a claimed report for that unit. Classifieds only: no payments.
 - Donation destinations are admin-curated; seed includes Omacom Foundation.
 - Do not vendor atmos `hw-inventory.py`.

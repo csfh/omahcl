@@ -11,6 +11,28 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    def omarchy_payload(product: "ThinkPad X220", instance_digest: ::Digest::SHA256.hexdigest(SecureRandom.hex(16)))
+      {
+        "omarchy" => { "version" => "4.0.2", "channel" => "stable" },
+        "hardware" => {
+          "vendor" => "LENOVO",
+          "product" => product,
+          "family" => product,
+          "chassis" => "Notebook",
+          "cpu" => { "model" => "Intel Core i5-2520M", "vendor" => "Intel", "arch" => "x86_64", "cores" => 2 },
+          "memory_bytes" => 2_147_483_648,
+          "gpus" => [ { "vendor" => "Intel", "name" => "HD Graphics 3000" } ],
+          "uefi" => true,
+          "tpm" => { "present" => false },
+          "secure_boot" => { "enabled" => false }
+        },
+        "instance_digest" => instance_digest
+      }
+    end
+
+    def ingest_report!(payload = omarchy_payload, ip: "203.0.113.10")
+      nonce, _challenge = Challenge.issue!(ip: ip)
+      Report.ingest(payload.merge("nonce" => nonce), ip: ip)
+    end
   end
 end

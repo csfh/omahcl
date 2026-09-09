@@ -7,10 +7,11 @@ class HardwareModelsController < ApplicationController
   end
 
   def show
-    @reports = Report.where(model_slug: params[:slug]).order(created_at: :desc)
+    @reports = Report.claimed.where(model_slug: params[:slug]).order(created_at: :desc)
     raise ActiveRecord::RecordNotFound if @reports.empty?
 
     @sample = @reports.first
+    @claimants_count = @reports.unscope(:order).distinct.count(:user_id)
     @listings = Listing.visible.for_model(params[:slug]).order(created_at: :desc)
     @cpu_models = @reports.unscope(:order).distinct.pluck(:cpu_model)
     @gpus = @reports.flat_map { |report| report.gpus }.uniq

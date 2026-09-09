@@ -38,7 +38,7 @@ Against a local server:
 curl -fsSL http://127.0.0.1:62951/collect | python3
 ```
 
-The script refuses to run unless `/etc/os-release` has `ID=omarchy`. It never reads DMI serial files. The server rejects identifier fields even if a client sends them.
+The script refuses to run unless `/etc/os-release` has `ID=omarchy`. Serials are hashed into `instance_digest` in memory and never sent. A short-lived challenge nonce stops replays. Public lookup counts people who claimed a snapshot, not anonymous posts. The server rejects identifier fields even if a client sends them.
 
 ## Tests
 

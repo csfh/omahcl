@@ -2,7 +2,7 @@
 
 <section class="max-w-2xl">
   <h1 class="text-4xl font-semibold tracking-tight">Does this machine run Omarchy?</h1>
-  <p class="mt-4 text-muted">People already on Omarchy submit facts about their hardware. You can look up a vendor and model, then list a verified unit for sale or donation.</p>
+  <p class="mt-4 text-muted">People already on Omarchy submit facts about their hardware, then claim that snapshot with an account. Lookup counts those people, not anonymous posts. After a claim you can list that unit for sale or donation.</p>
 </section>
 
 <%= form_with url: hardware_models_path, method: :get, class: "mt-8 flex max-w-xl gap-2" do |form| %>
@@ -15,17 +15,17 @@
   <h2 class="text-lg font-medium">Submit from Omarchy</h2>
   <p class="mt-2 text-sm text-muted">On a machine that already runs Omarchy:</p>
   <pre class="mt-3 overflow-x-auto rounded-md bg-panel p-4 text-sm text-paper"><code><%= collect_command %></code></pre>
-  <p class="mt-2 text-sm text-muted">The script prints a claim link. Sign in, claim the machine, then list it.</p>
+  <p class="mt-2 text-sm text-muted">The script prints a claim link. Until someone claims it, the snapshot stays off the public lookup.</p>
 </section>
 
 <% if @models.any? %>
   <section class="mt-12">
-    <h2 class="text-lg font-medium">Verified models</h2>
+    <h2 class="text-lg font-medium">Claimed models</h2>
     <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
       <% @models.each do |model| %>
         <li class="flex items-baseline justify-between gap-4 py-3">
           <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
-          <span class="text-sm text-muted"><%= pluralize(model.reports_count, "install") %></span>
+          <span class="text-sm text-muted"><%= pluralize(model.claimants_count, "person") %> · <%= evidence_label(model.claimants_count) %></span>
         </li>
       <% end %>
     </ul>

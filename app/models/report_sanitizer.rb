@@ -12,7 +12,8 @@ class ReportSanitizer
     ssh
   ].freeze
 
-  ALLOWED_ROOT = %w[omarchy hardware].freeze
+  ALLOWED_ROOT = %w[omarchy hardware instance_digest].freeze
+  INSTANCE_DIGEST = /\A[a-f0-9]{64}\z/
   ALLOWED_OMARCHY = %w[version channel].freeze
   ALLOWED_HARDWARE = %w[
     vendor product family chassis cpu memory_bytes gpus uefi tpm secure_boot
@@ -66,6 +67,9 @@ class ReportSanitizer
       assert_allowed_keys!(secure_boot, ALLOWED_SECURE_BOOT, "secure_boot")
     end
 
+    instance_digest = present_string(@raw["instance_digest"], "instance_digest")
+    raise Rejected, "instance_digest must be 64 hex characters" unless instance_digest.match?(INSTANCE_DIGEST)
+
     version = present_string(omarchy["version"], "omarchy.version")
     channel = present_string(omarchy["channel"].presence || "stable", "omarchy.channel")
     vendor = present_string(hardware["vendor"], "hardware.vendor")
@@ -74,6 +78,7 @@ class ReportSanitizer
     cpu_arch = present_string(cpu["arch"], "cpu.arch")
 
     {
+      instance_digest: instance_digest,
       omarchy_version: version,
       omarchy_channel: channel,
       vendor: vendor,

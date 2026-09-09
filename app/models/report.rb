@@ -1,5 +1,8 @@
 class Report < ApplicationRecord
   CLAIM_TTL = 7.days
+  ESTABLISHED_CLAIMANTS = 3
+
+  class ClaimRejected < StandardError; end
 
   belongs_to :user, optional: true
   has_one :machine, dependent: :restrict_with_exception
@@ -7,9 +10,11 @@ class Report < ApplicationRecord
   before_validation :assign_public_id, on: :create
   before_validation :assign_model_identity
 
-  validates :public_id, :omarchy_version, :vendor, :product, :cpu_model, :cpu_arch, :model_key, :model_slug, presence: true
+  validates :public_id, :omarchy_version, :vendor, :product, :cpu_model, :cpu_arch, :model_key, :model_slug, :instance_digest, presence: true
+  validates :instance_digest, uniqueness: true
   validates :memory_bytes, :cpu_cores, numericality: { greater_than_or_equal_to: 0 }
 
+  scope :claimed, -> { where.not(user_id: nil) }
   scope :for_query, ->(query) {
     if query.present?
       where("search_document ILIKE ?", "%#{sanitize_sql_like(query.strip)}%")
@@ -19,34 +24,45 @@ class Report < ApplicationRecord
   }
 
   def self.grouped_models(query = nil)
-    for_query(query)
+    claimed.for_query(query)
       .select(
         :model_key, :model_slug,
         "MIN(vendor) AS vendor",
         "MIN(product) AS product",
-        "COUNT(*) AS reports_count",
+        "COUNT(DISTINCT user_id) AS claimants_count",
         "MIN(memory_bytes) AS min_memory_bytes",
         "MAX(memory_bytes) AS max_memory_bytes"
       )
       .group(:model_key, :model_slug)
-      .order("reports_count DESC, vendor ASC, product ASC")
+      .order(Arel.sql("COUNT(DISTINCT user_id) DESC, MIN(vendor) ASC, MIN(product) ASC"))
+  end
+
+  def self.established?(claimants)
+    claimants.to_i >= ESTABLISHED_CLAIMANTS
   end
 
   def self.ingest(raw, ip:)
-    attrs = ReportSanitizer.clean!(raw)
-    report = new(attrs)
+    payload = raw.deep_stringify_keys
+    nonce = payload["nonce"]
+    raise ReportSanitizer::Rejected, "nonce is required" if nonce.blank?
+
+    attrs = ReportSanitizer.clean!(payload.except("nonce"))
+    Challenge.consume!(nonce)
+
+    report = find_or_initialize_by(instance_digest: attrs[:instance_digest])
+    report.assign_attributes(attrs)
     report.submitted_ip_digest = digest_ip(ip)
-    token = report.rotate_claim_token
+    token = report.claimed? ? nil : report.rotate_claim_token
     report.save!
     [ report, token ]
   end
 
   def self.digest_token(token)
-    Digest::SHA256.hexdigest(token.to_s)
+    ::Digest::SHA256.hexdigest(token.to_s)
   end
 
   def self.digest_ip(ip)
-    Digest::SHA256.hexdigest("#{Rails.application.secret_key_base}:#{ip}")
+    ::Digest::SHA256.hexdigest("#{Rails.application.secret_key_base}:#{ip}")
   end
 
   def rotate_claim_token
@@ -64,6 +80,7 @@ class Report < ApplicationRecord
   end
 
   def claim!(user:, token:)
+    raise ClaimRejected, "You can claim at most #{User::MAX_CLAIMED_MACHINES} machines." if user.machines.count >= User::MAX_CLAIMED_MACHINES
     raise ActiveRecord::RecordInvalid, self unless claimable?(token)
 
     transaction do

@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   get "collect", to: "collects#show"
+  get "challenges", to: "challenges#create"
   post "reports", to: "reports#create"
   get "reports/:public_id/claim", to: "claims#new", as: :claim_report
   post "reports/:public_id/claim", to: "claims#create"

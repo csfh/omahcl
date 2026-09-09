@@ -9,11 +9,12 @@ class ReportsController < ApplicationController
     raw = parse_json_body
     report, token = Report.ingest(raw, ip: request.remote_ip)
 
-    render json: {
+    body = {
       public_id: report.public_id,
-      claim_url: claim_report_url(report.public_id, token: token),
       model_url: hardware_model_url(report.model_slug)
-    }, status: :created
+    }
+    body[:claim_url] = claim_report_url(report.public_id, token: token) if token
+    render json: body, status: (report.previously_new_record? ? :created : :ok)
   rescue JSON::ParserError
     render json: { error: "invalid JSON" }, status: :bad_request
   rescue ReportSanitizer::Rejected => error

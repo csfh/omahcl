@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -73,6 +74,17 @@ def dmi(name: str) -> str:
     if "serial" in name.lower() or name.lower() in {"product_uuid", "chassis_serial"}:
         return ""
     return clean(read_strip(root("sys/class/dmi/id", name)))
+
+
+def instance_digest(vendor: str, product: str, cpu_model: str) -> str:
+    machine_id = read_strip(root("etc/machine-id"))
+    product_serial = read_strip(root("sys/class/dmi/id/product_serial"))
+    board_serial = read_strip(root("sys/class/dmi/id/board_serial"))
+    if product_serial or board_serial:
+        material = f"{machine_id}\0{product_serial}\0{board_serial}"
+    else:
+        material = f"{machine_id}\0{vendor}\0{product}\0{cpu_model}"
+    return hashlib.sha256(b"omarchy-market-instance-v1\0" + material.encode("utf-8", "replace")).hexdigest()
 
 
 def cpuinfo() -> dict[str, object]:
@@ -160,7 +172,28 @@ def payload() -> dict[str, object]:
     }
     if not hardware["vendor"] or not hardware["product"]:
         raise SystemExit("Could not read machine vendor and product from DMI.")
-    return {"omarchy": omarchy, "hardware": hardware}
+    digest = instance_digest(str(hardware["vendor"]), str(hardware["product"]), str(hardware["cpu"]["model"]))
+    return {"omarchy": omarchy, "hardware": hardware, "instance_digest": digest}
+
+
+def fetch_challenge() -> str:
+    request = urllib.request.Request(
+        MARKET_URL.rstrip("/") + "/challenges",
+        headers={"User-Agent": "omarchy-market-collect/1"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", "replace")
+        raise SystemExit(f"Market rejected the challenge ({error.code}): {detail}") from error
+    except urllib.error.URLError as error:
+        raise SystemExit(f"Could not reach Market at {MARKET_URL}: {error.reason}") from error
+    nonce = payload.get("nonce")
+    if not nonce:
+        raise SystemExit("Market did not return a challenge nonce.")
+    return str(nonce)
 
 
 def submit(body: dict[str, object]) -> dict[str, object]:
@@ -208,6 +241,7 @@ def main() -> None:
         json.dump(body, sys.stdout, indent=2)
         sys.stdout.write("\n")
         return
+    body["nonce"] = fetch_challenge()
     result = submit(body)
     print("Submitted hardware facts for this Omarchy machine.")
     if result.get("model_url"):

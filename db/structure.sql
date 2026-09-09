@@ -139,6 +139,40 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: challenges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.challenges (
+    id bigint NOT NULL,
+    nonce_digest character varying NOT NULL,
+    expires_at timestamp(6) without time zone NOT NULL,
+    consumed_at timestamp(6) without time zone,
+    issued_ip_digest character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: challenges_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.challenges_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: challenges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.challenges_id_seq OWNED BY public.challenges.id;
+
+
+--
 -- Name: donation_destinations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -277,7 +311,8 @@ CREATE TABLE public.reports (
     claimed_at timestamp(6) without time zone,
     submitted_ip_digest character varying,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    instance_digest character varying NOT NULL
 );
 
 
@@ -397,6 +432,13 @@ ALTER TABLE ONLY public.active_storage_variant_records ALTER COLUMN id SET DEFAU
 
 
 --
+-- Name: challenges id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.challenges ALTER COLUMN id SET DEFAULT nextval('public.challenges_id_seq'::regclass);
+
+
+--
 -- Name: donation_destinations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -468,6 +510,14 @@ ALTER TABLE ONLY public.active_storage_variant_records
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: challenges challenges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.challenges
+    ADD CONSTRAINT challenges_pkey PRIMARY KEY (id);
 
 
 --
@@ -555,6 +605,13 @@ CREATE UNIQUE INDEX index_active_storage_variant_records_uniqueness ON public.ac
 
 
 --
+-- Name: index_challenges_on_nonce_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_challenges_on_nonce_digest ON public.challenges USING btree (nonce_digest);
+
+
+--
 -- Name: index_listings_on_donation_destination_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -608,6 +665,13 @@ CREATE INDEX index_machines_on_user_id ON public.machines USING btree (user_id);
 --
 
 CREATE UNIQUE INDEX index_reports_on_claim_token_digest ON public.reports USING btree (claim_token_digest) WHERE (claim_token_digest IS NOT NULL);
+
+
+--
+-- Name: index_reports_on_instance_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_reports_on_instance_digest ON public.reports USING btree (instance_digest);
 
 
 --
@@ -730,6 +794,8 @@ ALTER TABLE ONLY public.listings
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260908220001'),
+('20260908220000'),
 ('20260908210941'),
 ('20260908210004'),
 ('20260908210003'),

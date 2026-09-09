@@ -15,7 +15,9 @@ class CollectorTest < ActiveSupport::TestCase
     write("sys/class/dmi/id/product_name", "ThinkPad X220")
     write("sys/class/dmi/id/product_family", "ThinkPad X220")
     write("sys/class/dmi/id/chassis_type", "10")
+    write("etc/machine-id", "0123456789abcdef0123456789abcdef")
     write("sys/class/dmi/id/product_serial", "SHOULD-NOT-BE-READ")
+    write("sys/class/dmi/id/board_serial", "BOARD-SERIAL")
     write("proc/cpuinfo", "processor\t: 0\nvendor_id\t: GenuineIntel\nmodel name\t: Intel Core i5-2520M\n")
     write("proc/meminfo", "MemTotal:        2048000 kB\n")
     FileUtils.mkdir_p(File.join(@root, "sys/firmware/efi"))
@@ -41,9 +43,13 @@ class CollectorTest < ActiveSupport::TestCase
     assert_equal "4.0.2", payload.dig("omarchy", "version")
     assert_equal "LENOVO", payload.dig("hardware", "vendor")
     assert_equal "ThinkPad X220", payload.dig("hardware", "product")
+    assert_match(/\A[a-f0-9]{64}\z/, payload["instance_digest"])
     dumped = JSON.generate(payload)
     refute_includes dumped, "SHOULD-NOT-BE-READ"
+    refute_includes dumped, "BOARD-SERIAL"
     refute_includes dumped.downcase, "serial"
+    source = File.read(Rails.root.join("lib/collectors/omarchy.py"))
+    refute_includes source, "omarchy-channel-current"
   end
 
   private

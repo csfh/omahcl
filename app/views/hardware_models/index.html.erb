@@ -1,7 +1,7 @@
 <% page_title "Models" %>
 
-<h1 class="text-3xl font-semibold">Verified models</h1>
-<p class="mt-2 text-muted">Search vendor or product names from machines that submitted Omarchy facts.</p>
+<h1 class="text-3xl font-semibold">Claimed models</h1>
+<p class="mt-2 text-muted">Search vendor or product names claimed by people who submitted from Omarchy. Anonymous posts are not listed.</p>
 
 <%= form_with url: hardware_models_path, method: :get, class: "mt-6 flex max-w-xl gap-2" do |form| %>
   <label class="sr-only" for="q">Search</label>
@@ -14,7 +14,7 @@
     <% @models.each do |model| %>
       <li class="flex items-baseline justify-between gap-4 py-3">
         <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
-        <span class="text-sm text-muted"><%= pluralize(model.reports_count, "install") %> · <%= memory_label(model.min_memory_bytes) %>–<%= memory_label(model.max_memory_bytes) %></span>
+        <span class="text-sm text-muted"><%= pluralize(model.claimants_count, "person") %> · <%= evidence_label(model.claimants_count) %> · <%= memory_label(model.min_memory_bytes) %>–<%= memory_label(model.max_memory_bytes) %></span>
       </li>
     <% end %>
   </ul>

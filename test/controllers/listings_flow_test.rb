@@ -8,7 +8,7 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
       active: true
     )
     @user = users(:one)
-    report, token = Report.ingest(payload, ip: "203.0.113.9")
+    report, token = ingest_report!
     @machine = report.claim!(user: @user, token: token)
   end
 
@@ -81,19 +81,4 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
-
-  private
-    def payload
-      {
-        "omarchy" => { "version" => "4.0.2", "channel" => "stable" },
-        "hardware" => {
-          "vendor" => "LENOVO",
-          "product" => "ThinkPad X220",
-          "cpu" => { "model" => "Intel Core i5-2520M", "arch" => "x86_64", "cores" => 2 },
-          "memory_bytes" => 2_147_483_648,
-          "gpus" => [],
-          "uefi" => true
-        }
-      }
-    end
 end

@@ -2,7 +2,10 @@
 
 <p class="text-sm text-muted"><%= link_to "All models", hardware_models_path %></p>
 <h1 class="mt-2 text-3xl font-semibold"><%= @sample.display_name %></h1>
-<p class="mt-2 text-muted"><%= pluralize(@reports.size, "verified Omarchy install") %> on this vendor and product.</p>
+<p class="mt-2 text-muted">
+  <%= pluralize(@claimants_count, "person") %> <%= @claimants_count == 1 ? "has" : "have" %> claimed this model after submitting from Omarchy.
+  <%= evidence_label(@claimants_count) %>.
+</p>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
   <div class="rounded-md bg-panel p-4">

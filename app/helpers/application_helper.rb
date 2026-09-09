@@ -19,6 +19,14 @@ module ApplicationHelper
     "inline-flex cursor-pointer items-center rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-ink hover:bg-accent/90"
   end
 
+  def evidence_label(claimants)
+    if Report.established?(claimants)
+      "Established"
+    else
+      "Limited evidence"
+    end
+  end
+
   def ghost_button_class
     "inline-flex items-center rounded-md border border-white/15 px-3.5 py-2 text-sm text-paper hover:bg-white/5"
   end

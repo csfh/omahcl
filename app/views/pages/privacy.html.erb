@@ -3,7 +3,8 @@
 <article class="prose-market max-w-2xl">
   <h1 class="mb-4 text-3xl font-semibold text-paper">Privacy</h1>
   <p>Market stores hardware facts so other people can see whether a similar machine has run Omarchy. The collector and the server both refuse identifier fields.</p>
-  <p>We do not keep serial numbers, board serials, MAC addresses, hostnames, usernames, or product UUIDs. Submitter IP addresses are stored only as a hash, for abuse control, and are never shown.</p>
+  <p>We do not keep serial numbers, board serials, MAC addresses, hostnames, usernames, or product UUIDs. The collector hashes machine-id and DMI serials in memory and sends only that digest, so the same box updates one row instead of creating many. Submitter IP addresses are stored only as a hash, for abuse control, and are never shown.</p>
+  <p>An unclaimed snapshot is not public. Lookup counts people who claimed a snapshot, not anonymous posts.</p>
   <p>A claim token is a one-time secret. It is hashed at rest and expires after seven days. Claiming a report attaches that machine to your account so you can list it.</p>
   <p>Listings show city and country, not a street address. Contact on a listing is email to the owner. Market is not a party to sales or donations.</p>
 </article>

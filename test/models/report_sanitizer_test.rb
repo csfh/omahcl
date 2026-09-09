@@ -37,6 +37,7 @@ class ReportSanitizerTest < ActiveSupport::TestCase
     def valid_payload
       {
         "omarchy" => { "version" => "4.0.2", "channel" => "stable" },
+        "instance_digest" => "a" * 64,
         "hardware" => {
           "vendor" => "LENOVO",
           "product" => "ThinkPad X220",
