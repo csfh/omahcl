@@ -4,7 +4,7 @@ module ApplicationHelper
   end
 
   def collect_command
-    "curl -fsSL #{root_url.chomp('/')}/collect | python3"
+    "curl -fsSL #{root_url.chomp('/')}/collect | bash"
   end
 
   def memory_label(bytes)

@@ -29,13 +29,13 @@ The Gemfile pins `json` to 2.x because Rails 8.1 still calls `JSON.parse(json, o
 On an Omarchy machine:
 
 ```sh
-curl -fsSL https://market.omarchy.org/collect | python3
+curl -fsSL https://market.omarchy.org/collect | bash
 ```
 
 Against a local server:
 
 ```sh
-curl -fsSL http://127.0.0.1:62951/collect | python3
+curl -fsSL http://127.0.0.1:62951/collect | bash
 ```
 
 The script refuses to run unless `/etc/os-release` has `ID=omarchy`. Serials are hashed into `instance_digest` in memory and never sent. A short-lived challenge nonce stops replays. Public lookup counts people who claimed a snapshot, not anonymous posts. The server rejects identifier fields even if a client sends them.

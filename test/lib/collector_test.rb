@@ -48,7 +48,7 @@ class CollectorTest < ActiveSupport::TestCase
     refute_includes dumped, "SHOULD-NOT-BE-READ"
     refute_includes dumped, "BOARD-SERIAL"
     refute_includes dumped.downcase, "serial"
-    source = File.read(Rails.root.join("lib/collectors/omarchy.py"))
+    source = File.read(Rails.root.join("lib/collectors/omarchy.sh"))
     refute_includes source, "omarchy-channel-current"
   end
 
@@ -66,8 +66,8 @@ class CollectorTest < ActiveSupport::TestCase
         "MARKET_SKIP_CMDS" => "1",
         "MARKET_ARCH" => "x86_64"
       }.merge(extra)
-      script = Rails.root.join("lib/collectors/omarchy.py")
-      output = IO.popen(env, [ "python3", script.to_s ], err: [ :child, :out ], &:read)
+      script = Rails.root.join("lib/collectors/omarchy.sh")
+      output = IO.popen(env, [ "bash", script.to_s ], err: [ :child, :out ], &:read)
       [ $?.exitstatus, output ]
     end
 end

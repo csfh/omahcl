@@ -14,7 +14,7 @@ Rails 8.1 app for Omarchy hardware compatibility and classifieds.
 
 ## Rules
 
-- Collector lives in `lib/collectors/omarchy.py` and is served at `GET /collect`. It fetches `GET /challenges` then `POST /reports`. Do not call Omarchy binaries.
+- Collector lives in `lib/collectors/omarchy.sh` and is served at `GET /collect` (`curl … | bash`). It fetches `GET /challenges` then `POST /reports`. Do not call Omarchy binaries.
 - Ingest is allowlist-only JSON with `nonce` and `instance_digest`. Reject serial/MAC/hostname fields in `ReportSanitizer`.
 - Public lookup counts distinct claiming users on claimed reports only. Unclaimed POSTs stay private.
 - Listing requires a claimed report. Accounts claim reports, not machines. Classifieds only: no payments.

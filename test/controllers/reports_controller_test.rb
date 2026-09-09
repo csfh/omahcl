@@ -33,11 +33,12 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "collect serves the python collector" do
+  test "collect serves the bash collector" do
     get collect_path
 
     assert_response :success
     assert_match(/Collect Omarchy hardware facts/, response.body)
+    assert_includes response.body, "#!/usr/bin/env bash"
     assert_includes response.body, "http://www.example.com"
     refute_includes response.body, "__MARKET_URL__"
     assert_includes response.body, "/challenges"
