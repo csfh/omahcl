@@ -5,11 +5,7 @@
   <p class="mt-4 text-muted">People already on Omarchy submit hardware facts, then claim that report with an account. Lookup counts those claimed reports, not anonymous posts. After a claim you can list from the report.</p>
 </section>
 
-<%= form_with url: hardware_models_path, method: :get, class: "mt-8 flex max-w-xl gap-2" do |form| %>
-  <label class="sr-only" for="q">Search by vendor or model</label>
-  <%= form.search_field :q, value: @query, id: "q", placeholder: "ThinkPad X220", class: field_class %>
-  <%= form.submit "Look up", class: button_class %>
-<% end %>
+<%= render "hardware_models/lookup_form", query: @query, submit_label: "Look up" %>
 
 <section class="mt-12">
   <h2 class="text-lg font-medium">Submit from Omarchy</h2>

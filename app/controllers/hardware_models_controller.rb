@@ -6,6 +6,12 @@ class HardwareModelsController < ApplicationController
     @models = Report.grouped_models(@query)
   end
 
+  def suggestions
+    @query = params[:q].to_s.strip
+    @models = @query.present? ? Report.grouped_models(@query).limit(8) : []
+    render layout: false
+  end
+
   def show
     @reports = Report.claimed.where(model_slug: params[:slug]).order(created_at: :desc)
     raise ActiveRecord::RecordNotFound if @reports.empty?

@@ -32,6 +32,28 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", /Limited evidence/
   end
 
+  test "suggestions return claimed models as typeahead html" do
+    x220, x220_token = ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "4" * 64))
+    x230, x230_token = ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "5" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "6" * 64))
+    x220.claim!(user: users(:one), token: x220_token)
+    x230.claim!(user: users(:two), token: x230_token)
+
+    get suggestions_hardware_models_path, params: { q: "X220" }
+
+    assert_response :success
+    assert_select "li[role=option]", count: 1
+    assert_select "a", text: /ThinkPad X220/
+    assert_select "a", text: /ThinkPad X230/, count: 0
+  end
+
+  test "suggestions are empty without a query" do
+    get suggestions_hardware_models_path, params: { q: "" }
+
+    assert_response :success
+    assert_select "li[role=option]", count: 0
+  end
+
   test "show groups claimed people for a slug" do
     report, token = ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "3" * 64))
     report.claim!(user: users(:one), token: token)

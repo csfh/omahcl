@@ -1,0 +1,31 @@
+<% submit_label = local_assigns.fetch(:submit_label, "Look up") %>
+
+<%= form_with url: hardware_models_path, method: :get, class: "mt-6 max-w-xl" do |form| %>
+  <div
+    class="relative"
+    data-controller="lookup"
+    data-lookup-url-value="<%= suggestions_hardware_models_path %>"
+    data-action="focusout->lookup#hide"
+  >
+    <div class="flex gap-2">
+      <label class="sr-only" for="q">Search by vendor or model</label>
+      <%= form.search_field :q,
+            value: query,
+            id: "q",
+            placeholder: "ThinkPad X220",
+            autocomplete: "off",
+            role: "combobox",
+            aria: { autocomplete: "list", expanded: "false", controls: "lookup-suggestions" },
+            data: { lookup_target: "input", action: "input->lookup#query keydown->lookup#keydown" },
+            class: field_class %>
+      <%= form.submit submit_label, class: button_class %>
+    </div>
+    <ul
+      id="lookup-suggestions"
+      class="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-white/15 bg-panel py-1 shadow-lg"
+      role="listbox"
+      data-lookup-target="list"
+      hidden
+    ></ul>
+  </div>
+<% end %>

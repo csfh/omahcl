@@ -11,7 +11,9 @@ Rails.application.routes.draw do
   get "reports/:public_id/claim", to: "claims#new", as: :claim_report
   post "reports/:public_id/claim", to: "claims#create"
 
-  resources :hardware_models, path: "models", param: :slug, only: %i[index show]
+  resources :hardware_models, path: "models", param: :slug, only: %i[index show] do
+    get :suggestions, on: :collection
+  end
   resources :listings, only: %i[index show]
   get "privacy", to: "pages#privacy", as: :privacy
 
