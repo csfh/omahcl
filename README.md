@@ -34,6 +34,17 @@ If Docker is unavailable, `mise.toml` pins Postgres 16. Point `DATABASE_HOST` / 
 
 The Gemfile pins `json` to 2.x because Rails 8.1 still calls `JSON.parse(json, options)` and json 3 only accepts keywords.
 
+## Production
+
+The image boots in `RAILS_ENV=production`. It decrypts `config/credentials.yml.enc` with `RAILS_MASTER_KEY`. That file is gitignored as `config/master.key`. Without the key, `db:prepare` aborts with `Missing secret_key_base`.
+
+Set one of these as a runtime secret (Kubernetes secret, Kamal `env.secret`, etc.):
+
+- `RAILS_MASTER_KEY` — paste the contents of `config/master.key` from a machine that has it
+- `SECRET_KEY_BASE` — a long random hex, if you prefer not to use credentials
+
+Do not commit `config/master.key`.
+
 ## Collector
 
 On an Omarchy machine:
