@@ -2,7 +2,7 @@
 
 Hardware compatibility and classifieds for [Omarchy](https://omarchy.org), destined for `market.omarchy.org`.
 
-People already running Omarchy submit machine facts. Everyone else can look up whether a vendor and model has verified installs. After claiming a report, the owner can list that unit for sale (new or used) or donation.
+People already running Omarchy submit hardware reports. Everyone else can look up whether a vendor and model has claimed reports. After claiming a report, you can list from it for sale (new or used) or donation. Accounts claim reports, not machines.
 
 Market is not a store. It does not take payment, escrow, or shipping.
 

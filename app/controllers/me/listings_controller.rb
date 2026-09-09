@@ -1,18 +1,18 @@
 module Me
   class ListingsController < ApplicationController
-    before_action :set_machine
+    before_action :set_report
     before_action :set_listing, only: %i[edit update]
 
     def new
-      if @machine.open_listing
-        redirect_to edit_me_machine_listing_path(@machine)
+      if @report.open_listing
+        redirect_to edit_me_report_listing_path(@report)
         return
       end
-      @listing = @machine.listings.build(kind: "sale", currency: "USD", status: "published")
+      @listing = @report.listings.build(kind: "sale", currency: "USD", status: "published")
     end
 
     def create
-      @listing = @machine.listings.build(listing_params)
+      @listing = @report.listings.build(listing_params)
       @listing.status = "published"
       if @listing.save
         redirect_to listing_path(@listing), notice: "Listing published."
@@ -27,7 +27,7 @@ module Me
     def update
       if params[:close]
         @listing.close!
-        redirect_to me_machines_path, notice: "Listing closed."
+        redirect_to me_reports_path, notice: "Listing closed."
         return
       end
 
@@ -39,13 +39,13 @@ module Me
     end
 
     private
-      def set_machine
-        @machine = current_user.machines.find(params[:machine_id])
+      def set_report
+        @report = current_user.reports.find(params[:report_id])
       end
 
       def set_listing
-        @listing = @machine.open_listing
-        redirect_to new_me_machine_listing_path(@machine), alert: "No open listing." unless @listing
+        @listing = @report.open_listing
+        redirect_to new_me_report_listing_path(@report), alert: "No open listing." unless @listing
       end
 
       def listing_params

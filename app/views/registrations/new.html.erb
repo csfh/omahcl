@@ -1,7 +1,7 @@
 <% page_title "Sign up" %>
 
 <h1 class="text-3xl font-semibold">Create an account</h1>
-<p class="mt-2 text-muted">You need an account to claim a machine and list it.</p>
+<p class="mt-2 text-muted">You need an account to claim a report and list from it.</p>
 
 <%= form_with model: @user, url: registration_path, class: "mt-6 max-w-md space-y-5" do |form| %>
   <% if @user.errors.any? %>

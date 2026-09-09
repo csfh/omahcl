@@ -8,15 +8,15 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
       active: true
     )
     @user = users(:one)
-    report, token = ingest_report!
-    @machine = report.claim!(user: @user, token: token)
+    @report, token = ingest_report!
+    @report.claim!(user: @user, token: token)
   end
 
   test "owner publishes a sale listing" do
     sign_in_as(@user)
 
     assert_difference -> { Listing.count }, 1 do
-      post me_machine_listing_path(@machine), params: {
+      post me_report_listing_path(@report), params: {
         listing: {
           kind: "sale",
           title: "Used X220",
@@ -39,7 +39,7 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
   test "owner publishes a donation listing" do
     sign_in_as(@user)
 
-    post me_machine_listing_path(@machine), params: {
+    post me_report_listing_path(@report), params: {
       listing: {
         kind: "donation",
         title: "X220 for the foundation",
@@ -54,7 +54,7 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
 
   test "admin can close a listing" do
     listing = Listing.create!(
-      machine: @machine,
+      report: @report,
       kind: "sale",
       title: "Used X220",
       condition: "used",
@@ -72,10 +72,10 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to listings_path
   end
 
-  test "strangers cannot list someone else's machine" do
+  test "strangers cannot list someone else's report" do
     sign_in_as(users(:two))
 
-    post me_machine_listing_path(@machine), params: {
+    post me_report_listing_path(@report), params: {
       listing: { kind: "donation", title: "Nope", donation_destination_id: @destination.id }
     }
 

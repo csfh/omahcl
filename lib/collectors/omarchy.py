@@ -243,11 +243,11 @@ def main() -> None:
         return
     body["nonce"] = fetch_challenge()
     result = submit(body)
-    print("Submitted hardware facts for this Omarchy machine.")
+    print("Submitted a hardware report.")
     if result.get("model_url"):
         print(f"Compatibility page: {result['model_url']}")
     if result.get("claim_url"):
-        print(f"Claim this machine: {result['claim_url']}")
+        print(f"Claim this report: {result['claim_url']}")
 
 
 if __name__ == "__main__":

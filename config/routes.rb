@@ -16,7 +16,7 @@ Rails.application.routes.draw do
   get "privacy", to: "pages#privacy", as: :privacy
 
   namespace :me do
-    resources :machines, only: :index do
+    resources :reports, only: :index do
       resource :listing, only: %i[new create edit update]
     end
   end

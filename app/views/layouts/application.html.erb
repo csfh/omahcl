@@ -24,7 +24,7 @@
           <%= link_to "Lookup", hardware_models_path, class: "text-paper no-underline hover:text-accent" %>
           <%= link_to "Listings", listings_path, class: "text-paper no-underline hover:text-accent" %>
           <% if authenticated? %>
-            <%= link_to "My machines", me_machines_path, class: "text-paper no-underline hover:text-accent" %>
+            <%= link_to "My reports", me_reports_path, class: "text-paper no-underline hover:text-accent" %>
             <% if current_user.admin? %>
               <%= link_to "Destinations", admin_donation_destinations_path, class: "text-paper no-underline hover:text-accent" %>
             <% end %>

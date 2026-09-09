@@ -1,8 +1,7 @@
 class Listing < ApplicationRecord
-  belongs_to :machine
+  belongs_to :report
   belongs_to :donation_destination, optional: true
-  has_one :user, through: :machine
-  has_one :report, through: :machine
+  has_one :user, through: :report
   has_many_attached :photos
 
   CONDITIONS = %w[new used].freeze
@@ -13,7 +12,7 @@ class Listing < ApplicationRecord
   attr_writer :price_amount
 
   validates :title, presence: true
-  validates :machine_id, uniqueness: { conditions: -> { where.not(status: "closed") }, message: "already has an open listing" }
+  validates :report_id, uniqueness: { conditions: -> { where.not(status: "closed") }, message: "already has an open listing" }
   validates :price_cents, numericality: { greater_than: 0 }, if: :sale?
   validates :currency, :city, :country_code, :condition, presence: true, if: :sale?
   validates :condition, inclusion: { in: CONDITIONS }, allow_blank: true
@@ -23,7 +22,7 @@ class Listing < ApplicationRecord
   validate :photos_are_images
   validate :photos_count_within_limit
 
-  scope :visible, -> { published.includes(:machine, report: {}, donation_destination: {}, photos_attachments: :blob) }
+  scope :visible, -> { published.includes(:report, :donation_destination, photos_attachments: :blob) }
   scope :for_model, ->(slug) { joins(:report).where(reports: { model_slug: slug }) }
 
   before_validation :assign_price_cents_from_amount

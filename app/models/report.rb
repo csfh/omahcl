@@ -5,7 +5,7 @@ class Report < ApplicationRecord
   class ClaimRejected < StandardError; end
 
   belongs_to :user, optional: true
-  has_one :machine, dependent: :restrict_with_exception
+  has_many :listings, dependent: :destroy
 
   before_validation :assign_public_id, on: :create
   before_validation :assign_model_identity
@@ -80,18 +80,15 @@ class Report < ApplicationRecord
   end
 
   def claim!(user:, token:)
-    raise ClaimRejected, "You can claim at most #{User::MAX_CLAIMED_MACHINES} machines." if user.machines.count >= User::MAX_CLAIMED_MACHINES
+    raise ClaimRejected, "You can claim at most #{User::MAX_CLAIMED_REPORTS} reports." if user.reports.count >= User::MAX_CLAIMED_REPORTS
     raise ActiveRecord::RecordInvalid, self unless claimable?(token)
 
-    transaction do
-      update!(
-        user: user,
-        claimed_at: Time.current,
-        claim_token_digest: nil,
-        claim_token_expires_at: nil
-      )
-      Machine.create!(user: user, report: self)
-    end
+    update!(
+      user: user,
+      claimed_at: Time.current,
+      claim_token_digest: nil,
+      claim_token_expires_at: nil
+    )
   end
 
   def claimed?
@@ -100,6 +97,10 @@ class Report < ApplicationRecord
 
   def display_name
     [ vendor, product ].compact.join(" ")
+  end
+
+  def open_listing
+    listings.find { |listing| listing.status != "closed" }
   end
 
   private

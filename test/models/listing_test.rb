@@ -4,7 +4,7 @@ class ListingTest < ActiveSupport::TestCase
   setup do
     @user = users(:one)
     @report, token = ingest_report!
-    @machine = @report.claim!(user: @user, token: token)
+    @report.claim!(user: @user, token: token)
     @destination = DonationDestination.create!(
       name: "Omacom Foundation",
       url: "https://donate.omarchy.org",
@@ -13,7 +13,7 @@ class ListingTest < ActiveSupport::TestCase
   end
 
   test "sale listing requires price condition and location" do
-    listing = Listing.new(machine: @machine, kind: "sale", title: "X220", status: "published")
+    listing = Listing.new(report: @report, kind: "sale", title: "X220", status: "published")
 
     refute listing.valid?
     assert_includes listing.errors.attribute_names, :price_cents
@@ -22,7 +22,7 @@ class ListingTest < ActiveSupport::TestCase
 
   test "sale listing is valid with price in dollars" do
     listing = Listing.new(
-      machine: @machine,
+      report: @report,
       kind: "sale",
       title: "ThinkPad X220",
       condition: "used",
@@ -39,7 +39,7 @@ class ListingTest < ActiveSupport::TestCase
 
   test "donation listing requires an active destination" do
     listing = Listing.new(
-      machine: @machine,
+      report: @report,
       kind: "donation",
       title: "Give this X220",
       status: "published"
@@ -51,9 +51,9 @@ class ListingTest < ActiveSupport::TestCase
     assert listing.valid?
   end
 
-  test "a machine may only have one open listing" do
+  test "a report may only have one open listing" do
     Listing.create!(
-      machine: @machine,
+      report: @report,
       kind: "donation",
       title: "Give this X220",
       donation_destination: @destination,
@@ -61,7 +61,7 @@ class ListingTest < ActiveSupport::TestCase
     )
 
     duplicate = Listing.new(
-      machine: @machine,
+      report: @report,
       kind: "sale",
       title: "Sell it",
       condition: "used",

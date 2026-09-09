@@ -212,7 +212,6 @@ ALTER SEQUENCE public.donation_destinations_id_seq OWNED BY public.donation_dest
 
 CREATE TABLE public.listings (
     id bigint NOT NULL,
-    machine_id bigint NOT NULL,
     kind character varying NOT NULL,
     condition character varying,
     status character varying DEFAULT 'published'::character varying NOT NULL,
@@ -224,7 +223,8 @@ CREATE TABLE public.listings (
     country_code character varying,
     donation_destination_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    report_id bigint NOT NULL
 );
 
 
@@ -245,38 +245,6 @@ CREATE SEQUENCE public.listings_id_seq
 --
 
 ALTER SEQUENCE public.listings_id_seq OWNED BY public.listings.id;
-
-
---
--- Name: machines; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.machines (
-    id bigint NOT NULL,
-    user_id bigint NOT NULL,
-    report_id bigint NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: machines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.machines_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: machines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.machines_id_seq OWNED BY public.machines.id;
 
 
 --
@@ -453,13 +421,6 @@ ALTER TABLE ONLY public.listings ALTER COLUMN id SET DEFAULT nextval('public.lis
 
 
 --
--- Name: machines id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.machines ALTER COLUMN id SET DEFAULT nextval('public.machines_id_seq'::regclass);
-
-
---
 -- Name: reports id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -534,14 +495,6 @@ ALTER TABLE ONLY public.donation_destinations
 
 ALTER TABLE ONLY public.listings
     ADD CONSTRAINT listings_pkey PRIMARY KEY (id);
-
-
---
--- Name: machines machines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.machines
-    ADD CONSTRAINT machines_pkey PRIMARY KEY (id);
 
 
 --
@@ -626,17 +579,17 @@ CREATE INDEX index_listings_on_kind ON public.listings USING btree (kind);
 
 
 --
--- Name: index_listings_on_machine_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_listings_on_open_report; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_listings_on_machine_id ON public.listings USING btree (machine_id);
+CREATE UNIQUE INDEX index_listings_on_open_report ON public.listings USING btree (report_id) WHERE ((status)::text <> 'closed'::text);
 
 
 --
--- Name: index_listings_on_open_machine; Type: INDEX; Schema: public; Owner: -
+-- Name: index_listings_on_report_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_listings_on_open_machine ON public.listings USING btree (machine_id) WHERE ((status)::text <> 'closed'::text);
+CREATE INDEX index_listings_on_report_id ON public.listings USING btree (report_id);
 
 
 --
@@ -644,20 +597,6 @@ CREATE UNIQUE INDEX index_listings_on_open_machine ON public.listings USING btre
 --
 
 CREATE INDEX index_listings_on_status ON public.listings USING btree (status);
-
-
---
--- Name: index_machines_on_report_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_machines_on_report_id ON public.machines USING btree (report_id);
-
-
---
--- Name: index_machines_on_user_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_machines_on_user_id ON public.machines USING btree (user_id);
 
 
 --
@@ -724,14 +663,6 @@ CREATE UNIQUE INDEX index_users_on_email_address ON public.users USING btree (em
 
 
 --
--- Name: machines fk_rails_6a1aeed356; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.machines
-    ADD CONSTRAINT fk_rails_6a1aeed356 FOREIGN KEY (report_id) REFERENCES public.reports(id);
-
-
---
 -- Name: sessions fk_rails_758836b4f0; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -756,6 +687,14 @@ ALTER TABLE ONLY public.listings
 
 
 --
+-- Name: listings fk_rails_bebdefbcd2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listings
+    ADD CONSTRAINT fk_rails_bebdefbcd2 FOREIGN KEY (report_id) REFERENCES public.reports(id);
+
+
+--
 -- Name: active_storage_attachments fk_rails_c3b3935057; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -772,28 +711,13 @@ ALTER TABLE ONLY public.reports
 
 
 --
--- Name: machines fk_rails_f7c8eaf040; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.machines
-    ADD CONSTRAINT fk_rails_f7c8eaf040 FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: listings fk_rails_fefae444fa; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.listings
-    ADD CONSTRAINT fk_rails_fefae444fa FOREIGN KEY (machine_id) REFERENCES public.machines(id);
-
-
---
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260909120000'),
 ('20260908220001'),
 ('20260908220000'),
 ('20260908210941'),

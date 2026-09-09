@@ -53,15 +53,14 @@ class ReportTest < ActiveSupport::TestCase
     assert_match(/challenge/, error.message)
   end
 
-  test "claim attaches a machine to the user" do
+  test "claim attaches the report to the user" do
     report, token = ingest_report!
     user = users(:one)
 
-    machine = report.claim!(user: user, token: token)
+    report.claim!(user: user, token: token)
 
     assert_equal user, report.reload.user
-    assert_equal user, machine.user
-    assert_equal report, machine.report
+    assert report.claimed?
     refute report.claimable?(token)
     assert_equal 1, Report.grouped_models.to_a.size
   end
@@ -73,7 +72,7 @@ class ReportTest < ActiveSupport::TestCase
     refute report.claimable?(token)
   end
 
-  test "a user cannot claim more than five machines" do
+  test "a user cannot claim more than five reports" do
     user = users(:one)
     5.times do |index|
       report, token = ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("cap-#{index}")))
@@ -84,7 +83,7 @@ class ReportTest < ActiveSupport::TestCase
     error = assert_raises(Report::ClaimRejected) do
       report.claim!(user: user, token: token)
     end
-    assert_match(/at most 5/, error.message)
+    assert_match(/at most 5 reports/, error.message)
   end
 
   test "three independent claimants mark a model established" do

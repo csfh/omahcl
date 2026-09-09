@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  MAX_CLAIMED_MACHINES = 5
+  MAX_CLAIMED_REPORTS = 5
 
   has_secure_password
   has_many :sessions, dependent: :destroy
@@ -8,8 +8,7 @@ class User < ApplicationRecord
     password_salt&.last(10)
   end
   has_many :reports, dependent: :nullify
-  has_many :machines, dependent: :destroy
-  has_many :listings, through: :machines
+  has_many :listings, through: :reports
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

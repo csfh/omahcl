@@ -27,7 +27,7 @@
 </dl>
 
 <% if @listings.any? %>
-  <h2 class="mt-10 text-lg font-medium">Listed machines</h2>
+  <h2 class="mt-10 text-lg font-medium">Listings</h2>
   <ul class="mt-4 grid gap-4 sm:grid-cols-2">
     <% @listings.each do |listing| %>
       <%= render "listings/card", listing: listing %>
