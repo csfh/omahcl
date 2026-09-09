@@ -5,6 +5,8 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select "h1", /Omarchy/
+    assert_select "h2", "How to use this site"
+    assert_select "ol li", minimum: 4
   end
 
   test "unclaimed reports do not appear in lookup" do
