@@ -38,12 +38,27 @@ The Gemfile pins `json` to 2.x because Rails 8.1 still calls `JSON.parse(json, o
 
 The image boots in `RAILS_ENV=production`. It decrypts `config/credentials.yml.enc` with `RAILS_MASTER_KEY`. That file is gitignored as `config/master.key`. Without the key, `db:prepare` aborts with `Missing secret_key_base`.
 
-Set one of these as a runtime secret (Kubernetes secret, Kamal `env.secret`, etc.):
-
-- `RAILS_MASTER_KEY` — paste the contents of `config/master.key` from a machine that has it
-- `SECRET_KEY_BASE` — a long random hex, if you prefer not to use credentials
-
 Do not commit `config/master.key`.
+
+### DigitalOcean App Platform
+
+In the app: **Settings → the web component → Environment Variables → Edit**.
+
+Add a **runtime** variable (scope Run Time, or Run and Build Time):
+
+| Key | Value | Encrypt |
+| --- | --- | --- |
+| `RAILS_MASTER_KEY` | contents of local `config/master.key` | yes |
+
+```sh
+cat config/master.key
+```
+
+Save, then deploy. App Platform injects encrypted vars at runtime; the Dockerfile never contains the key.
+
+If a managed Postgres is attached, App Platform also sets `DATABASE_URL`. Rails uses that for the primary database.
+
+HTTP port for this image is **80** (Thruster).
 
 ## Collector
 
