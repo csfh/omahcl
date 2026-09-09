@@ -18,6 +18,16 @@ bin/rails db:seed
 bin/dev
 ```
 
+Development seed creates these logins (password `password`):
+
+| Email | Role |
+| --- | --- |
+| `one@example.com` | user |
+| `two@example.com` | user |
+| `admin@example.com` | admin |
+
+It also claims a few hardware reports so lookup has something to find. Production and test seeds skip those accounts.
+
 Compose publishes Postgres on a high loopback port and Mailpit SMTP/UI. The app listens on `PORT` from `.env`.
 
 If Docker is unavailable, `mise.toml` pins Postgres 16. Point `DATABASE_HOST` / `DATABASE_PORT` at that server (or any Postgres 16+ with `pg_trgm`) and dump `db/structure.sql` with a matching `pg_dump`.
