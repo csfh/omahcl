@@ -50,4 +50,11 @@ class DatabaseConfigTest < ActiveSupport::TestCase
   test "production image runs Solid Queue inside Puma" do
     assert_includes Rails.root.join("Dockerfile").read, 'SOLID_QUEUE_IN_PUMA="true"'
   end
+
+  test "Puma runs Solid Queue without forking so a 512MB app can boot" do
+    source = Rails.root.join("config/puma.rb").read
+
+    assert_includes source, "plugin :solid_queue"
+    assert_includes source, "solid_queue_mode :async"
+  end
 end
