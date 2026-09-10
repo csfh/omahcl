@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "from@example.com"
+  default from: "Market <noreply@omarchy.csfh.dev>"
   layout "mailer"
 end

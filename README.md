@@ -44,11 +44,12 @@ Do not commit `config/master.key`.
 
 In the app: **Settings → the web component → Environment Variables → Edit**.
 
-Add a **runtime** variable (scope Run Time, or Run and Build Time):
+Add **runtime** variables (scope Run Time is enough):
 
 | Key | Value | Encrypt |
 | --- | --- | --- |
 | `RAILS_MASTER_KEY` | contents of local `config/master.key` | yes |
+| `CLOUDFLARE_EMAIL_API_TOKEN` | Cloudflare API token with **Email Sending: Edit** | yes |
 
 ```sh
 cat config/master.key
@@ -59,6 +60,39 @@ Save, then deploy. App Platform injects encrypted vars at runtime; the Dockerfil
 If a managed Postgres is attached, App Platform also sets `DATABASE_URL`. Production primary, cache, queue, and cable connections all use that URL.
 
 HTTP port for this image is **80** (Thruster).
+
+### Cloudflare Email Sending
+
+Password resets leave through Cloudflare SMTP. The From address is `Market <noreply@omarchy.csfh.dev>`, so `omarchy.csfh.dev` must be onboarded for Email Sending. Local development still uses Mailpit.
+
+Email Sending needs a Workers Paid plan. Leave Email Routing off; that product takes inbound MX for the domain.
+
+1. In the [Cloudflare dashboard](https://dash.cloudflare.com/), go to **Compute** → **Email Service** → **Email Sending** ([deep link](https://dash.cloudflare.com/?to=/:account/email-service/sending)).
+2. **Onboard Domain** and pick `omarchy.csfh.dev`. Cloudflare writes bounce MX, SPF, and DKIM on `cf-bounce.omarchy.csfh.dev`, plus a DMARC record on `_dmarc.omarchy.csfh.dev`. If that DMARC record already exists, review the change before confirming.
+3. Wait until **Email Sending** → **Settings** shows those records present (often 5–15 minutes).
+4. Create an **account-owned** API token: **Manage Account** → **Account API Tokens** → **Create Token** → **Create Custom Token**. Name it `market-smtp`. Permission: **Account** → **Email Sending** → **Edit**. Limit it to the account that owns `omarchy.csfh.dev`. Copy the secret once.
+5. Prove SMTP before putting the token on App Platform. Use an inbox you can open:
+
+```sh
+cat > /tmp/market-smtp.txt <<EOF
+From: Market <noreply@omarchy.csfh.dev>
+To: you@example.com
+Subject: Market SMTP check
+
+Cloudflare Email Sending accepted this message.
+EOF
+
+curl --ssl-reqd \
+  --url "smtps://smtp.mx.cloudflare.net:465" \
+  --user "api_token:PASTE_TOKEN_HERE" \
+  --mail-from "noreply@omarchy.csfh.dev" \
+  --mail-rcpt "you@example.com" \
+  --upload-file /tmp/market-smtp.txt
+```
+
+A `250` after the body means the token and domain are good. `535` is a bad token or the wrong permission. `550 5.7.1` means `omarchy.csfh.dev` is not onboarded on that account.
+
+6. Add `CLOUDFLARE_EMAIL_API_TOKEN` on App Platform as in the table above, then deploy. The container exits on boot if the variable is missing.
 
 ## Collector
 

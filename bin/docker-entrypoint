@@ -5,6 +5,11 @@ if [ "${RAILS_ENV:-production}" = "production" ] && [ -z "${RAILS_MASTER_KEY:-}"
   exit 1
 fi
 
+if [ "${RAILS_ENV:-production}" = "production" ] && [ -z "${CLOUDFLARE_EMAIL_API_TOKEN:-}" ]; then
+  echo "Production needs CLOUDFLARE_EMAIL_API_TOKEN (Cloudflare Email Sending API token, SMTP password)." >&2
+  exit 1
+fi
+
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
