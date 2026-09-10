@@ -26,4 +26,4 @@ Rails 8.1 app for Omarchy hardware compatibility and classifieds.
 - Cache, queue, and cable share `DATABASE_URL`. Keep their tables in `db/cache_migrate`, `db/queue_migrate`, and `db/cable_migrate` so `db:prepare` creates them on an already-populated Postgres.
 - Production mail uses Cloudflare Email Sending over SMTP (`smtp.mx.cloudflare.net:465`). Password is `CLOUDFLARE_EMAIL_API_TOKEN`. From is `noreply@omarchy.csfh.dev`. Dev stays on Mailpit.
 - Production site URLs use `https://market-app-blg2k.ondigitalocean.app/`.
-- After a completed slice, commit, merge into `main`, and push `origin/main` so DigitalOcean App Platform deploys.
+- Develop the slice with tests, then commit, merge into `main`, and push `origin/main` so DigitalOcean App Platform deploys. Watch the deploy until it is ACTIVE.
