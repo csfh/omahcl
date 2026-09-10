@@ -25,4 +25,11 @@ class CloudflareEmailSmtpTest < ActiveSupport::TestCase
     error = assert_raises(KeyError) { CloudflareEmailSmtp.settings }
     assert_match(/CLOUDFLARE_EMAIL_API_TOKEN/, error.message)
   end
+
+  test "production initializer waits for autoload before touching CloudflareEmailSmtp" do
+    source = Rails.root.join("config/initializers/cloudflare_email_smtp.rb").read
+
+    assert_includes source, "after_initialize"
+    refute_match(/^Rails\.application\.config\.action_mailer\.smtp_settings = CloudflareEmailSmtp/, source)
+  end
 end
