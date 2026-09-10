@@ -10,6 +10,7 @@ if Rails.env.development?
     user.password = password
     user.password_confirmation = password
     user.admin = admin
+    user.email_verified_at ||= Time.current
     user.save!
     user
   end

@@ -26,6 +26,20 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil cookies[:session_id]
   end
 
+  test "create with unverified email resends the link and stays signed out" do
+    user = User.create!(email_address: "unverified@example.com", password: "password12")
+
+    assert_enqueued_email_with EmailVerificationsMailer, :verify, args: [ user ] do
+      post session_path, params: { email_address: user.email_address, password: "password12" }
+    end
+
+    assert_redirected_to new_session_path
+    assert_nil cookies[:session_id]
+
+    follow_redirect!
+    assert_select "div", /Verify your email/
+  end
+
   test "destroy" do
     sign_in_as(User.take)
 

@@ -355,7 +355,8 @@ CREATE TABLE public.users (
     password_digest character varying NOT NULL,
     admin boolean DEFAULT false NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    email_verified_at timestamp(6) without time zone
 );
 
 
@@ -717,6 +718,7 @@ ALTER TABLE ONLY public.reports
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260910175100'),
 ('20260909120000'),
 ('20260908220001'),
 ('20260908220000'),

@@ -1,0 +1,6 @@
+<p>
+  Confirm this email for Market on
+  <%= link_to "this verification page", email_verification_url(@user.email_verification_token) %>.
+
+  This link will expire in <%= distance_of_time_in_words(0, @user.email_verification_token_expires_in) %>.
+</p>

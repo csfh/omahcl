@@ -36,7 +36,7 @@ The Gemfile pins `json` to 2.x because Rails 8.1 still calls `JSON.parse(json, o
 
 ## Production
 
-The image boots in `RAILS_ENV=production`. It decrypts `config/credentials.yml.enc` with `RAILS_MASTER_KEY`. That file is gitignored as `config/master.key`. Without the key, `db:prepare` aborts with `Missing secret_key_base`.
+The image boots in `RAILS_ENV=production`. It decrypts `config/credentials.yml.enc` with `RAILS_MASTER_KEY`. That file is gitignored as `config/master.key`. Without the key, `db:prepare` aborts with `Missing secret_key_base`. Puma runs Solid Queue so verification and password-reset mail leave the queue.
 
 Do not commit `config/master.key`.
 
