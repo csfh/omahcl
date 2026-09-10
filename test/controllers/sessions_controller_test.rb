@@ -3,13 +3,18 @@ require "test_helper"
 class SessionsControllerTest < ActionDispatch::IntegrationTest
   setup { @user = User.take }
 
-  test "new" do
+  test "new exposes password-manager sign-in fields" do
     get new_session_path
 
     assert_response :success
     assert_select "form#signin[data-turbo=false]"
-    assert_select "input#email[type=email][autocomplete=username][required]"
+    assert_select "label[for=email]", text: "Email"
+    assert_select "input#email[type=email][autocomplete=email][required]"
+    assert_select "label[for=current-password]", text: "Password"
     assert_select "input#current-password[type=password][autocomplete=current-password][required]"
+    assert_select "form#signin a", count: 0
+    assert_select "nav a[href=?][data-turbo=false]", new_session_path
+    assert_select "nav a[href=?][data-turbo=false]", new_registration_path
   end
 
   test "create with valid credentials" do

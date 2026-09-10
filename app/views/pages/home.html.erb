@@ -19,7 +19,7 @@
       <p class="mt-2 text-sm">The script prints a claim link. An unclaimed report stays off the public lookup.</p>
     </li>
     <li>
-      <p><%= link_to "Sign in", new_session_path %> (or <%= link_to "create an account", new_registration_path %>) and open the claim link. That attaches the report to you.</p>
+      <p><%= link_to "Sign in", new_session_path, data: { turbo: false } %> (or <%= link_to "create an account", new_registration_path, data: { turbo: false } %>) and open the claim link. That attaches the report to you.</p>
     </li>
     <li>
       <p>From <%= link_to "My reports", me_reports_path %>, list a claimed report for sale or donation. Market does not take payment or ship anything. Buyers contact the owner by email.</p>

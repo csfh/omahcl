@@ -31,8 +31,8 @@
             <% end %>
             <%= button_to "Sign out", session_path, method: :delete, class: "cursor-pointer text-paper hover:text-accent" %>
           <% else %>
-            <%= link_to "Sign in", new_session_path, class: "text-paper no-underline hover:text-accent" %>
-            <%= link_to "Sign up", new_registration_path, class: "text-paper no-underline hover:text-accent" %>
+            <%= link_to "Sign in", new_session_path, class: "text-paper no-underline hover:text-accent", data: { turbo: false } %>
+            <%= link_to "Sign up", new_registration_path, class: "text-paper no-underline hover:text-accent", data: { turbo: false } %>
           <% end %>
         </nav>
       </div>
