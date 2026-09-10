@@ -10,7 +10,7 @@
   <% end %>
 
   <fieldset>
-    <legend class="text-sm text-muted">Kind</legend>
+    <legend class="text-sm text-muted">Sale or donation</legend>
     <div class="mt-2 flex gap-4">
       <label class="flex items-center gap-2"><%= form.radio_button :kind, "sale" %> Sale</label>
       <label class="flex items-center gap-2"><%= form.radio_button :kind, "donation" %> Donation</label>
@@ -51,7 +51,7 @@
       <%= form.text_field :city, class: field_class %>
     </div>
     <div>
-      <%= form.label :country_code, "Country (ISO two letters)", class: "text-sm text-muted" %>
+        <%= form.label :country_code, "Country (two-letter code, like DK)", class: "text-sm text-muted" %>
       <%= form.text_field :country_code, maxlength: 2, class: field_class %>
     </div>
   </div>

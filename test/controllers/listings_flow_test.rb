@@ -34,6 +34,29 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select "h1", "Used X220"
+    assert_select "p", /For sale/
+    assert_select "a", text: "Omarchy on this machine"
+  end
+
+  test "listings index uses product language" do
+    Listing.create!(
+      report: @report,
+      kind: "sale",
+      title: "Used X220",
+      condition: "used",
+      price_amount: "150",
+      currency: "USD",
+      city: "Copenhagen",
+      country_code: "DK",
+      status: "published"
+    )
+
+    get listings_path
+
+    assert_response :success
+    assert_select "h1", "Machines for sale or donation"
+    assert_select "p", /People sell or give machines here/
+    assert_select "li p", /For sale/
   end
 
   test "owner publishes a donation listing" do

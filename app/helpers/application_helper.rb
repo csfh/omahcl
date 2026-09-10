@@ -26,8 +26,20 @@ module ApplicationHelper
     if Report.established?(claimants)
       "Verified"
     else
-      "Needs more evidence"
+      "Only a few people so far"
     end
+  end
+
+  def people_ran_omarchy(count)
+    "#{pluralize(count, "person")} #{count == 1 ? "has" : "have"} run Omarchy on this machine."
+  end
+
+  def listing_kind_label(listing)
+    listing.donation? ? "Donation" : "For sale"
+  end
+
+  def listing_condition_label(listing)
+    listing.condition.to_s.titleize.presence
   end
 
   def claimants_status(claimants)

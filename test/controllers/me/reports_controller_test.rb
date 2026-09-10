@@ -7,7 +7,7 @@ class Me::ReportsControllerTest < ActionDispatch::IntegrationTest
     get me_reports_path
 
     assert_response :success
-    assert_select "h1", "Claimed reports"
+    assert_select "h1", "My machines"
     assert_select "[data-controller=clipboard]"
     assert_select "[data-clipboard-target=source]", text: /curl -fsSL .+\/collect \| bash/
     assert_select "button[type=button][data-action='clipboard#copy']", text: "Copy"
