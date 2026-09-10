@@ -15,6 +15,10 @@ class Report < ApplicationRecord
   validates :memory_bytes, :cpu_cores, numericality: { greater_than_or_equal_to: 0 }
 
   scope :claimed, -> { where.not(user_id: nil) }
+  scope :unclaimed, -> { where(user_id: nil) }
+  scope :created_since, ->(time) { where(created_at: time..) }
+  scope :updated_since, ->(time) { where(updated_at: time..) }
+  scope :claimed_since, ->(time) { where(claimed_at: time..) }
   scope :for_query, ->(query) {
     if query.present?
       where("search_document ILIKE ?", "%#{sanitize_sql_like(query.strip)}%")

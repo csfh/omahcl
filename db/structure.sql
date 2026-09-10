@@ -718,6 +718,7 @@ ALTER TABLE ONLY public.reports
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260910231500'),
 ('20260910175100'),
 ('20260909120000'),
 ('20260908220001'),

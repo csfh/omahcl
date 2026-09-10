@@ -92,7 +92,7 @@ class ListingsFlowTest < ActionDispatch::IntegrationTest
     post close_admin_listing_path(listing)
 
     assert listing.reload.closed?
-    assert_redirected_to listings_path
+    assert_redirected_to admin_listing_path(listing)
   end
 
   test "strangers cannot list someone else's report" do

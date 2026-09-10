@@ -1,0 +1,33 @@
+<% page_title "Listings" %>
+
+<h1 class="text-3xl font-semibold">Listings</h1>
+
+<%= form_with url: admin_listings_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
+  <div>
+    <%= form.label :status, "Status", class: "text-sm text-muted" %>
+    <%= form.select :status, [["All", ""]] + Listing.statuses.keys.map { |status| [status.titleize, status] }, { selected: @status }, class: field_class %>
+  </div>
+  <div>
+    <%= form.label :kind, "Kind", class: "text-sm text-muted" %>
+    <%= form.select :kind, [["All", ""]] + Listing.kinds.keys.map { |kind| [kind.titleize, kind] }, { selected: @kind }, class: field_class %>
+  </div>
+  <%= form.submit "Filter", class: button_class %>
+<% end %>
+
+<ul class="mt-8 divide-y divide-white/10 border-y border-white/10">
+  <% @listings.each do |listing| %>
+    <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
+      <div>
+        <p><%= link_to listing.title, admin_listing_path(listing) %></p>
+        <p class="text-sm text-muted">
+          <%= listing.status.titleize %>
+          ·
+          <%= listing_kind_label(listing) %>
+          ·
+          <%= listing.report.display_name %>
+        </p>
+      </div>
+      <p class="text-sm text-muted"><%= listing.user&.email_address || "No owner" %></p>
+    </li>
+  <% end %>
+</ul>

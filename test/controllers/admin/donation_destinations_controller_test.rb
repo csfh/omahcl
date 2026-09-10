@@ -22,4 +22,24 @@ class Admin::DonationDestinationsControllerTest < ActionDispatch::IntegrationTes
 
     assert_redirected_to admin_donation_destinations_path
   end
+
+  test "show is not routed" do
+    destination = DonationDestination.create!(name: "Spare lab", url: "https://example.org/spare")
+    sign_in_as(users(:admin))
+
+    get "/admin/donation_destinations/#{destination.id}"
+
+    assert_response :not_found
+  end
+
+  test "admin can remove a destination with no listings" do
+    destination = DonationDestination.create!(name: "Spare lab", url: "https://example.org/spare")
+    sign_in_as(users(:admin))
+
+    assert_difference -> { DonationDestination.count }, -1 do
+      delete admin_donation_destination_path(destination)
+    end
+
+    assert_redirected_to admin_donation_destinations_path
+  end
 end

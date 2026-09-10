@@ -12,8 +12,9 @@
         <p><%= destination.name %> <% unless destination.active? %><span class="text-sm text-muted">(inactive)</span><% end %></p>
         <p class="text-sm text-muted"><%= destination.url %></p>
       </div>
-      <div class="text-sm">
+      <div class="flex flex-wrap items-center gap-3 text-sm">
         <%= link_to "Edit", edit_admin_donation_destination_path(destination) %>
+        <%= button_to "Remove", admin_donation_destination_path(destination), method: :delete, class: "cursor-pointer text-paper hover:text-accent", form: { data: { turbo_confirm: "Remove this destination?" } } %>
       </div>
     </li>
   <% end %>

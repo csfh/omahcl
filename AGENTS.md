@@ -16,7 +16,8 @@ Rails 8.1 app for Omarchy hardware compatibility and classifieds.
 
 - Collector lives in `lib/collectors/omarchy.sh` and is served at `GET /collect` (`curl … | bash`). It fetches `GET /challenges` then `POST /reports`. Do not call Omarchy binaries.
 - Ingest is allowlist-only JSON with `nonce` and `instance_digest`. Reject serial/MAC/hostname fields in `ReportSanitizer`.
-- Public lookup counts distinct claiming users on claimed reports only. Unclaimed POSTs stay private.
+- Public lookup counts distinct claiming users on claimed reports only. Unclaimed POSTs stay private on public pages. Admins can inspect them under `/admin/reports`.
+- Admin user delete closes that account’s open listings, then nullifies the reports so they become unclaimed.
 - Listing requires a claimed report. Accounts claim reports, not machines. Classifieds only: no payments.
 - Donation destinations are admin-curated; seed includes Omacom Foundation.
 - Do not vendor atmos `hw-inventory.py`.

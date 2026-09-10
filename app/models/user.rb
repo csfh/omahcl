@@ -38,4 +38,12 @@ class User < ApplicationRecord
   def self.find_by_email_verification_token!(token)
     find_by_token_for!(:email_verification, token)
   end
+
+  def last_admin?
+    admin? && self.class.where(admin: true).one?
+  end
+
+  def close_open_listings!
+    listings.where.not(status: :closed).find_each(&:close!)
+  end
 end

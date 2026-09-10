@@ -1,0 +1,24 @@
+<% page_title "Challenge #{@challenge.id}" %>
+
+<p class="text-sm text-muted"><%= link_to "All challenges", admin_challenges_path %></p>
+<h1 class="mt-2 text-3xl font-semibold">Challenge <%= @challenge.id %></h1>
+<p class="mt-2 text-muted"><%= @challenge.status_label %></p>
+
+<dl class="mt-8 grid gap-4 sm:grid-cols-2">
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Issued</dt>
+    <dd class="mt-1"><%= @challenge.created_at.to_fs(:long) %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Expires</dt>
+    <dd class="mt-1"><%= @challenge.expires_at.to_fs(:long) %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Consumed</dt>
+    <dd class="mt-1"><%= @challenge.consumed_at&.to_fs(:long) || "Not yet" %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Nonce digest</dt>
+    <dd class="mt-1 break-all font-mono text-sm"><%= @challenge.nonce_digest %></dd>
+  </div>
+</dl>

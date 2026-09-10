@@ -27,7 +27,7 @@
           <% if authenticated? %>
             <%= link_to "My machines", me_reports_path, class: "text-paper no-underline hover:text-accent" %>
             <% if current_user.admin? %>
-              <%= link_to "Destinations", admin_donation_destinations_path, class: "text-paper no-underline hover:text-accent" %>
+              <%= link_to "Admin", admin_root_path, class: "text-paper no-underline hover:text-accent" %>
             <% end %>
             <%= button_to "Sign out", session_path, method: :delete, class: "cursor-pointer text-paper hover:text-accent" %>
           <% else %>
@@ -38,6 +38,7 @@
       </div>
     </header>
     <main id="main" class="mx-auto max-w-5xl px-5 py-10">
+      <%= render "admin/nav" if controller_path.start_with?("admin/") %>
       <% if notice = flash[:notice] %>
         <div class="mb-6 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-accent" role="status"><%= notice %></div>
       <% end %>

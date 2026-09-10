@@ -1,0 +1,65 @@
+<% page_title @report.display_name %>
+
+<p class="text-sm text-muted"><%= link_to "All reports", admin_reports_path %></p>
+<h1 class="mt-2 text-3xl font-semibold"><%= @report.display_name %></h1>
+<p class="mt-2 text-muted">
+  <% if @report.claimed? %>
+    Claimed by <%= link_to @report.user.email_address, admin_user_path(@report.user) %>
+    <%= @report.claimed_at.to_fs(:long) if @report.claimed_at %>
+  <% else %>
+    Unclaimed
+  <% end %>
+</p>
+
+<dl class="mt-8 grid gap-4 sm:grid-cols-2">
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Public id</dt>
+    <dd class="mt-1 break-all"><%= @report.public_id %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Instance digest</dt>
+    <dd class="mt-1 break-all font-mono text-sm"><%= @report.instance_digest %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Omarchy</dt>
+    <dd class="mt-1"><%= @report.omarchy_version %> · <%= @report.omarchy_channel %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Memory</dt>
+    <dd class="mt-1"><%= memory_label(@report.memory_bytes) %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">CPU</dt>
+    <dd class="mt-1"><%= [@report.cpu_model, @report.cpu_vendor, @report.cpu_arch, pluralize(@report.cpu_cores, "core")].compact.join(" · ") %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">GPUs</dt>
+    <dd class="mt-1"><%= @report.gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Family / chassis</dt>
+    <dd class="mt-1"><%= [@report.family, @report.chassis].compact.join(" · ").presence || "Not reported" %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Firmware</dt>
+    <dd class="mt-1">
+      UEFI <%= @report.uefi? ? "yes" : "no" %>
+      · TPM <%= @report.tpm_present? ? "yes" : "no" %>
+      · Secure Boot <%= @report.secure_boot_enabled? ? "yes" : "no" %>
+    </dd>
+  </div>
+</dl>
+
+<h2 class="mt-10 text-lg font-medium">Listings</h2>
+<% if @report.listings.any? %>
+  <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
+    <% @report.listings.each do |listing| %>
+      <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
+        <p><%= link_to listing.title, admin_listing_path(listing) %></p>
+        <p class="text-sm text-muted"><%= listing.status.titleize %> · <%= listing_kind_label(listing) %></p>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="mt-4 text-muted">None.</p>
+<% end %>

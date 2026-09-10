@@ -1,0 +1,8 @@
+<nav class="mb-8 flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Admin">
+  <%= link_to "Home", admin_root_path, class: admin_nav_class(admin_root_path) %>
+  <%= link_to "Users", admin_users_path, class: admin_nav_class(admin_users_path) %>
+  <%= link_to "Listings", admin_listings_path, class: admin_nav_class(admin_listings_path) %>
+  <%= link_to "Reports", admin_reports_path, class: admin_nav_class(admin_reports_path) %>
+  <%= link_to "Challenges", admin_challenges_path, class: admin_nav_class(admin_challenges_path) %>
+  <%= link_to "Destinations", admin_donation_destinations_path, class: admin_nav_class(admin_donation_destinations_path) %>
+</nav>
