@@ -21,9 +21,28 @@ module ApplicationHelper
 
   def evidence_label(claimants)
     if Report.established?(claimants)
-      "Established"
+      "Verified"
     else
-      "Limited evidence"
+      "Needs more evidence"
+    end
+  end
+
+  def claimants_status(claimants)
+    render "application/claimants_status", claimants: claimants.to_i
+  end
+
+  def inline_icon(paths, title:)
+    tag.svg(
+      xmlns: "http://www.w3.org/2000/svg",
+      fill: "none",
+      viewBox: "0 0 24 24",
+      "stroke-width": 1.5,
+      stroke: "currentColor",
+      class: "size-4 shrink-0",
+      "aria-hidden": true,
+      title: title
+    ) do
+      safe_join(Array(paths).map { |d| tag.path(d:, "stroke-linecap": "round", "stroke-linejoin": "round") })
     end
   end
 

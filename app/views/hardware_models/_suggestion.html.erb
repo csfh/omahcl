@@ -1,6 +1,6 @@
 <li role="option" aria-selected="false" class="px-3 py-2 text-sm">
-  <%= link_to hardware_model_path(model.model_slug), class: "flex items-baseline justify-between gap-3 text-paper no-underline hover:text-accent" do %>
+  <%= link_to hardware_model_path(model.model_slug), class: "flex items-center justify-between gap-3 text-paper no-underline hover:text-accent" do %>
     <span><%= model.vendor %> <%= model.product %></span>
-    <span class="text-muted"><%= evidence_label(model.claimants_count) %></span>
+    <%= claimants_status(model.claimants_count) %>
   <% end %>
 </li>

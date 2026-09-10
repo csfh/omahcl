@@ -2,9 +2,9 @@
 
 <p class="text-sm text-muted"><%= link_to "All models", hardware_models_path %></p>
 <h1 class="mt-2 text-3xl font-semibold"><%= @sample.display_name %></h1>
-<p class="mt-2 text-muted">
-  <%= pluralize(@claimants_count, "person") %> <%= @claimants_count == 1 ? "has" : "have" %> claimed this model after submitting from Omarchy.
-  <%= evidence_label(@claimants_count) %>.
+<p class="mt-2 flex flex-wrap items-center gap-3 text-muted">
+  <%= claimants_status(@claimants_count) %>
+  <span><%= pluralize(@claimants_count, "person") %> <%= @claimants_count == 1 ? "has" : "have" %> claimed this model after submitting from Omarchy.</span>
 </p>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">

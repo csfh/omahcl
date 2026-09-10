@@ -31,7 +31,7 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a", text: /ThinkPad X220/
     assert_select "a", text: /ThinkPad X230/, count: 0
-    assert_select "span", /Limited evidence/
+    assert_select "span", /Needs more evidence/
   end
 
   test "suggestions return claimed models as typeahead html" do
@@ -65,6 +65,6 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", /ThinkPad X220/
     assert_match(/1 person has claimed/, response.body)
-    assert_match(/Limited evidence/, response.body)
+    assert_match(/Needs more evidence/, response.body)
   end
 end

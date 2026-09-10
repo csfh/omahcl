@@ -32,9 +32,9 @@
     <h2 class="text-lg font-medium">Claimed models</h2>
     <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
       <% @models.each do |model| %>
-        <li class="flex items-baseline justify-between gap-4 py-3">
+        <li class="flex items-center justify-between gap-4 py-3">
           <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
-          <span class="text-sm text-muted"><%= pluralize(model.claimants_count, "person") %> · <%= evidence_label(model.claimants_count) %></span>
+          <%= claimants_status(model.claimants_count) %>
         </li>
       <% end %>
     </ul>
