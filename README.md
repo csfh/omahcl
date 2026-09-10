@@ -1,6 +1,6 @@
 # Market
 
-Hardware compatibility and classifieds for [Omarchy](https://omarchy.org), destined for `market.omarchy.org`.
+Hardware compatibility and classifieds for [Omarchy](https://omarchy.org), destined for `https://market-app-blg2k.ondigitalocean.app/`.
 
 People already running Omarchy submit hardware reports. Everyone else can look up whether a vendor and model has claimed reports. After claiming a report, you can list from it for sale (new or used) or donation. Accounts claim reports, not machines.
 
@@ -99,7 +99,7 @@ A `250` after the body means the token and domain are good. `535` is a bad token
 On an Omarchy machine:
 
 ```sh
-curl -fsSL https://market.omarchy.org/collect | bash
+curl -fsSL https://market-app-blg2k.ondigitalocean.app/collect | bash
 ```
 
 Against a local server:

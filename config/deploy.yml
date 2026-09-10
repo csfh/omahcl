@@ -22,7 +22,7 @@ servers:
 #
 # proxy:
 #   ssl: true
-#   host: market.omarchy.org
+#   host: market-app-blg2k.ondigitalocean.app
 
 # Where you keep your container images.
 registry:
