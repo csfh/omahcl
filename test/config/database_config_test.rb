@@ -31,4 +31,23 @@ class DatabaseConfigTest < ActiveSupport::TestCase
       assert files.any? { |file| file.read.include?(table) }, "#{role} creates #{table}"
     end
   end
+
+  test "queue migrations create recurring_tasks even when jobs already exists" do
+    files = Rails.root.join("db/queue_migrate").glob("*.rb")
+    completing = files.reject { |file| file.read.include?("return if table_exists?(:solid_queue_jobs)") }
+
+    assert completing.any? { |file| file.read.include?("solid_queue_recurring_tasks") }
+
+    taken = %w[migrate cache_migrate cable_migrate].flat_map { |dir|
+      Rails.root.join("db/#{dir}").glob("*.rb").map { |file| file.basename.to_s.split("_").first }
+    }
+    completing.each do |file|
+      version = file.basename.to_s.split("_").first
+      refute_includes taken, version, file.basename.to_s
+    end
+  end
+
+  test "production image runs Solid Queue inside Puma" do
+    assert_includes Rails.root.join("Dockerfile").read, 'SOLID_QUEUE_IN_PUMA="true"'
+  end
 end
