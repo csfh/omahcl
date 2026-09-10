@@ -19,4 +19,16 @@ class DatabaseConfigTest < ActiveSupport::TestCase
   ensure
     ENV["DATABASE_URL"] = original
   end
+
+  test "cache queue and cable have migrations so a shared DATABASE_URL gets their tables" do
+    {
+      "cache" => "solid_cache_entries",
+      "queue" => "solid_queue_jobs",
+      "cable" => "solid_cable_messages"
+    }.each do |role, table|
+      files = Rails.root.join("db/#{role}_migrate").glob("*.rb")
+      assert files.any?, "db/#{role}_migrate"
+      assert files.any? { |file| file.read.include?(table) }, "#{role} creates #{table}"
+    end
+  end
 end
