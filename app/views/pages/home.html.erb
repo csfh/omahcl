@@ -15,7 +15,9 @@
     </li>
     <li>
       <p>If you already run Omarchy, submit a hardware report from that machine:</p>
-      <pre class="mt-2 overflow-x-auto rounded-md bg-panel p-4 text-sm text-paper"><code><%= collect_command %></code></pre>
+      <div class="mt-2">
+        <%= render "application/collect_command" %>
+      </div>
       <p class="mt-2 text-sm">The script prints a claim link. An unclaimed report stays off the public lookup.</p>
     </li>
     <li>

@@ -7,6 +7,9 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", /Omarchy/
     assert_select "h2", "How to use this site"
     assert_select "ol li", minimum: 4
+    assert_select "[data-controller=clipboard]"
+    assert_select "[data-clipboard-target=source]", text: /curl -fsSL .+\/collect \| bash/
+    assert_select "button[type=button][data-action='clipboard#copy']", text: "Copy"
   end
 
   test "unclaimed reports do not appear in lookup" do

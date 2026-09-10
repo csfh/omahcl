@@ -25,5 +25,7 @@
   </ul>
 <% else %>
   <p class="mt-8 text-muted">None yet. Run the collector on Omarchy, then open the claim link while signed in.</p>
-  <pre class="mt-3 overflow-x-auto rounded-md bg-panel p-4 text-sm"><code><%= collect_command %></code></pre>
+  <div class="mt-3">
+    <%= render "application/collect_command" %>
+  </div>
 <% end %>

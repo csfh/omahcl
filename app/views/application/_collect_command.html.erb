@@ -1,0 +1,7 @@
+<div class="flex items-start gap-2" data-controller="clipboard">
+  <pre class="min-w-0 flex-1 overflow-x-auto rounded-md bg-panel p-4 text-sm text-paper"><code data-clipboard-target="source"><%= collect_command %></code></pre>
+  <button type="button" class="<%= ghost_button_class %> shrink-0 cursor-pointer" data-action="clipboard#copy" data-clipboard-target="button">
+    Copy
+  </button>
+  <p class="sr-only" aria-live="polite" data-clipboard-target="status"></p>
+</div>
