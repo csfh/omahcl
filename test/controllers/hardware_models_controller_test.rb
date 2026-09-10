@@ -5,11 +5,25 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     get root_path
     assert_response :success
     assert_select "h1", /Omarchy/
-    assert_select "h2", "How to use this site"
+    assert_select "h2", "Add your machine"
     assert_select "ol li", minimum: 4
     assert_select "[data-controller=clipboard]"
     assert_select "[data-clipboard-target=source]", text: /curl -fsSL .+\/collect \| bash/
     assert_select "button[type=button][data-action='clipboard#copy']", text: "Copy"
+  end
+
+  test "home lists machines people have run" do
+    report, token = ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+    report.claim!(user: users(:one), token: token)
+
+    get root_path
+
+    assert_response :success
+    assert_select "h2", "Machines people run"
+    assert_select "a", text: /ThinkPad X220/
+    assert_select "h2", "Add your machine"
+    assert_select "nav a", text: "Machines"
+    assert_select "nav a", text: "Classifieds"
   end
 
   test "unclaimed reports do not appear in lookup" do
@@ -32,9 +46,10 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     get hardware_models_path, params: { q: "X220" }
 
     assert_response :success
+    assert_select "h1", "Machines that run Omarchy"
     assert_select "a", text: /ThinkPad X220/
     assert_select "a", text: /ThinkPad X230/, count: 0
-    assert_select "span", /Needs more evidence/
+    assert_select "span", /Only a few people so far/
   end
 
   test "suggestions return claimed models as typeahead html" do
@@ -67,7 +82,7 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", /ThinkPad X220/
-    assert_match(/1 person has claimed/, response.body)
-    assert_match(/Needs more evidence/, response.body)
+    assert_match(/1 person has run Omarchy on this machine/, response.body)
+    assert_match(/Only a few people so far/, response.body)
   end
 end

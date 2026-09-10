@@ -2,36 +2,14 @@
 
 <section class="max-w-2xl">
   <h1 class="text-4xl font-semibold tracking-tight">Does this machine run Omarchy?</h1>
-  <p class="mt-4 text-muted">People already on Omarchy submit hardware facts, then claim that report with an account. Lookup counts those claimed reports, not anonymous posts. After a claim you can list from the report.</p>
+  <p class="mt-4 text-muted">Search a vendor or model. These are machines people have run Omarchy on.</p>
 </section>
 
 <%= render "hardware_models/lookup_form", query: @query, submit_label: "Look up" %>
 
-<section class="mt-12 max-w-2xl">
-  <h2 class="text-lg font-medium">How to use this site</h2>
-  <ol class="mt-4 list-decimal space-y-4 pl-5 text-muted">
-    <li>
-      <p>Look up a vendor or model in the field above. Suggestions appear as you type. Open a result to see who has claimed that hardware after running Omarchy.</p>
-    </li>
-    <li>
-      <p>If you already run Omarchy, submit a hardware report from that machine:</p>
-      <div class="mt-2">
-        <%= render "application/collect_command" %>
-      </div>
-      <p class="mt-2 text-sm">The script prints a claim link. An unclaimed report stays off the public lookup.</p>
-    </li>
-    <li>
-      <p><%= link_to "Sign in", new_session_path, data: { turbo: false } %> (or <%= link_to "create an account", new_registration_path, data: { turbo: false } %>) and open the claim link. That attaches the report to you.</p>
-    </li>
-    <li>
-      <p>From <%= link_to "My reports", me_reports_path %>, list a claimed report for sale or donation. Market does not take payment or ship anything. Buyers contact the owner by email.</p>
-    </li>
-  </ol>
-</section>
-
 <% if @models.any? %>
   <section class="mt-12">
-    <h2 class="text-lg font-medium">Claimed models</h2>
+    <h2 class="text-lg font-medium">Machines people run</h2>
     <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
       <% @models.each do |model| %>
         <li class="flex items-center justify-between gap-4 py-3">
@@ -40,13 +18,13 @@
         </li>
       <% end %>
     </ul>
-    <p class="mt-4"><%= link_to "All models", hardware_models_path %></p>
+    <p class="mt-4"><%= link_to "See every machine", hardware_models_path %></p>
   </section>
 <% end %>
 
 <% if @listings.any? %>
   <section class="mt-12">
-    <h2 class="text-lg font-medium">Latest listings</h2>
+    <h2 class="text-lg font-medium">For sale or donation</h2>
     <ul class="mt-4 grid gap-4 sm:grid-cols-2">
       <% @listings.each do |listing| %>
         <%= render "listings/card", listing: listing %>
@@ -54,3 +32,25 @@
     </ul>
   </section>
 <% end %>
+
+<section class="mt-12 max-w-2xl">
+  <h2 class="text-lg font-medium">Add your machine</h2>
+  <ol class="mt-4 list-decimal space-y-4 pl-5 text-muted">
+    <li>
+      <p>Type a vendor or model above. Open a result to see who has run Omarchy on that hardware.</p>
+    </li>
+    <li>
+      <p>If you already run Omarchy, paste this into a terminal on that machine:</p>
+      <div class="mt-2">
+        <%= render "application/collect_command" %>
+      </div>
+      <p class="mt-2 text-sm">The script prints a link. Until you open it while signed in, that hardware stays private.</p>
+    </li>
+    <li>
+      <p><%= link_to "Sign in", new_session_path, data: { turbo: false } %> (or <%= link_to "create an account", new_registration_path, data: { turbo: false } %>) and open the link. That attaches the machine to you.</p>
+    </li>
+    <li>
+      <p>From <%= link_to "My machines", me_reports_path %>, you can list it for sale or donation. Buyers email the owner. We don't take payment or ship anything.</p>
+    </li>
+  </ol>
+</section>

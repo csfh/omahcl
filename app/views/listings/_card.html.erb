@@ -1,5 +1,5 @@
 <li class="rounded-md border border-white/10 bg-panel p-4">
-  <p class="text-xs uppercase tracking-wide text-muted"><%= listing.kind %> <% if listing.sale? %>· <%= listing.condition %><% end %></p>
+  <p class="text-xs uppercase tracking-wide text-muted"><%= listing_kind_label(listing) %><% if listing.sale? %> · <%= listing_condition_label(listing) %><% end %></p>
   <p class="mt-1 text-lg"><%= link_to listing.title, listing_path(listing), class: "text-paper no-underline hover:text-accent" %></p>
   <p class="mt-1 text-sm text-muted"><%= listing.report.display_name %></p>
   <% if listing.sale? %>

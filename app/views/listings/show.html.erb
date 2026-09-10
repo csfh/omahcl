@@ -6,8 +6,8 @@
   <p class="mt-3 text-xl"><%= @listing.price %></p>
 <% end %>
 <p class="mt-2 text-muted">
-  <%= @listing.kind %>
-  <% if @listing.sale? %> · <%= @listing.condition %><% end %>
+  <%= listing_kind_label(@listing) %>
+  <% if @listing.sale? %> · <%= listing_condition_label(@listing) %><% end %>
   <% if @listing.donation? %> · <%= @listing.donation_destination.name %><% end %>
 </p>
 <p class="mt-1 text-muted"><%= @listing.report.display_name %> · <%= [@listing.city, @listing.country_code].compact.join(", ") %></p>
@@ -31,7 +31,7 @@
 </p>
 
 <p class="mt-6 text-sm">
-  <%= link_to "Compatibility for this model", hardware_model_path(@listing.report.model_slug) %>
+  <%= link_to "Omarchy on this machine", hardware_model_path(@listing.report.model_slug) %>
 </p>
 
 <% if current_user&.admin? && @listing.published? %>

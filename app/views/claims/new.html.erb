@@ -1,9 +1,9 @@
-<% page_title "Claim report" %>
+<% page_title "Add this machine" %>
 
-<h1 class="text-3xl font-semibold">Claim this report</h1>
+<h1 class="text-3xl font-semibold">Add this machine</h1>
 <p class="mt-3 text-muted">
-  <%= @report.display_name %> submitted Omarchy <%= @report.omarchy_version %>.
-  Claiming it attaches the snapshot to <%= current_user.email_address %> so you can list from it.
+  <%= @report.display_name %> ran Omarchy <%= @report.omarchy_version %>.
+  Attach it to <%= current_user.email_address %> and you can list it.
 </p>
 
-<%= button_to "Claim this report", claim_report_path(@report.public_id, token: @token), class: button_class + " mt-6" %>
+<%= button_to "Add it to my account", claim_report_path(@report.public_id, token: @token), class: button_class + " mt-6" %>

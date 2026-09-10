@@ -11,7 +11,7 @@ class ClaimsController < ApplicationController
     @report = Report.find_by!(public_id: params[:public_id])
     @token = params[:token].to_s
     @report.claim!(user: current_user, token: @token)
-    redirect_to me_reports_path, notice: "This report is now claimed."
+    redirect_to me_reports_path, notice: "This machine is on your account."
   rescue Report::ClaimRejected => error
     redirect_to me_reports_path, alert: error.message
   rescue ActiveRecord::RecordInvalid

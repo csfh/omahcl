@@ -1,6 +1,6 @@
-<% page_title "List from report" %>
+<% page_title "List this machine" %>
 
 <h1 class="text-3xl font-semibold">List <%= @report.display_name %></h1>
-<p class="mt-2 text-muted">Sale listings need a price and condition. Donation listings need a destination.</p>
+<p class="mt-2 text-muted">A sale needs a price and whether it's new or used. A donation needs a destination.</p>
 
 <%= render "form", listing: @listing, url: me_report_listing_path(@report) %>

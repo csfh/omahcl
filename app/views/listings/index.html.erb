@@ -1,7 +1,7 @@
-<% page_title "Listings" %>
+<% page_title "Classifieds" %>
 
 <h1 class="text-3xl font-semibold">Machines for sale or donation</h1>
-<p class="mt-2 text-muted">Classifieds only. Market does not take payment or ship anything.</p>
+<p class="mt-2 text-muted">People sell or give machines here. We don't take payment or ship anything.</p>
 
 <nav class="mt-6 flex gap-4 text-sm">
   <% { "All" => nil, "Sale" => "sale", "Donation" => "donation" }.each do |label, kind| %>
@@ -20,12 +20,12 @@
   </ul>
 <% elsif @kind %>
   <p class="mt-8 text-muted">
-    No <%= @kind == "sale" ? "listings for sale" : "donation listings" %> yet.
+    No <%= @kind == "sale" ? "machines for sale" : "machines for donation" %> yet.
     <%= link_to "See all listings", listings_path %>
   </p>
 <% else %>
   <p class="mt-8 text-muted">
-    No listings yet.
+    Nobody has listed a machine yet.
     <%= link_to "How to list a machine", root_path %>
   </p>
 <% end %>
