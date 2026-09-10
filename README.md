@@ -56,7 +56,7 @@ cat config/master.key
 
 Save, then deploy. App Platform injects encrypted vars at runtime; the Dockerfile never contains the key.
 
-If a managed Postgres is attached, App Platform also sets `DATABASE_URL`. Rails uses that for the primary database.
+If a managed Postgres is attached, App Platform also sets `DATABASE_URL`. Production primary, cache, queue, and cable connections all use that URL.
 
 HTTP port for this image is **80** (Thruster).
 
