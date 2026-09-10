@@ -16,28 +16,35 @@
   --color-line: rgb(255 255 255 / 0.12);
 }
 
-html {
-  color-scheme: dark;
+/* Element defaults live in @layer base so utility classes on the element win.
+   Unlayered rules outbid every layer, which made `a` beat `text-ink`/`no-underline`
+   on link-styled buttons. */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-ink font-sans text-paper antialiased;
+  }
+
+  select {
+    color-scheme: dark;
+  }
+
+  option,
+  optgroup {
+    background-color: var(--color-panel);
+    color: var(--color-paper);
+  }
+
+  a {
+    @apply text-accent underline-offset-2 hover:underline;
+  }
 }
 
-body {
-  @apply bg-ink font-sans text-paper antialiased;
-}
-
-select {
-  color-scheme: dark;
-}
-
-option,
-optgroup {
-  background-color: var(--color-panel);
-  color: var(--color-paper);
-}
-
-a {
-  @apply text-accent underline-offset-2 hover:underline;
-}
-
-.prose-market p {
-  @apply mb-3 text-muted;
+@layer components {
+  .prose-market p {
+    @apply mb-3 text-muted;
+  }
 }

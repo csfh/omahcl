@@ -11,8 +11,11 @@ module ApplicationHelper
     number_to_human_size(bytes.to_i)
   end
 
-  def field_class
-    "mt-2 block w-full rounded-md border border-white/15 bg-white/5 px-3 py-2 text-paper placeholder:text-paper/40 focus:border-accent focus:outline-none"
+  # spacing: false for fields laid out in a flex row, where the stacked-form
+  # top margin would push the field below its sibling button.
+  def field_class(spacing: true)
+    base = "block w-full rounded-md border border-white/15 bg-white/5 px-3 py-2 text-paper placeholder:text-paper/40 focus:border-accent focus:outline-2 focus:outline-offset-2 focus:outline-accent"
+    spacing ? "mt-2 #{base}" : base
   end
 
   def button_class
