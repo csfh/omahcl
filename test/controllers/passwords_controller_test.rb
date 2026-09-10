@@ -5,7 +5,10 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "new" do
     get new_password_path
+
     assert_response :success
+    assert_select "form#forgot-password[data-turbo=false]"
+    assert_select "input#email[type=email][autocomplete=username][required]"
   end
 
   test "create" do
@@ -28,7 +31,12 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "edit" do
     get edit_password_path(@user.password_reset_token)
+
     assert_response :success
+    assert_select "form#reset-password[data-turbo=false]"
+    assert_select "input#username[autocomplete=username][value=?]", @user.email_address
+    assert_select "input#new-password[type=password][autocomplete=new-password][required]"
+    assert_select "input#confirm-password[type=password][autocomplete=new-password][required]"
   end
 
   test "edit with invalid password reset token" do

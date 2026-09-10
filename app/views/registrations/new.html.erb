@@ -3,7 +3,7 @@
 <h1 class="text-3xl font-semibold">Create an account</h1>
 <p class="mt-2 text-muted">You need an account to claim a report and list from it.</p>
 
-<%= form_with model: @user, url: registration_path, class: "mt-6 max-w-md space-y-5" do |form| %>
+<%= form_with model: @user, url: registration_path, id: "signup", data: { turbo: false }, class: "mt-6 max-w-md space-y-5" do |form| %>
   <% if @user.errors.any? %>
     <div class="rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-200" role="alert">
       <ul class="list-disc pl-5">
@@ -15,16 +15,16 @@
   <% end %>
 
   <div>
-    <%= form.label :email_address, "Email", class: "text-sm text-muted" %>
-    <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", class: field_class %>
+    <%= form.label :email_address, "Email", for: "email", class: "text-sm text-muted" %>
+    <%= form.email_field :email_address, id: "email", required: true, autofocus: true, autocomplete: "email", class: field_class %>
   </div>
   <div>
-    <%= form.label :password, class: "text-sm text-muted" %>
-    <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72, class: field_class %>
+    <%= form.label :password, for: "new-password", class: "text-sm text-muted" %>
+    <%= form.password_field :password, id: "new-password", required: true, autocomplete: "new-password", maxlength: 72, passwordrules: "maxlength: 72;", class: field_class %>
   </div>
   <div>
-    <%= form.label :password_confirmation, "Confirm password", class: "text-sm text-muted" %>
-    <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72, class: field_class %>
+    <%= form.label :password_confirmation, "Confirm password", for: "confirm-password", class: "text-sm text-muted" %>
+    <%= form.password_field :password_confirmation, id: "confirm-password", required: true, autocomplete: "new-password", maxlength: 72, passwordrules: "maxlength: 72;", class: field_class %>
   </div>
   <%= form.submit "Sign up", class: button_class %>
 <% end %>

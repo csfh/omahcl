@@ -5,7 +5,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
   test "new" do
     get new_session_path
+
     assert_response :success
+    assert_select "form#signin[data-turbo=false]"
+    assert_select "input#email[type=email][autocomplete=username][required]"
+    assert_select "input#current-password[type=password][autocomplete=current-password][required]"
   end
 
   test "create with valid credentials" do
