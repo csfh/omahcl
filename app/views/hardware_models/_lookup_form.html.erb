@@ -17,7 +17,7 @@
             role: "combobox",
             aria: { autocomplete: "list", expanded: "false", controls: "lookup-suggestions" },
             data: { lookup_target: "input", action: "input->lookup#query keydown->lookup#keydown" },
-            class: field_class %>
+            class: field_class(spacing: false) %>
       <%= form.submit submit_label, class: button_class %>
     </div>
     <ul

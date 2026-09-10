@@ -4,9 +4,12 @@
 <p class="mt-2 text-muted">Classifieds only. Market does not take payment or ship anything.</p>
 
 <nav class="mt-6 flex gap-4 text-sm">
-  <%= link_to "All", listings_path, class: params[:kind].blank? ? "text-accent" : "text-paper" %>
-  <%= link_to "Sale", listings_path(kind: "sale"), class: params[:kind] == "sale" ? "text-accent" : "text-paper" %>
-  <%= link_to "Donation", listings_path(kind: "donation"), class: params[:kind] == "donation" ? "text-accent" : "text-paper" %>
+  <% { "All" => nil, "Sale" => "sale", "Donation" => "donation" }.each do |label, kind| %>
+    <% active = @kind == kind %>
+    <%= link_to label, listings_path(kind: kind),
+          class: active ? "font-medium text-accent" : "text-paper",
+          aria: { current: ("page" if active) } %>
+  <% end %>
 </nav>
 
 <% if @listings.any? %>
@@ -15,6 +18,14 @@
       <%= render "listings/card", listing: listing %>
     <% end %>
   </ul>
+<% elsif @kind %>
+  <p class="mt-8 text-muted">
+    No <%= @kind == "sale" ? "listings for sale" : "donation listings" %> yet.
+    <%= link_to "See all listings", listings_path %>
+  </p>
 <% else %>
-  <p class="mt-8 text-muted">No listings yet.</p>
+  <p class="mt-8 text-muted">
+    No listings yet.
+    <%= link_to "How to list a machine", root_path %>
+  </p>
 <% end %>

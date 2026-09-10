@@ -5,7 +5,7 @@ class MoneyDisplay
   end
 
   def to_s
-    amount = format("%.2f", @cents / 100.0)
+    amount = ActiveSupport::NumberHelper.number_to_delimited(format("%.2f", @cents / 100.0))
     "#{amount} #{@currency}"
   end
 end
