@@ -7,7 +7,7 @@ gem "propshaft"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 # Rails 8.1 still calls JSON.parse(json, options). json 3 only accepts keywords.
-gem "json", "~> 2.15"
+gem "json", "~> 3.0"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
