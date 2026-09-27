@@ -22,7 +22,7 @@ Rails 8.1 app for Omarchy hardware compatibility and classifieds.
 - Donation destinations are admin-curated; seed includes Omacom Foundation.
 - Do not vendor atmos `hw-inventory.py`.
 - Zeitwerk ignores `lib/collectors`.
-- Keep `json` on 2.x until Rails calls `JSON.parse` with keywords. json 3 breaks cookies, flash, jsonb, and signed tokens.
+- json 3.x is allowed with Rails 8.1.4+, which splats options into `JSON.parse`. Do not drop below Rails 8.1.4 while json is on 3.x.
 - Schema format is SQL (`db/structure.sql`) because of `pg_trgm` GIN indexes. Dump with a Postgres 16 client.
 - Cache, queue, and cable share `DATABASE_URL`. Keep their tables in `db/cache_migrate`, `db/queue_migrate`, and `db/cable_migrate` so `db:prepare` creates them on an already-populated Postgres.
 - Production mail uses Cloudflare Email Sending over SMTP (`smtp.mx.cloudflare.net:465`). Password is `CLOUDFLARE_EMAIL_API_TOKEN`. From is `noreply@omarchy.csfh.dev`. Dev stays on Mailpit.
