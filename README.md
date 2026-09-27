@@ -32,7 +32,7 @@ Compose publishes Postgres on a high loopback port and Mailpit SMTP/UI. The app 
 
 If Docker is unavailable, `mise.toml` pins Postgres 16. Point `DATABASE_HOST` / `DATABASE_PORT` at that server (or any Postgres 16+ with `pg_trgm`) and dump `db/structure.sql` with a matching `pg_dump`.
 
-The Gemfile pins `json` to 2.x because Rails 8.1 still calls `JSON.parse(json, options)` and json 3 only accepts keywords.
+The Gemfile requires Rails 8.1.4+ so `ActiveSupport::JSON.decode` works with json 3, which only accepts keyword options for `JSON.parse`.
 
 ## Production
 

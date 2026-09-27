@@ -1,13 +1,14 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+# 8.1.4+ splats options into JSON.parse; required for json 3.x.
+gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
-# Rails 8.1 still calls JSON.parse(json, options). json 3 only accepts keywords.
-gem "json", "~> 2.15"
+# json 3 accepts parse options as keywords only. Stay on Rails 8.1.4+.
+gem "json", "~> 3.0"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
