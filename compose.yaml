@@ -1,4 +1,4 @@
-name: market
+name: omarify
 
 services:
   postgres:
@@ -7,13 +7,13 @@ services:
     ports:
       - "127.0.0.1:55446:5432"
     environment:
-      POSTGRES_USER: market
+      POSTGRES_USER: omarify
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: market_development
+      POSTGRES_DB: omarify_development
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U market -d market_development"]
+      test: ["CMD-SHELL", "pg_isready -U omarify -d omarify_development"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,8 +22,8 @@ services:
 
 networks:
   default:
-    name: market
+    name: omarify
 
 volumes:
   postgres_data:
-    name: market_postgres
+    name: omarify_postgres

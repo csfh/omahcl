@@ -44,7 +44,7 @@
 }
 
 @layer components {
-  .prose-market p {
+  .prose-omarify p {
     @apply mb-3 text-muted;
   }
 }

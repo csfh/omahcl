@@ -1,6 +1,6 @@
 module ApplicationHelper
   def page_title(title)
-    content_for(:title, "#{title} · Market")
+    content_for(:title, "#{title} · Omarify")
   end
 
   def collect_command
