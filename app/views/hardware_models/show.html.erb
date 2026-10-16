@@ -3,7 +3,7 @@
 <p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path %></p>
 <h1 class="mt-2 text-3xl font-semibold"><%= @sample.display_name %></h1>
 <p class="mt-2 flex flex-wrap items-center gap-3 text-muted">
-  <%= machines_status(@machines_count) %>
+  <%= machines_status(@machines_count, @networks_count) %>
   <span><%= machines_ran_omarchy(@machines_count) %></span>
 </p>
 

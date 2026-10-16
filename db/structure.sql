@@ -102,7 +102,8 @@ CREATE TABLE public.reports (
     submitted_ip_digest character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    instance_digest character varying NOT NULL
+    instance_digest character varying NOT NULL,
+    hidden_at timestamp(6) without time zone
 );
 
 
@@ -347,6 +348,7 @@ ALTER TABLE ONLY public.sessions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261016130000'),
 ('20261016120300'),
 ('20261016120200'),
 ('20261016120100'),
