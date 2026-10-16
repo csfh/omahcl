@@ -2,7 +2,19 @@
 
 <p class="text-sm text-muted"><%= link_to "All reports", admin_reports_path %></p>
 <h1 class="mt-2 text-3xl font-semibold"><%= @report.display_name %></h1>
-<p class="mt-2 text-muted">Last reported <%= @report.updated_at.to_fs(:long) %></p>
+<p class="mt-2 text-muted">
+  Last reported <%= @report.updated_at.to_fs(:long) %>
+  ·
+  <%= @report.hidden? ? "Hidden from public pages" : "Public" %>
+</p>
+
+<div class="mt-6">
+  <% if @report.hidden? %>
+    <%= button_to "Make public again", unhide_admin_report_path(@report.public_id), class: ghost_button_class + " cursor-pointer" %>
+  <% else %>
+    <%= button_to "Hide from public pages", hide_admin_report_path(@report.public_id), class: ghost_button_class + " cursor-pointer", form: { data: { turbo_confirm: "Hide this report? It stays hidden if the machine reports again." } } %>
+  <% end %>
+</div>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
   <div class="rounded-md bg-panel p-4">

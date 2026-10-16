@@ -1,5 +1,6 @@
 class Report < ApplicationRecord
   ESTABLISHED_MACHINES = 3
+  ESTABLISHED_NETWORKS = 2
 
   before_validation :assign_public_id, on: :create
   before_validation :assign_model_identity
@@ -8,6 +9,8 @@ class Report < ApplicationRecord
   validates :instance_digest, uniqueness: true
   validates :memory_bytes, :cpu_cores, numericality: { greater_than_or_equal_to: 0 }
 
+  scope :visible, -> { where(hidden_at: nil) }
+  scope :hidden, -> { where.not(hidden_at: nil) }
   scope :created_since, ->(time) { where(created_at: time..) }
   scope :updated_since, ->(time) { where(updated_at: time..) }
   scope :for_query, ->(query) {
@@ -19,12 +22,13 @@ class Report < ApplicationRecord
   }
 
   def self.grouped_models(query = nil)
-    for_query(query)
+    visible.for_query(query)
       .select(
         :model_key, :model_slug,
         "MIN(vendor) AS vendor",
         "MIN(product) AS product",
         "COUNT(DISTINCT instance_digest) AS machines_count",
+        "COUNT(DISTINCT submitted_ip_digest) AS networks_count",
         "MIN(memory_bytes) AS min_memory_bytes",
         "MAX(memory_bytes) AS max_memory_bytes"
       )
@@ -32,8 +36,10 @@ class Report < ApplicationRecord
       .order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, MIN(vendor) ASC, MIN(product) ASC"))
   end
 
-  def self.established?(machines)
-    machines.to_i >= ESTABLISHED_MACHINES
+  # Machine ids come from the client, so one person can mint many. Requiring
+  # reports from more than one network keeps a single source from vouching alone.
+  def self.established?(machines, networks)
+    machines.to_i >= ESTABLISHED_MACHINES && networks.to_i >= ESTABLISHED_NETWORKS
   end
 
   def self.ingest(raw, ip:)
@@ -53,6 +59,10 @@ class Report < ApplicationRecord
 
   def self.digest_ip(ip)
     ::Digest::SHA256.hexdigest("#{Rails.application.secret_key_base}:#{ip}")
+  end
+
+  def hidden?
+    hidden_at.present?
   end
 
   def display_name

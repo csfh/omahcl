@@ -26,8 +26,8 @@ module ApplicationHelper
     "#{pluralize(count, "machine")} reported running Omarchy."
   end
 
-  def machines_status(machines)
-    render "application/machines_status", machines: machines.to_i
+  def machines_status(machines, networks)
+    render "application/machines_status", machines: machines.to_i, networks: networks.to_i
   end
 
   def inline_icon(paths, title:)

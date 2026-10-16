@@ -1,4 +1,4 @@
-<% established = Report.established?(machines) %>
+<% established = Report.established?(machines, networks) %>
 <span class="inline-flex items-center gap-3 text-sm text-muted">
   <span class="inline-flex items-center gap-1" title="<%= pluralize(machines, "machine") %>">
     <%= inline_icon(

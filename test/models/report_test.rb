@@ -57,13 +57,47 @@ class ReportTest < ActiveSupport::TestCase
     assert_match(/challenge/, error.message)
   end
 
-  test "three distinct machines mark a model established" do
+  test "three machines from several networks mark a model established" do
     3.times do |index|
-      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("est-#{index}")))
+      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("est-#{index}")), ip: "203.0.113.#{index + 10}")
     end
 
     grouped = Report.grouped_models.first
     assert_equal 3, grouped.machines_count
-    assert Report.established?(grouped.machines_count)
+    assert_equal 3, grouped.networks_count
+    assert Report.established?(grouped.machines_count, grouped.networks_count)
+  end
+
+  test "many machines from one network are not established" do
+    3.times do |index|
+      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("one-net-#{index}")), ip: "203.0.113.50")
+    end
+
+    grouped = Report.grouped_models.first
+    assert_equal 3, grouped.machines_count
+    assert_equal 1, grouped.networks_count
+    assert_not Report.established?(grouped.machines_count, grouped.networks_count)
+  end
+
+  test "two machines are never established" do
+    assert_not Report.established?(2, 2)
+  end
+
+  test "hidden reports are left out of grouping" do
+    report = ingest_report!
+    report.update!(hidden_at: Time.current)
+
+    assert_empty Report.grouped_models
+    assert report.hidden?
+  end
+
+  test "a hidden machine stays hidden when it reports again" do
+    digest = "9" * 64
+    report = ingest_report!(omarchy_payload(instance_digest: digest))
+    report.update!(hidden_at: Time.current)
+
+    ingest_report!(omarchy_payload(instance_digest: digest))
+
+    assert report.reload.hidden?
   end
 end

@@ -83,4 +83,26 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/1 machine reported running Omarchy/, response.body)
     assert_match(/Only a few machines so far/, response.body)
   end
+
+  test "hidden reports are not public" do
+    report = ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+    report.update!(hidden_at: Time.current)
+
+    get hardware_models_path, params: { q: "X220" }
+    assert_select "a", text: /ThinkPad X220/, count: 0
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+    assert_response :not_found
+  end
+
+  test "show says established only with machines on several networks" do
+    3.times do |index|
+      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("show-#{index}")), ip: "203.0.113.#{index + 20}")
+    end
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_match(/3 machines reported running Omarchy/, response.body)
+    assert_select "span", text: "Verified"
+  end
 end

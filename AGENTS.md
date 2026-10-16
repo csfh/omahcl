@@ -17,7 +17,7 @@ Rails 8.1 app for Omarchy hardware compatibility and classifieds.
 - This is a public hardware compatibility database for Omarchy. There are no accounts, listings, claims, payments, or email. Do not add them back.
 - Collector lives in `lib/collectors/omarchy.sh` and is served at `GET /collect` (`curl … | bash`). It fetches `GET /challenges` then `POST /reports`. Do not call Omarchy binaries.
 - Ingest is allowlist-only JSON with `nonce` and `instance_digest`. Reject serial/MAC/hostname fields in `ReportSanitizer`.
-- Every accepted report is public. Public lookup counts distinct `instance_digest` values per model, so reposting one machine never raises a count.
+- Every accepted report is public unless an admin hides it (`hidden_at`; a hidden machine stays hidden when it reports again). Public lookup counts distinct `instance_digest` values per model, so reposting one machine never raises a count. A model is "Verified" only with 3+ machines from 2+ distinct `submitted_ip_digest` values, because the client computes `instance_digest`.
 - Users exist only for admins. Only admins can sign in. There is no signup and no password reset mail; create or reset an admin with `bin/rails admin:create EMAIL=… [PASSWORD=…]`.
 - Do not vendor atmos `hw-inventory.py`.
 - Zeitwerk ignores `lib/collectors`.

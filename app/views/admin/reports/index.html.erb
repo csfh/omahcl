@@ -7,6 +7,10 @@
     <%= form.label :q, "Machine", class: "text-sm text-muted" %>
     <%= form.search_field :q, value: @query, class: field_class %>
   </div>
+  <div>
+    <%= form.label :hidden, "Visibility", class: "text-sm text-muted" %>
+    <%= form.select :hidden, [["All", ""], ["Public", "no"], ["Hidden", "yes"]], { selected: @hidden_filter }, class: field_class %>
+  </div>
   <%= form.submit "Filter", class: button_class %>
 <% end %>
 
@@ -17,7 +21,7 @@
         <p><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
         <p class="text-sm text-muted"><%= memory_label(report.memory_bytes) %> · <%= report.cpu_model %></p>
       </div>
-      <p class="text-sm text-muted"><%= report.updated_at.to_fs(:long) %></p>
+      <p class="text-sm text-muted"><%= report.hidden? ? "Hidden · " : "" %><%= report.updated_at.to_fs(:long) %></p>
     </li>
   <% end %>
 </ul>
