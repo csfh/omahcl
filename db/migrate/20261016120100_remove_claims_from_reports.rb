@@ -4,9 +4,6 @@ class RemoveClaimsFromReports < ActiveRecord::Migration[8.1]
     # has claims, so they are deleted rather than published.
     execute "DELETE FROM reports WHERE user_id IS NULL"
 
-    # Only admins can sign in now. End any sessions that non-admins still hold.
-    execute "DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE NOT admin)"
-
     remove_index :reports, :claim_token_digest
     remove_reference :reports, :user, foreign_key: true, index: true
     remove_column :reports, :claim_token_digest
