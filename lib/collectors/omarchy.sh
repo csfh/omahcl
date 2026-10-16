@@ -7,8 +7,16 @@
 
 set -euo pipefail
 
-MARKET_URL=${MARKET_URL:-__MARKET_URL__}
-SYS=${MARKET_SYS_ROOT:-/}
+# OMARIFY_* names win. The older MARKET_* names still work.
+OMARIFY_URL=${OMARIFY_URL:-${MARKET_URL:-__OMARIFY_URL__}}
+OMARIFY_SYS_ROOT=${OMARIFY_SYS_ROOT:-${MARKET_SYS_ROOT:-}}
+OMARIFY_ARCH=${OMARIFY_ARCH:-${MARKET_ARCH:-}}
+OMARIFY_KERNEL=${OMARIFY_KERNEL:-${MARKET_KERNEL:-}}
+OMARIFY_DRY_RUN=${OMARIFY_DRY_RUN:-${MARKET_DRY_RUN:-}}
+OMARIFY_SUBMIT=${OMARIFY_SUBMIT:-${MARKET_SUBMIT:-}}
+OMARIFY_SKIP_CMDS=${OMARIFY_SKIP_CMDS:-${MARKET_SKIP_CMDS:-}}
+
+SYS=${OMARIFY_SYS_ROOT:-/}
 SYS=${SYS%/}
 [[ -n $SYS ]] || SYS=/
 
@@ -104,7 +112,7 @@ cpu_arch() {
   if [[ $SYS == / ]]; then
     uname -m
   else
-    printf '%s' "${MARKET_ARCH:-unknown}"
+    printf '%s' "${OMARIFY_ARCH:-unknown}"
   fi
 }
 
@@ -127,6 +135,8 @@ sha256_hex() {
 
 instance_digest() {
   local vendor=$1 product=$2 cpu_model=$3
+  # These domain strings predate the name Omarify. Never rename them: that would
+  # give every machine a new instance_digest and split its history.
   local domain=${4:-omarchy-market-instance-v1}
   local machine_id product_serial board_serial material
   machine_id=$(read_strip "$(root etc/machine-id)")
@@ -143,7 +153,7 @@ host_kernel() {
   if [[ $SYS == / ]]; then
     uname -s
   else
-    printf '%s' "${MARKET_KERNEL:-Linux}"
+    printf '%s' "${OMARIFY_KERNEL:-Linux}"
   fi
 }
 
@@ -189,7 +199,7 @@ secure_boot_state() {
 }
 
 gpus_json() {
-  if [[ -n ${MARKET_SKIP_CMDS:-} ]] || ! command -v lspci >/dev/null 2>&1; then
+  if [[ -n ${OMARIFY_SKIP_CMDS:-} ]] || ! command -v lspci >/dev/null 2>&1; then
     printf '[]'
     return
   fi
@@ -378,12 +388,12 @@ print_verdict() {
 }
 
 confirm_submit() {
-  case ${MARKET_SUBMIT:-} in
+  case ${OMARIFY_SUBMIT:-} in
     yes | y | 1) return 0 ;;
     no | n | 0) return 1 ;;
   esac
   if ! ( : </dev/tty ) 2>/dev/null; then
-    echo "Run this in a terminal to choose whether to share it, or set MARKET_SUBMIT=yes." >&2
+    echo "Run this in a terminal to choose whether to share it, or set OMARIFY_SUBMIT=yes." >&2
     return 1
   fi
   local answer=
@@ -401,14 +411,14 @@ confirm_submit() {
 
 fetch_challenge() {
   local body
-  body=$(curl -fsS -A "omarchy-market-collect/2" --max-time 30 "${MARKET_URL%/}/challenges") || {
-    echo "Could not reach Market at $MARKET_URL" >&2
+  body=$(curl -fsS -A "omarify-collect/2" --max-time 30 "${OMARIFY_URL%/}/challenges") || {
+    echo "Could not reach Omarify at $OMARIFY_URL" >&2
     exit 1
   }
   local nonce
   nonce=$(printf '%s' "$body" | sed -n 's/.*"nonce"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)
   if [[ -z $nonce ]]; then
-    echo "Market did not return a challenge nonce." >&2
+    echo "Omarify did not return a challenge nonce." >&2
     exit 1
   fi
   printf '%s' "$nonce"
@@ -417,11 +427,11 @@ fetch_challenge() {
 submit() {
   local body=$1
   local response
-  if ! response=$(curl -fsS -A "omarchy-market-collect/2" --max-time 30 \
+  if ! response=$(curl -fsS -A "omarify-collect/2" --max-time 30 \
     -H "Content-Type: application/json" \
     -d "$body" \
-    "${MARKET_URL%/}/reports"); then
-    echo "Market rejected the report." >&2
+    "${OMARIFY_URL%/}/reports"); then
+    echo "Omarify rejected the report." >&2
     exit 1
   fi
   printf '%s' "$response"
@@ -445,7 +455,7 @@ refuse_identifiers() {
 # Prints the payload for a dry run and returns 0, or returns 1 for a real send.
 # Callers use it as a condition, so it must never be the place that fails.
 dry_run_print() {
-  [[ -n ${MARKET_DRY_RUN:-} ]] || return 1
+  [[ -n ${OMARIFY_DRY_RUN:-} ]] || return 1
   printf '%s\n' "$1"
 }
 
@@ -533,8 +543,8 @@ run_macos() {
 }
 
 main() {
-  if [[ $MARKET_URL == __* ]]; then
-    echo "Set MARKET_URL, or download this script from Market so the URL is filled in." >&2
+  if [[ $OMARIFY_URL == __* ]]; then
+    echo "Set OMARIFY_URL, or download this script from Omarify so the URL is filled in." >&2
     exit 1
   fi
 
