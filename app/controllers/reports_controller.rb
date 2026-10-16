@@ -7,14 +7,12 @@ class ReportsController < ApplicationController
     return head :payload_too_large if request.content_length.to_i > 64.kilobytes
 
     raw = parse_json_body
-    report, token = Report.ingest(raw, ip: request.remote_ip)
+    report = Report.ingest(raw, ip: request.remote_ip)
 
-    body = {
+    render json: {
       public_id: report.public_id,
       model_url: hardware_model_url(report.model_slug)
-    }
-    body[:claim_url] = claim_report_url(report.public_id, token: token) if token
-    render json: body, status: (report.previously_new_record? ? :created : :ok)
+    }, status: (report.previously_new_record? ? :created : :ok)
   rescue JSON::ParserError
     render json: { error: "invalid JSON" }, status: :bad_request
   rescue ReportSanitizer::Rejected => error

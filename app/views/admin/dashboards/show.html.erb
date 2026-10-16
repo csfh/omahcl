@@ -1,7 +1,7 @@
 <% page_title "Admin" %>
 
 <h1 class="text-3xl font-semibold">Admin</h1>
-<p class="mt-2 text-muted">Collector submissions, claims, listings, and accounts. Week means the last seven days.</p>
+<p class="mt-2 text-muted">Collector submissions, challenges, and admin accounts. Week means the last seven days.</p>
 
 <h2 class="mt-10 text-lg font-medium">Collections submitted</h2>
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -21,18 +21,6 @@
     <dt class="text-sm text-muted">Machine types</dt>
     <dd class="mt-1"><%= pluralize(@model_count, "type") %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Claimed</dt>
-    <dd class="mt-1">
-      <%= link_to "#{@claimed_report_count} claimed", admin_reports_path(claimed: "yes") %>
-      ·
-      <%= @claimed_week %> this week
-    </dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Still private</dt>
-    <dd class="mt-1"><%= link_to "#{@unclaimed_report_count} unclaimed", admin_reports_path(claimed: "no") %></dd>
-  </div>
 </dl>
 
 <h2 class="mt-10 text-lg font-medium">Recent collections</h2>
@@ -44,7 +32,6 @@
           <p><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
           <p class="text-sm text-muted"><%= report.updated_at.to_fs(:long) %></p>
         </div>
-        <p class="text-sm text-muted"><%= report.claimed? ? report.user.email_address : "Unclaimed" %></p>
       </li>
     <% end %>
   </ul>
@@ -72,26 +59,6 @@
   </div>
 </dl>
 
-<h2 class="mt-10 text-lg font-medium">Classifieds</h2>
-<dl class="mt-4 grid gap-4 sm:grid-cols-2">
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Published</dt>
-    <dd class="mt-1"><%= link_to "#{@listing_counts["published"]} published", admin_listings_path(status: "published") %></dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Draft / closed</dt>
-    <dd class="mt-1"><%= @listing_counts["draft"] %> draft · <%= @listing_counts["closed"] %> closed</dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Listed this week</dt>
-    <dd class="mt-1"><%= @listings_published_week %></dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Destinations</dt>
-    <dd class="mt-1"><%= link_to pluralize(@destination_count, "destination"), admin_donation_destinations_path %></dd>
-  </div>
-</dl>
-
 <h2 class="mt-10 text-lg font-medium">Accounts</h2>
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
   <div class="rounded-md bg-panel p-4">
@@ -99,7 +66,7 @@
     <dd class="mt-1"><%= link_to pluralize(@user_count, "account"), admin_users_path %></dd>
   </div>
   <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Verified</dt>
-    <dd class="mt-1"><%= @verified_user_count %> verified · <%= @admin_count %> admin</dd>
+    <dt class="text-sm text-muted">Admins</dt>
+    <dd class="mt-1"><%= @admin_count %></dd>
   </div>
 </dl>

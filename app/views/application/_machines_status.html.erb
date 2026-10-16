@@ -1,12 +1,12 @@
-<% established = Report.established?(claimants) %>
+<% established = Report.established?(machines) %>
 <span class="inline-flex items-center gap-3 text-sm text-muted">
-  <span class="inline-flex items-center gap-1" title="<%= pluralize(claimants, "person") %>">
+  <span class="inline-flex items-center gap-1" title="<%= pluralize(machines, "machine") %>">
     <%= inline_icon(
       "M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z",
-      title: "People who run this"
+      title: "Machines that run this"
     ) %>
-    <span><%= claimants %></span>
-    <span class="sr-only"><%= pluralize(claimants, "person") %></span>
+    <span><%= machines %></span>
+    <span class="sr-only"><%= pluralize(machines, "machine") %></span>
   </span>
   <% if established %>
     <span class="inline-flex items-center gap-1 text-accent" title="Verified">
@@ -17,12 +17,12 @@
       <span>Verified</span>
     </span>
   <% else %>
-    <span class="inline-flex items-center gap-1" title="Only a few people so far">
+    <span class="inline-flex items-center gap-1" title="Only a few machines so far">
       <%= inline_icon(
         "M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z",
-        title: "Only a few people so far"
+        title: "Only a few machines so far"
       ) %>
-      <span class="sr-only">Only a few people so far</span>
+      <span class="sr-only">Only a few machines so far</span>
     </span>
   <% end %>
 </span>

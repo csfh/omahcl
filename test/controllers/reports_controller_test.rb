@@ -9,7 +9,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
     body = JSON.parse(response.body)
     assert body["public_id"]
-    assert_includes body["claim_url"], "/reports/#{body['public_id']}/claim"
+    assert_nil body["claim_url"]
     assert_includes body["model_url"], "/models/lenovo-thinkpad-x220"
   end
 

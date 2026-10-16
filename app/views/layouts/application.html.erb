@@ -23,16 +23,11 @@
         </p>
         <nav class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm">
           <%= link_to "Machines", hardware_models_path, class: "text-paper no-underline hover:text-accent" %>
-          <%= link_to "Classifieds", listings_path, class: "text-paper no-underline hover:text-accent" %>
           <% if authenticated? %>
-            <%= link_to "My machines", me_reports_path, class: "text-paper no-underline hover:text-accent" %>
             <% if current_user.admin? %>
               <%= link_to "Admin", admin_root_path, class: "text-paper no-underline hover:text-accent" %>
             <% end %>
             <%= button_to "Sign out", session_path, method: :delete, class: "cursor-pointer text-paper hover:text-accent" %>
-          <% else %>
-            <%= link_to "Sign in", new_session_path, class: "text-paper no-underline hover:text-accent", data: { turbo: false } %>
-            <%= link_to "Sign up", new_registration_path, class: "text-paper no-underline hover:text-accent", data: { turbo: false } %>
           <% end %>
         </nav>
       </div>

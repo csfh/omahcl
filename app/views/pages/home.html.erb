@@ -1,8 +1,8 @@
 <% page_title "Omarchy hardware" %>
 
 <section class="max-w-2xl">
-  <h1 class="text-4xl font-semibold tracking-tight">Does this machine run Omarchy?</h1>
-  <p class="mt-4 text-muted">Search a vendor or model. These are machines people have run Omarchy on.</p>
+  <h1 class="text-4xl font-semibold tracking-tight">What hardware runs Omarchy?</h1>
+  <p class="mt-4 text-muted">Search a vendor or model. Every machine listed here was reported by someone running Omarchy on it.</p>
 </section>
 
 <%= render "hardware_models/lookup_form", query: @query, submit_label: "Look up" %>
@@ -14,7 +14,7 @@
       <% @models.each do |model| %>
         <li class="flex items-center justify-between gap-4 py-3">
           <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
-          <%= claimants_status(model.claimants_count) %>
+          <%= machines_status(model.machines_count) %>
         </li>
       <% end %>
     </ul>
@@ -22,35 +22,11 @@
   </section>
 <% end %>
 
-<% if @listings.any? %>
-  <section class="mt-12">
-    <h2 class="text-lg font-medium">For sale or donation</h2>
-    <ul class="mt-4 grid gap-4 sm:grid-cols-2">
-      <% @listings.each do |listing| %>
-        <%= render "listings/card", listing: listing %>
-      <% end %>
-    </ul>
-  </section>
-<% end %>
-
 <section class="mt-12 max-w-2xl">
-  <h2 class="text-lg font-medium">Add your machine</h2>
-  <ol class="mt-4 list-decimal space-y-4 pl-5 text-muted">
-    <li>
-      <p>Type a vendor or model above. Open a result to see who has run Omarchy on that hardware.</p>
-    </li>
-    <li>
-      <p>If you already run Omarchy, paste this into a terminal on that machine:</p>
-      <div class="mt-2">
-        <%= render "application/collect_command" %>
-      </div>
-      <p class="mt-2 text-sm">The script prints a link. Until you open it while signed in, that hardware stays private.</p>
-    </li>
-    <li>
-      <p><%= link_to "Sign in", new_session_path, data: { turbo: false } %> (or <%= link_to "create an account", new_registration_path, data: { turbo: false } %>) and open the link. That attaches the machine to you.</p>
-    </li>
-    <li>
-      <p>From <%= link_to "My machines", me_reports_path %>, you can list it for sale or donation. Buyers email the owner. We don't take payment or ship anything.</p>
-    </li>
-  </ol>
+  <h2 class="text-lg font-medium">Report your machine</h2>
+  <p class="mt-2 text-muted">Run this in a terminal. On Omarchy it sends an anonymous hardware report. Anywhere else it only checks your machine locally.</p>
+  <div class="mt-4">
+    <%= render "application/collect_command" %>
+  </div>
+  <p class="mt-2 text-sm text-muted">No account is needed. Read the script first at <%= link_to "/collect", collect_path %>, and see <%= link_to "what we keep", privacy_path %>.</p>
 </section>

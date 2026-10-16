@@ -292,11 +292,9 @@ main() {
   local result
   result=$(submit "$body")
   echo "Submitted a hardware report."
-  local model_url claim_url
+  local model_url
   model_url=$(json_string_field "$result" model_url)
-  claim_url=$(json_string_field "$result" claim_url)
   [[ -n $model_url ]] && echo "Compatibility page: $model_url"
-  [[ -n $claim_url ]] && echo "Claim this report: $claim_url"
 }
 
 main

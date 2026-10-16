@@ -1,7 +1,7 @@
 <% page_title "Machines" %>
 
 <h1 class="text-3xl font-semibold">Machines that run Omarchy</h1>
-<p class="mt-2 text-muted">Search a vendor or model. You only see hardware someone has run Omarchy on.</p>
+<p class="mt-2 text-muted">Search a vendor or model. Every machine here has reported running Omarchy.</p>
 
 <%= render "lookup_form", query: @query, submit_label: "Search" %>
 
@@ -11,12 +11,12 @@
       <li class="flex items-center justify-between gap-4 py-3">
         <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
         <span class="inline-flex items-center gap-3 text-sm text-muted">
-          <%= claimants_status(model.claimants_count) %>
+          <%= machines_status(model.machines_count) %>
           <span><%= memory_label(model.min_memory_bytes) %>–<%= memory_label(model.max_memory_bytes) %></span>
         </span>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p class="mt-8 text-muted">Nothing matches yet. Try another name, or add a machine from Omarchy.</p>
+  <p class="mt-8 text-muted">Nothing matches yet. Try another name, or report your own machine from Omarchy.</p>
 <% end %>

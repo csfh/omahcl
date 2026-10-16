@@ -21,13 +21,7 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
-
   host = "market-app-blg2k.ondigitalocean.app"
-  config.action_mailer.default_url_options = { host: host, protocol: "https" }
-  config.action_mailer.raise_delivery_errors = true
-  config.action_mailer.delivery_method = :smtp
   Rails.application.routes.default_url_options[:host] = host
   Rails.application.routes.default_url_options[:protocol] = "https"
 

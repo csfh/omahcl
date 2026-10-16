@@ -3,8 +3,8 @@
 <p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path %></p>
 <h1 class="mt-2 text-3xl font-semibold"><%= @sample.display_name %></h1>
 <p class="mt-2 flex flex-wrap items-center gap-3 text-muted">
-  <%= claimants_status(@claimants_count) %>
-  <span><%= people_ran_omarchy(@claimants_count) %></span>
+  <%= machines_status(@machines_count) %>
+  <span><%= machines_ran_omarchy(@machines_count) %></span>
 </p>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
@@ -25,12 +25,3 @@
     <dd class="mt-1"><%= @versions.join(", ") %></dd>
   </div>
 </dl>
-
-<% if @listings.any? %>
-  <h2 class="mt-10 text-lg font-medium">For sale or donation</h2>
-  <ul class="mt-4 grid gap-4 sm:grid-cols-2">
-    <% @listings.each do |listing| %>
-      <%= render "listings/card", listing: listing %>
-    <% end %>
-  </ul>
-<% end %>
