@@ -5,9 +5,11 @@ module Admin
     def index
       @query = params[:q].to_s
       @hidden_filter = params[:hidden] if params[:hidden].in?(%w[yes no])
+      @source = params[:source] if params[:source].in?(Report.sources.keys)
       @reports = Report.order(created_at: :desc).for_query(@query)
       @reports = @reports.hidden if @hidden_filter == "yes"
-      @reports = @reports.visible if @hidden_filter == "no"
+      @reports = @reports.unhidden if @hidden_filter == "no"
+      @reports = @reports.where(source: @source) if @source
     end
 
     def show

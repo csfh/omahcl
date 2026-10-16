@@ -12,7 +12,9 @@ class ReportSanitizer
     ssh
   ].freeze
 
-  ALLOWED_ROOT = %w[omarchy hardware instance_digest].freeze
+  ALLOWED_ROOT = %w[source verdict host_os omarchy hardware instance_digest].freeze
+  SOURCES = %w[omarchy candidate].freeze
+  VERDICTS = %w[likely unclear unlikely].freeze
   INSTANCE_DIGEST = /\A[a-f0-9]{64}\z/
   ALLOWED_OMARCHY = %w[version channel].freeze
   ALLOWED_HARDWARE = %w[
@@ -37,7 +39,22 @@ class ReportSanitizer
     reject_denied_keys!(@raw)
     assert_allowed_keys!(@raw, ALLOWED_ROOT, "payload")
 
-    omarchy = require_hash(@raw["omarchy"], "omarchy")
+    source = (@raw["source"].presence || "omarchy").to_s
+    raise Rejected, "source must be one of #{SOURCES.join(', ')}" unless SOURCES.include?(source)
+    candidate = source == "candidate"
+
+    if candidate
+      raise Rejected, "candidate reports must not include omarchy" if @raw.key?("omarchy")
+      verdict = @raw["verdict"].to_s
+      raise Rejected, "verdict must be one of #{VERDICTS.join(', ')}" unless VERDICTS.include?(verdict)
+      host_os = optional_string(@raw["host_os"])&.downcase&.first(40)
+      omarchy = {}
+    else
+      raise Rejected, "only candidate reports may include verdict or host_os" if @raw.key?("verdict") || @raw.key?("host_os")
+      verdict = host_os = nil
+      omarchy = require_hash(@raw["omarchy"], "omarchy")
+    end
+
     hardware = require_hash(@raw["hardware"], "hardware")
 
     assert_allowed_keys!(omarchy, ALLOWED_OMARCHY, "omarchy")
@@ -70,14 +87,17 @@ class ReportSanitizer
     instance_digest = present_string(@raw["instance_digest"], "instance_digest")
     raise Rejected, "instance_digest must be 64 hex characters" unless instance_digest.match?(INSTANCE_DIGEST)
 
-    version = present_string(omarchy["version"], "omarchy.version")
-    channel = present_string(omarchy["channel"].presence || "stable", "omarchy.channel")
+    version = candidate ? nil : present_string(omarchy["version"], "omarchy.version")
+    channel = candidate ? "stable" : present_string(omarchy["channel"].presence || "stable", "omarchy.channel")
     vendor = present_string(hardware["vendor"], "hardware.vendor")
     product = present_string(hardware["product"], "hardware.product")
     cpu_model = present_string(cpu["model"], "cpu.model")
     cpu_arch = present_string(cpu["arch"], "cpu.arch")
 
     {
+      source: source,
+      verdict: verdict,
+      host_os: host_os,
       instance_digest: instance_digest,
       omarchy_version: version,
       omarchy_channel: channel,
@@ -95,7 +115,7 @@ class ReportSanitizer
       tpm_present: boolean_value(tpm && tpm["present"]),
       secure_boot_enabled: boolean_value(secure_boot && secure_boot["enabled"]),
       facts: {
-        "omarchy" => { "version" => version, "channel" => channel },
+        "omarchy" => (candidate ? nil : { "version" => version, "channel" => channel }),
         "hardware" => {
           "vendor" => vendor,
           "product" => product,
@@ -113,7 +133,7 @@ class ReportSanitizer
           "tpm" => { "present" => boolean_value(tpm && tpm["present"]) },
           "secure_boot" => { "enabled" => boolean_value(secure_boot && secure_boot["enabled"]) }
         }
-      }
+      }.compact
     }
   end
 
