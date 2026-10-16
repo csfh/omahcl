@@ -18,7 +18,11 @@
     <dd class="mt-1"><%= @collections_updated_week %></dd>
   </div>
   <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Machine types</dt>
+    <dt class="text-sm text-muted">Candidates (not running Omarchy)</dt>
+    <dd class="mt-1"><%= link_to pluralize(@candidate_count, "candidate"), admin_reports_path(source: "candidate") %></dd>
+  </div>
+  <div class="rounded-md bg-panel p-4">
+    <dt class="text-sm text-muted">Machine types running Omarchy</dt>
     <dd class="mt-1"><%= pluralize(@model_count, "type") %></dd>
   </div>
 </dl>

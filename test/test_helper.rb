@@ -30,6 +30,12 @@ module ActiveSupport
       }
     end
 
+    def candidate_payload(product: "ThinkPad X220", instance_digest: ::Digest::SHA256.hexdigest(SecureRandom.hex(16)), verdict: "likely")
+      omarchy_payload(product: product, instance_digest: instance_digest)
+        .except("omarchy")
+        .merge("source" => "candidate", "verdict" => verdict, "host_os" => "ubuntu")
+    end
+
     def ingest_report!(payload = omarchy_payload, ip: "203.0.113.10")
       nonce, _challenge = Challenge.issue!(ip: ip)
       Report.ingest(payload.merge("nonce" => nonce), ip: ip)

@@ -5,7 +5,11 @@
 <p class="mt-2 text-muted">
   Last reported <%= @report.updated_at.to_fs(:long) %>
   ·
-  <%= @report.hidden? ? "Hidden from public pages" : "Public" %>
+  <%= if @report.source_candidate?
+        "Candidate from #{@report.host_os.presence || "unknown OS"}, verdict #{@report.verdict}. Not shown on public pages."
+      else
+        @report.hidden? ? "Hidden from public pages" : "Public"
+      end %>
 </p>
 
 <div class="mt-6">
@@ -27,7 +31,7 @@
   </div>
   <div class="rounded-md bg-panel p-4">
     <dt class="text-sm text-muted">Omarchy</dt>
-    <dd class="mt-1"><%= @report.omarchy_version %> · <%= @report.omarchy_channel %></dd>
+    <dd class="mt-1"><%= @report.source_candidate? ? "Not installed" : "#{@report.omarchy_version} · #{@report.omarchy_channel}" %></dd>
   </div>
   <div class="rounded-md bg-panel p-4">
     <dt class="text-sm text-muted">Memory</dt>

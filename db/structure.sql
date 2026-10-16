@@ -80,7 +80,7 @@ ALTER SEQUENCE public.challenges_id_seq OWNED BY public.challenges.id;
 CREATE TABLE public.reports (
     id bigint NOT NULL,
     public_id uuid NOT NULL,
-    omarchy_version character varying NOT NULL,
+    omarchy_version character varying,
     omarchy_channel character varying DEFAULT 'stable'::character varying NOT NULL,
     vendor character varying NOT NULL,
     product character varying NOT NULL,
@@ -103,7 +103,11 @@ CREATE TABLE public.reports (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     instance_digest character varying NOT NULL,
-    hidden_at timestamp(6) without time zone
+    hidden_at timestamp(6) without time zone,
+    source character varying DEFAULT 'omarchy'::character varying NOT NULL,
+    verdict character varying,
+    host_os character varying,
+    CONSTRAINT reports_source_check CHECK (((source)::text = ANY ((ARRAY['omarchy'::character varying, 'candidate'::character varying])::text[])))
 );
 
 
@@ -348,6 +352,7 @@ ALTER TABLE ONLY public.sessions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261016140000'),
 ('20261016130000'),
 ('20261016120300'),
 ('20261016120200'),

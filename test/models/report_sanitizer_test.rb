@@ -33,7 +33,50 @@ class ReportSanitizerTest < ActiveSupport::TestCase
     assert_raises(ReportSanitizer::Rejected) { ReportSanitizer.clean!(payload) }
   end
 
+  test "an omarchy payload defaults to the omarchy source" do
+    assert_equal "omarchy", ReportSanitizer.clean!(valid_payload)[:source]
+  end
+
+  test "accepts a candidate payload without omarchy details" do
+    result = ReportSanitizer.clean!(candidate_payload)
+
+    assert_equal "candidate", result[:source]
+    assert_equal "unclear", result[:verdict]
+    assert_equal "ubuntu", result[:host_os]
+    assert_nil result[:omarchy_version]
+    assert_nil result[:facts]["omarchy"]
+  end
+
+  test "rejects a candidate that claims to run omarchy" do
+    payload = candidate_payload.merge("omarchy" => { "version" => "4.0.2" })
+
+    error = assert_raises(ReportSanitizer::Rejected) { ReportSanitizer.clean!(payload) }
+    assert_match(/must not include omarchy/, error.message)
+  end
+
+  test "rejects a candidate with an unknown verdict" do
+    error = assert_raises(ReportSanitizer::Rejected) { ReportSanitizer.clean!(candidate_payload.merge("verdict" => "great")) }
+    assert_match(/verdict/, error.message)
+  end
+
+  test "rejects a verdict on an omarchy payload" do
+    error = assert_raises(ReportSanitizer::Rejected) { ReportSanitizer.clean!(valid_payload.merge("verdict" => "likely")) }
+    assert_match(/only candidate/, error.message)
+  end
+
+  test "rejects an unknown source" do
+    assert_raises(ReportSanitizer::Rejected) { ReportSanitizer.clean!(valid_payload.merge("source" => "admin")) }
+  end
+
+  test "candidate host_os cannot carry identifiers" do
+    assert_raises(ReportSanitizer::Rejected) { ReportSanitizer.clean!(candidate_payload.merge("hostname" => "devbox")) }
+  end
+
   private
+    def candidate_payload
+      valid_payload.except("omarchy").merge("source" => "candidate", "verdict" => "unclear", "host_os" => "Ubuntu")
+    end
+
     def valid_payload
       {
         "omarchy" => { "version" => "4.0.2", "channel" => "stable" },

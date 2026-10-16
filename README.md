@@ -64,7 +64,16 @@ Against a local server:
 curl -fsSL http://127.0.0.1:62951/collect | bash
 ```
 
-The script refuses to run unless `/etc/os-release` has `ID=omarchy`. Serials are hashed into `instance_digest` in memory and never sent. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
+The script has two modes:
+
+- **On Omarchy** (`ID=omarchy` in `/etc/os-release`) it sends an anonymous hardware report, which becomes public.
+- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. It sends nothing unless you answer yes at the prompt, and then it files a private *candidate* report. Candidates never appear on public pages. With no terminal to ask on, the answer is no. Set `MARKET_SUBMIT=yes` to answer for a script.
+
+Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
+
+Serials are hashed into `instance_digest` in memory and never sent. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
+
+Environment variables: `MARKET_URL`, `MARKET_DRY_RUN` (print the payload, send nothing), `MARKET_SUBMIT` (`yes` or `no`), `MARKET_SYS_ROOT`, `MARKET_ARCH`, `MARKET_KERNEL` and `MARKET_SKIP_CMDS` (for tests).
 
 ## Tests
 
