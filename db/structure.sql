@@ -347,6 +347,7 @@ ALTER TABLE ONLY public.sessions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261016120300'),
 ('20261016120200'),
 ('20261016120100'),
 ('20261016120000'),
