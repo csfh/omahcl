@@ -28,105 +28,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: active_storage_attachments; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.active_storage_attachments (
-    id bigint NOT NULL,
-    name character varying NOT NULL,
-    record_type character varying NOT NULL,
-    record_id bigint NOT NULL,
-    blob_id bigint NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: active_storage_attachments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.active_storage_attachments_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: active_storage_attachments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.active_storage_attachments_id_seq OWNED BY public.active_storage_attachments.id;
-
-
---
--- Name: active_storage_blobs; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.active_storage_blobs (
-    id bigint NOT NULL,
-    key character varying NOT NULL,
-    filename character varying NOT NULL,
-    content_type character varying,
-    metadata text,
-    service_name character varying NOT NULL,
-    byte_size bigint NOT NULL,
-    checksum character varying,
-    created_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: active_storage_blobs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.active_storage_blobs_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: active_storage_blobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.active_storage_blobs_id_seq OWNED BY public.active_storage_blobs.id;
-
-
---
--- Name: active_storage_variant_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.active_storage_variant_records (
-    id bigint NOT NULL,
-    blob_id bigint NOT NULL,
-    variation_digest character varying NOT NULL
-);
-
-
---
--- Name: active_storage_variant_records_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.active_storage_variant_records_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: active_storage_variant_records_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.active_storage_variant_records_id_seq OWNED BY public.active_storage_variant_records.id;
-
-
---
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -173,88 +74,12 @@ ALTER SEQUENCE public.challenges_id_seq OWNED BY public.challenges.id;
 
 
 --
--- Name: donation_destinations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.donation_destinations (
-    id bigint NOT NULL,
-    name character varying NOT NULL,
-    url character varying NOT NULL,
-    description text,
-    active boolean DEFAULT true NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: donation_destinations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.donation_destinations_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: donation_destinations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.donation_destinations_id_seq OWNED BY public.donation_destinations.id;
-
-
---
--- Name: listings; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.listings (
-    id bigint NOT NULL,
-    kind character varying NOT NULL,
-    condition character varying,
-    status character varying DEFAULT 'published'::character varying NOT NULL,
-    title character varying NOT NULL,
-    description text,
-    price_cents integer,
-    currency character varying,
-    city character varying,
-    country_code character varying,
-    donation_destination_id bigint,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    report_id bigint NOT NULL
-);
-
-
---
--- Name: listings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.listings_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: listings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.listings_id_seq OWNED BY public.listings.id;
-
-
---
 -- Name: reports; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.reports (
     id bigint NOT NULL,
     public_id uuid NOT NULL,
-    user_id bigint,
     omarchy_version character varying NOT NULL,
     omarchy_channel character varying DEFAULT 'stable'::character varying NOT NULL,
     vendor character varying NOT NULL,
@@ -274,9 +99,6 @@ CREATE TABLE public.reports (
     model_key character varying NOT NULL,
     model_slug character varying NOT NULL,
     search_document character varying DEFAULT ''::character varying NOT NULL,
-    claim_token_digest character varying,
-    claim_token_expires_at timestamp(6) without time zone,
-    claimed_at timestamp(6) without time zone,
     submitted_ip_digest character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
@@ -355,8 +177,7 @@ CREATE TABLE public.users (
     password_digest character varying NOT NULL,
     admin boolean DEFAULT false NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    email_verified_at timestamp(6) without time zone
+    updated_at timestamp(6) without time zone NOT NULL
 );
 
 
@@ -380,45 +201,10 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: active_storage_attachments id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_attachments ALTER COLUMN id SET DEFAULT nextval('public.active_storage_attachments_id_seq'::regclass);
-
-
---
--- Name: active_storage_blobs id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_blobs ALTER COLUMN id SET DEFAULT nextval('public.active_storage_blobs_id_seq'::regclass);
-
-
---
--- Name: active_storage_variant_records id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_variant_records ALTER COLUMN id SET DEFAULT nextval('public.active_storage_variant_records_id_seq'::regclass);
-
-
---
 -- Name: challenges id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.challenges ALTER COLUMN id SET DEFAULT nextval('public.challenges_id_seq'::regclass);
-
-
---
--- Name: donation_destinations id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.donation_destinations ALTER COLUMN id SET DEFAULT nextval('public.donation_destinations_id_seq'::regclass);
-
-
---
--- Name: listings id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.listings ALTER COLUMN id SET DEFAULT nextval('public.listings_id_seq'::regclass);
 
 
 --
@@ -443,30 +229,6 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- Name: active_storage_attachments active_storage_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_attachments
-    ADD CONSTRAINT active_storage_attachments_pkey PRIMARY KEY (id);
-
-
---
--- Name: active_storage_blobs active_storage_blobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_blobs
-    ADD CONSTRAINT active_storage_blobs_pkey PRIMARY KEY (id);
-
-
---
--- Name: active_storage_variant_records active_storage_variant_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_variant_records
-    ADD CONSTRAINT active_storage_variant_records_pkey PRIMARY KEY (id);
-
-
---
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -480,22 +242,6 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.challenges
     ADD CONSTRAINT challenges_pkey PRIMARY KEY (id);
-
-
---
--- Name: donation_destinations donation_destinations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.donation_destinations
-    ADD CONSTRAINT donation_destinations_pkey PRIMARY KEY (id);
-
-
---
--- Name: listings listings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.listings
-    ADD CONSTRAINT listings_pkey PRIMARY KEY (id);
 
 
 --
@@ -531,80 +277,10 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: index_active_storage_attachments_on_blob_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_active_storage_attachments_on_blob_id ON public.active_storage_attachments USING btree (blob_id);
-
-
---
--- Name: index_active_storage_attachments_uniqueness; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_active_storage_attachments_uniqueness ON public.active_storage_attachments USING btree (record_type, record_id, name, blob_id);
-
-
---
--- Name: index_active_storage_blobs_on_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_active_storage_blobs_on_key ON public.active_storage_blobs USING btree (key);
-
-
---
--- Name: index_active_storage_variant_records_uniqueness; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_active_storage_variant_records_uniqueness ON public.active_storage_variant_records USING btree (blob_id, variation_digest);
-
-
---
 -- Name: index_challenges_on_nonce_digest; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX index_challenges_on_nonce_digest ON public.challenges USING btree (nonce_digest);
-
-
---
--- Name: index_listings_on_donation_destination_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_listings_on_donation_destination_id ON public.listings USING btree (donation_destination_id);
-
-
---
--- Name: index_listings_on_kind; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_listings_on_kind ON public.listings USING btree (kind);
-
-
---
--- Name: index_listings_on_open_report; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_listings_on_open_report ON public.listings USING btree (report_id) WHERE ((status)::text <> 'closed'::text);
-
-
---
--- Name: index_listings_on_report_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_listings_on_report_id ON public.listings USING btree (report_id);
-
-
---
--- Name: index_listings_on_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_listings_on_status ON public.listings USING btree (status);
-
-
---
--- Name: index_reports_on_claim_token_digest; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_reports_on_claim_token_digest ON public.reports USING btree (claim_token_digest) WHERE (claim_token_digest IS NOT NULL);
 
 
 --
@@ -643,13 +319,6 @@ CREATE INDEX index_reports_on_search_document ON public.reports USING gin (searc
 
 
 --
--- Name: index_reports_on_user_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_reports_on_user_id ON public.reports USING btree (user_id);
-
-
---
 -- Name: index_sessions_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -672,52 +341,15 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- Name: active_storage_variant_records fk_rails_993965df05; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_variant_records
-    ADD CONSTRAINT fk_rails_993965df05 FOREIGN KEY (blob_id) REFERENCES public.active_storage_blobs(id);
-
-
---
--- Name: listings fk_rails_a142605e2c; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.listings
-    ADD CONSTRAINT fk_rails_a142605e2c FOREIGN KEY (donation_destination_id) REFERENCES public.donation_destinations(id);
-
-
---
--- Name: listings fk_rails_bebdefbcd2; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.listings
-    ADD CONSTRAINT fk_rails_bebdefbcd2 FOREIGN KEY (report_id) REFERENCES public.reports(id);
-
-
---
--- Name: active_storage_attachments fk_rails_c3b3935057; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.active_storage_attachments
-    ADD CONSTRAINT fk_rails_c3b3935057 FOREIGN KEY (blob_id) REFERENCES public.active_storage_blobs(id);
-
-
---
--- Name: reports fk_rails_c7699d537d; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.reports
-    ADD CONSTRAINT fk_rails_c7699d537d FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261016120200'),
+('20261016120100'),
+('20261016120000'),
 ('20260910231500'),
 ('20260910175100'),
 ('20260909120000'),

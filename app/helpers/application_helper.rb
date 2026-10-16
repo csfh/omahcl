@@ -22,28 +22,12 @@ module ApplicationHelper
     "inline-flex cursor-pointer items-center rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-ink hover:bg-accent/90"
   end
 
-  def evidence_label(claimants)
-    if Report.established?(claimants)
-      "Verified"
-    else
-      "Only a few people so far"
-    end
+  def machines_ran_omarchy(count)
+    "#{pluralize(count, "machine")} reported running Omarchy."
   end
 
-  def people_ran_omarchy(count)
-    "#{pluralize(count, "person")} #{count == 1 ? "has" : "have"} run Omarchy on this machine."
-  end
-
-  def listing_kind_label(listing)
-    listing.donation? ? "Donation" : "For sale"
-  end
-
-  def listing_condition_label(listing)
-    listing.condition.to_s.titleize.presence
-  end
-
-  def claimants_status(claimants)
-    render "application/claimants_status", claimants: claimants.to_i
+  def machines_status(machines)
+    render "application/machines_status", machines: machines.to_i
   end
 
   def inline_icon(paths, title:)

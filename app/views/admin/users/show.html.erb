@@ -2,53 +2,13 @@
 
 <p class="text-sm text-muted"><%= link_to "All users", admin_users_path %></p>
 <h1 class="mt-2 text-3xl font-semibold"><%= @user.email_address %></h1>
-<p class="mt-2 text-muted">
-  <%= @user.admin? ? "Admin" : "Member" %>
-  ·
-  <% if @user.email_verified? %>
-    Verified <%= @user.email_verified_at.to_fs(:long) %>
-  <% else %>
-    Unverified
-  <% end %>
-</p>
+<p class="mt-2 text-muted"><%= @user.admin? ? "Admin" : "Inactive account. Only admins can sign in." %></p>
 
 <div class="mt-6 flex flex-wrap gap-3">
-  <% unless @user.email_verified? %>
-    <%= button_to "Mark email verified", verify_email_admin_user_path(@user), class: button_class + " cursor-pointer" %>
-  <% end %>
   <% if @user.admin? %>
     <%= button_to "Revoke admin", revoke_admin_admin_user_path(@user), class: ghost_button_class + " cursor-pointer", form: { data: { turbo_confirm: "Revoke admin access?" } } %>
   <% else %>
     <%= button_to "Grant admin", grant_admin_admin_user_path(@user), class: ghost_button_class + " cursor-pointer" %>
   <% end %>
-  <%= button_to "Send password reset", password_reset_admin_user_path(@user), class: ghost_button_class + " cursor-pointer" %>
-  <%= button_to "Delete account", admin_user_path(@user), method: :delete, class: ghost_button_class + " cursor-pointer", form: { data: { turbo_confirm: "Delete this account? Open listings will close and reports will become unclaimed." } } %>
+  <%= button_to "Delete account", admin_user_path(@user), method: :delete, class: ghost_button_class + " cursor-pointer", form: { data: { turbo_confirm: "Delete this account?" } } %>
 </div>
-
-<h2 class="mt-10 text-lg font-medium">Claimed reports</h2>
-<% if @reports.any? %>
-  <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
-    <% @reports.each do |report| %>
-      <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
-        <p><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
-        <p class="text-sm text-muted"><%= memory_label(report.memory_bytes) %> · <%= report.cpu_model %></p>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p class="mt-4 text-muted">None.</p>
-<% end %>
-
-<h2 class="mt-10 text-lg font-medium">Listings</h2>
-<% if @listings.any? %>
-  <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
-    <% @listings.each do |listing| %>
-      <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
-        <p><%= link_to listing.title, admin_listing_path(listing) %></p>
-        <p class="text-sm text-muted"><%= listing.status.titleize %> · <%= listing_kind_label(listing) %></p>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p class="mt-4 text-muted">None.</p>
-<% end %>

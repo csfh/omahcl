@@ -20,15 +20,6 @@ services:
     networks:
       - default
 
-  mailpit:
-    image: axllent/mailpit
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:51559:1025"
-      - "127.0.0.1:55673:8025"
-    networks:
-      - default
-
 networks:
   default:
     name: market

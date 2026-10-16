@@ -1,7 +1,7 @@
 require "test_helper"
 
 class SessionsControllerTest < ActionDispatch::IntegrationTest
-  setup { @user = User.take }
+  setup { @user = users(:admin) }
 
   test "new exposes password-manager sign-in fields" do
     get new_session_path
@@ -13,8 +13,6 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for=current-password]", text: "Password"
     assert_select "input#current-password[type=password][autocomplete=current-password][required]"
     assert_select "form#signin a", count: 0
-    assert_select "nav a[href=?][data-turbo=false]", new_session_path
-    assert_select "nav a[href=?][data-turbo=false]", new_registration_path
   end
 
   test "create with valid credentials" do
@@ -31,26 +29,29 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil cookies[:session_id]
   end
 
-  test "create with unverified email resends the link and stays signed out" do
-    user = User.create!(email_address: "unverified@example.com", password: "password12")
-
-    assert_enqueued_email_with EmailVerificationsMailer, :verify, args: [ user ] do
-      post session_path, params: { email_address: user.email_address, password: "password12" }
-    end
+  test "create refuses a valid password for an account that is not an admin" do
+    post session_path, params: { email_address: users(:one).email_address, password: "password" }
 
     assert_redirected_to new_session_path
     assert_nil cookies[:session_id]
-
-    follow_redirect!
-    assert_select "div", /Verify your email/
   end
 
   test "destroy" do
-    sign_in_as(User.take)
+    sign_in_as(@user)
 
     delete session_path
 
     assert_redirected_to new_session_path
     assert_empty cookies[:session_id]
+  end
+
+  test "a signed-in non-admin sees no admin link" do
+    sign_in_as(users(:one))
+
+    get root_path
+
+    assert_response :success
+    assert_select "nav a", text: "Admin", count: 0
+    assert_select "nav button", text: "Sign out"
   end
 end

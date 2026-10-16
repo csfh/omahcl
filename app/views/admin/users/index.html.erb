@@ -9,7 +9,7 @@
   </div>
   <div>
     <%= form.label :admin, "Role", class: "text-sm text-muted" %>
-    <%= form.select :admin, [["All", ""], ["Admins", "yes"], ["Members", "no"]], { selected: @admin_filter }, class: field_class %>
+    <%= form.select :admin, [["All", ""], ["Admins", "yes"], ["Not admin", "no"]], { selected: @admin_filter }, class: field_class %>
   </div>
   <%= form.submit "Filter", class: button_class %>
 <% end %>
@@ -19,13 +19,8 @@
     <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
       <div>
         <p><%= link_to user.email_address, admin_user_path(user) %></p>
-        <p class="text-sm text-muted">
-          <%= user.admin? ? "Admin" : "Member" %>
-          ·
-          <%= user.email_verified? ? "Verified" : "Unverified" %>
-        </p>
+        <p class="text-sm text-muted"><%= user.admin? ? "Admin" : "Inactive account" %></p>
       </div>
-      <p class="text-sm text-muted"><%= pluralize(user.reports.size, "report") %></p>
     </li>
   <% end %>
 </ul>
