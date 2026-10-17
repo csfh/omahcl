@@ -50,8 +50,10 @@ Attach and set:
 | `RAILS_MASTER_KEY` | Contents of local `config/master.key`, as a secret. Or set `SECRET_KEY_BASE` instead. |
 | Deploy command | `bin/rails db:prepare`. Cloud runs it before a new deployment takes traffic. The Docker entrypoint does this elsewhere, but Cloud's start command skips the entrypoint. |
 | Build command | The default, `SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile`. |
+| Start command | The default, `bundle exec bin/rails server -b '::' -p $PORT`. Thruster is not used. |
+| Background process | A custom worker on the App instance running `bundle exec bin/jobs --mode async`. It runs the recurring jobs in `config/recurring.yml`, which delete expired challenges and rate-limit keys older than an hour. Async mode keeps Solid Queue to one process on the 512MB instance. Do not also set `SOLID_QUEUE_IN_PUMA`. |
 
-Nothing else is needed: no Redis, object storage, mail, or persistent disk. Solid Queue must run for the recurring jobs in `config/recurring.yml`, which delete expired challenges and rate-limit keys older than an hour. Either set `SOLID_QUEUE_IN_PUMA=true`, which runs it inside Puma, or run `bin/jobs` as a separate process.
+Nothing else is needed: no Redis, object storage, mail, or persistent disk.
 
 Things to know:
 
@@ -60,6 +62,10 @@ Things to know:
 - The app runs on ARM64 and the lockfile carries the `aarch64-linux` platforms. Keep them when updating gems.
 - TLS ends at Cloud's proxy, so `assume_ssl` and `force_ssl` are on. `/up` is exempt from the redirect for health checks.
 - For the custom domain, add a CNAME in Cloudflare to the origin Cloud shows. Keep the `_acme-challenge` records DNS only (not proxied) or certificate issuance fails.
+- Pushing `main` deploys: push-to-deploy is on.
+- Hibernation is on. While the app sleeps, so do the recurring jobs, and they catch up within 5 minutes of it waking.
+- `config.hosts` allows `omahcl.csfh.dev` and the environment's Cloud domain, `omarchy-hcl-production-2mzewm.laravel.cloud`. A recreated environment gets a new Cloud domain. Add it there, or that domain answers 403; the `Blocked hosts` log line names it.
+- The `cloud` CLI reads its organization and app from `.cloud/config.json`.
 - Filesystem is reset on every deploy. Nothing here writes to it.
 - Logs are under Monitoring, then Logs. One-off commands go in the Commands tab, and they must be non-interactive, so use `bin/rails runner`. `bin/rails admin:create EMAIL=…` works there.
 
