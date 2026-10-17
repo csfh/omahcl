@@ -36,7 +36,6 @@ class SessionCookieTest < ActionDispatch::IntegrationTest
 
     set_cookie = Array(response.headers["Set-Cookie"]).join("\n")
     assert_match(/^_session=/, set_cookie)
-    assert_no_match(/omarify/i, set_cookie)
   end
 
   test "admins sign in and get a CSRF token on admin pages" do

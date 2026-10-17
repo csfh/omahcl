@@ -7,16 +7,15 @@
 
 set -euo pipefail
 
-# OMARIFY_* names win. The older MARKET_* names still work.
-OMARIFY_URL=${OMARIFY_URL:-${MARKET_URL:-__OMARIFY_URL__}}
-OMARIFY_SYS_ROOT=${OMARIFY_SYS_ROOT:-${MARKET_SYS_ROOT:-}}
-OMARIFY_ARCH=${OMARIFY_ARCH:-${MARKET_ARCH:-}}
-OMARIFY_KERNEL=${OMARIFY_KERNEL:-${MARKET_KERNEL:-}}
-OMARIFY_DRY_RUN=${OMARIFY_DRY_RUN:-${MARKET_DRY_RUN:-}}
-OMARIFY_SUBMIT=${OMARIFY_SUBMIT:-${MARKET_SUBMIT:-}}
-OMARIFY_SKIP_CMDS=${OMARIFY_SKIP_CMDS:-${MARKET_SKIP_CMDS:-}}
+OMAHCL_URL=${OMAHCL_URL:-__OMAHCL_URL__}
+OMAHCL_SYS_ROOT=${OMAHCL_SYS_ROOT:-}
+OMAHCL_ARCH=${OMAHCL_ARCH:-}
+OMAHCL_KERNEL=${OMAHCL_KERNEL:-}
+OMAHCL_DRY_RUN=${OMAHCL_DRY_RUN:-}
+OMAHCL_SUBMIT=${OMAHCL_SUBMIT:-}
+OMAHCL_SKIP_CMDS=${OMAHCL_SKIP_CMDS:-}
 
-SYS=${OMARIFY_SYS_ROOT:-/}
+SYS=${OMAHCL_SYS_ROOT:-/}
 SYS=${SYS%/}
 [[ -n $SYS ]] || SYS=/
 
@@ -112,7 +111,7 @@ cpu_arch() {
   if [[ $SYS == / ]]; then
     uname -m
   else
-    printf '%s' "${OMARIFY_ARCH:-unknown}"
+    printf '%s' "${OMAHCL_ARCH:-unknown}"
   fi
 }
 
@@ -153,7 +152,7 @@ host_kernel() {
   if [[ $SYS == / ]]; then
     uname -s
   else
-    printf '%s' "${OMARIFY_KERNEL:-Linux}"
+    printf '%s' "${OMAHCL_KERNEL:-Linux}"
   fi
 }
 
@@ -199,7 +198,7 @@ secure_boot_state() {
 }
 
 gpus_json() {
-  if [[ -n ${OMARIFY_SKIP_CMDS:-} ]] || ! command -v lspci >/dev/null 2>&1; then
+  if [[ -n ${OMAHCL_SKIP_CMDS:-} ]] || ! command -v lspci >/dev/null 2>&1; then
     printf '[]'
     return
   fi
@@ -388,12 +387,12 @@ print_verdict() {
 }
 
 confirm_submit() {
-  case ${OMARIFY_SUBMIT:-} in
+  case ${OMAHCL_SUBMIT:-} in
     yes | y | 1) return 0 ;;
     no | n | 0) return 1 ;;
   esac
   if ! ( : </dev/tty ) 2>/dev/null; then
-    echo "Run this in a terminal to choose whether to share it, or set OMARIFY_SUBMIT=yes." >&2
+    echo "Run this in a terminal to choose whether to share it, or set OMAHCL_SUBMIT=yes." >&2
     return 1
   fi
   local answer=
@@ -411,8 +410,8 @@ confirm_submit() {
 
 fetch_challenge() {
   local body
-  body=$(curl -fsS -A "omarify-collect/2" --max-time 30 "${OMARIFY_URL%/}/challenges") || {
-    echo "Could not reach Omarchy HCL at $OMARIFY_URL" >&2
+  body=$(curl -fsS -A "omahcl-collect/2" --max-time 30 "${OMAHCL_URL%/}/challenges") || {
+    echo "Could not reach Omarchy HCL at $OMAHCL_URL" >&2
     exit 1
   }
   local nonce
@@ -427,10 +426,10 @@ fetch_challenge() {
 submit() {
   local body=$1
   local response
-  if ! response=$(curl -fsS -A "omarify-collect/2" --max-time 30 \
+  if ! response=$(curl -fsS -A "omahcl-collect/2" --max-time 30 \
     -H "Content-Type: application/json" \
     -d "$body" \
-    "${OMARIFY_URL%/}/reports"); then
+    "${OMAHCL_URL%/}/reports"); then
     echo "Omarchy HCL rejected the report." >&2
     exit 1
   fi
@@ -455,7 +454,7 @@ refuse_identifiers() {
 # Prints the payload for a dry run and returns 0, or returns 1 for a real send.
 # Callers use it as a condition, so it must never be the place that fails.
 dry_run_print() {
-  [[ -n ${OMARIFY_DRY_RUN:-} ]] || return 1
+  [[ -n ${OMAHCL_DRY_RUN:-} ]] || return 1
   printf '%s\n' "$1"
 }
 
@@ -543,8 +542,8 @@ run_macos() {
 }
 
 main() {
-  if [[ $OMARIFY_URL == __* ]]; then
-    echo "Set OMARIFY_URL, or download this script from Omarchy HCL so the URL is filled in." >&2
+  if [[ $OMAHCL_URL == __* ]]; then
+    echo "Set OMAHCL_URL, or download this script from Omarchy HCL so the URL is filled in." >&2
     exit 1
   fi
 

@@ -38,10 +38,11 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     get collect_path
 
     assert_response :success
+    assert_includes response.headers["Content-Disposition"], 'filename="collect.sh"'
     assert_match(/Hardware check for Omarchy/, response.body)
     assert_includes response.body, "#!/usr/bin/env bash"
     assert_includes response.body, "http://www.example.com"
-    refute_includes response.body, "__OMARIFY_URL__"
+    refute_includes response.body, "__OMAHCL_URL__"
     assert_includes response.body, "/challenges"
     refute_includes response.body, "omarchy-channel-current"
   end
