@@ -1,6 +1,6 @@
-# Omarify
+# Omarchy HCL
 
-A public database of hardware that runs [Omarchy](https://omarchy.org), destined for `https://market-app-blg2k.ondigitalocean.app/`.
+A public hardware compatibility list for [Omarchy](https://omarchy.org), at `https://omahcl.csfh.dev/`. It is unofficial.
 
 People already running Omarchy send an anonymous hardware report with one command. Everyone else can look up whether a vendor and model has been seen running Omarchy. There are no accounts, listings, or email.
 
@@ -38,24 +38,16 @@ The image boots in `RAILS_ENV=production`. It decrypts `config/credentials.yml.e
 
 Do not commit `config/master.key`.
 
-### DigitalOcean App Platform
+### Environment
 
-In the app: **Settings → the web component → Environment Variables → Edit**. Add one **runtime** variable:
+Set `RAILS_MASTER_KEY` (the contents of local `config/master.key`) as a secret, and `DATABASE_URL` for Postgres. Production primary, cache, queue, and cable connections all use that URL. The Dockerfile never contains the key. `CLOUDFLARE_EMAIL_API_TOKEN` from earlier versions is no longer read and can be removed.
 
-| Key | Value | Encrypt |
-| --- | --- | --- |
-| `RAILS_MASTER_KEY` | contents of local `config/master.key` | yes |
-
-Save, then deploy. App Platform injects encrypted vars at runtime; the Dockerfile never contains the key. `CLOUDFLARE_EMAIL_API_TOKEN` from earlier versions is no longer read and can be removed.
-
-If a managed Postgres is attached, App Platform also sets `DATABASE_URL`. Production primary, cache, queue, and cable connections all use that URL.
-
-HTTP port for this image is **80** (Thruster).
+HTTP port for this image is **80** (Thruster). `config/deploy.yml` holds a Kamal setup if you deploy that way.
 
 ## Collector
 
 ```sh
-curl -fsSL https://market-app-blg2k.ondigitalocean.app/collect | bash
+curl -fsSL https://omahcl.csfh.dev/collect | bash
 ```
 
 Against a local server:

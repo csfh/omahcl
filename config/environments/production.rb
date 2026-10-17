@@ -21,7 +21,7 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  host = "market-app-blg2k.ondigitalocean.app"
+  host = "omahcl.csfh.dev"
   Rails.application.routes.default_url_options[:host] = host
   Rails.application.routes.default_url_options[:protocol] = "https"
 

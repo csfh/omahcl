@@ -22,7 +22,7 @@ servers:
 #
 # proxy:
 #   ssl: true
-#   host: market-app-blg2k.ondigitalocean.app
+#   host: omahcl.csfh.dev
 
 # Where you keep your container images.
 registry:
