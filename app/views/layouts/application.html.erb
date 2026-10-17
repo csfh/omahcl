@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="dark">
     <meta name="application-name" content="Omarchy HCL">
-    <%= csrf_meta_tags %>
+    <%# A CSRF token writes the session cookie, and anonymous visitors must not get one. Forms carry their own token. %>
+    <%= csrf_meta_tags if authenticated? %>
     <%= csp_meta_tag %>
     <%= yield :head %>
     <link rel="icon" href="/icon.png" type="image/png">
