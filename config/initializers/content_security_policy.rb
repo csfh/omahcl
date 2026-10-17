@@ -1,29 +1,27 @@
 # Be sure to restart your server when you modify this file.
 
-# Define an application-wide content security policy.
-# See the Securing Rails Applications Guide for more information:
+# Everything the site loads comes from its own origin, so the policy is
+# same-origin only. Cloudflare's bot detection loads from /cdn-cgi/challenge-platform/
+# on this origin, and Cloudflare copies the nonce from this header onto the inline
+# script it injects. See the Securing Rails Applications Guide:
 # https://guides.rubyonrails.org/security.html#content-security-policy-header
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src :self
+    policy.script_src :self
+    policy.style_src :self
+    policy.img_src :self
+    policy.font_src :self
+    policy.connect_src :self
+    policy.manifest_src :self
+    policy.object_src :none
+    policy.base_uri :self
+    policy.form_action :self
+    policy.frame_ancestors :none
+  end
 
-# Rails.application.configure do
-#   config.content_security_policy do |policy|
-#     policy.default_src :self, :https
-#     policy.font_src    :self, :https, :data
-#     policy.img_src     :self, :https, :data
-#     policy.object_src  :none
-#     policy.script_src  :self, :https
-#     policy.style_src   :self, :https
-#     # Specify URI for violation reports
-#     # policy.report_uri "/csp-violation-report-endpoint"
-#   end
-#
-#   # Generate session nonces for permitted importmap, inline scripts, and inline styles.
-#   config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
-#   config.content_security_policy_nonce_directives = %w(script-src style-src)
-#
-#   # Automatically add `nonce` to `javascript_tag`, `javascript_include_tag`, and `stylesheet_link_tag`
-#   # if the corresponding directives are specified in `content_security_policy_nonce_directives`.
-#   # config.content_security_policy_nonce_auto = true
-#
-#   # Report violations without enforcing the policy.
-#   # config.content_security_policy_report_only = true
-# end
+  # A fresh nonce per response. Rails' example derives it from the session id,
+  # which would set a session cookie on every page.
+  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
+  config.content_security_policy_nonce_directives = %w[script-src style-src]
+end
