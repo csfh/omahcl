@@ -2,9 +2,24 @@
 
 <article class="prose-omahcl max-w-2xl">
   <h1 class="mb-4 text-3xl font-semibold text-paper">Privacy</h1>
-  <p>This site is a public list of hardware that runs Omarchy. Anyone running Omarchy can send a report of their machine, and reports are public once they arrive. No account is needed.</p>
-  <p>A report holds the vendor and model, CPU, memory size, GPU names, UEFI, TPM and Secure Boot state, and the Omarchy version. It does not hold serial numbers, board serials, MAC addresses, hostnames, usernames, or product UUIDs. The collector and the server both refuse those fields.</p>
-  <p>The script hashes machine-id and DMI serials in memory and sends only that digest, so the same machine updates one row instead of creating many. The digest cannot be turned back into the machine-id. Submitter IP addresses are stored only as a salted hash, for abuse control, and are never shown.</p>
-  <p>If you run the script on a machine that is not running Omarchy, it checks that machine on your computer and sends nothing unless you answer yes. A yes sends the same hardware facts, the verdict, and the name of your distro, as a candidate report. Candidates are never shown or counted on public pages. You are only told how many machines of that model have reported running Omarchy.</p>
-  <p>Only people who run the collector on Omarchy create public reports. Admins can see every report. Admin accounts store an email address; nobody else has an account.</p>
+  <p>This site is a public list of hardware that runs Omarchy. Anyone running Omarchy can send a report of their machine, and the report is public once it arrives. Nobody needs an account.</p>
+
+  <h2 class="mb-2 mt-8 text-lg font-medium text-paper">What a report holds</h2>
+  <p>A report holds the vendor, model, product family and chassis type; the CPU model, vendor, architecture and core count; the memory size; up to eight GPU names; whether the machine boots with UEFI, has a TPM and has Secure Boot on; and the Omarchy version and release channel. It never holds serial numbers, MAC addresses, hostnames, usernames or product UUIDs. The script and the server both refuse those fields.</p>
+  <p>The script also sends a one-way hash so that the same machine updates one report instead of adding new ones. It is computed on your machine from its machine-id, plus the DMI serials when the script can read them. The machine-id and serials are never sent, and the hash cannot be turned back into them.</p>
+
+  <h2 class="mb-2 mt-8 text-lg font-medium text-paper">IP addresses</h2>
+  <p>The site's own logs record which pages were requested, when, and the hardware facts in each submitted report. They do not record IP addresses, search terms or machine hashes.</p>
+  <p>To limit abuse, the server counts report submissions and sign-in attempts per IP address over a few minutes. Those counts are deleted within about an hour.</p>
+  <p>Each report keeps a hash of the IP address that last sent it, made with a secret key. It lets the site mark a model Verified once enough machines from more than one network have reported it. The hash is never shown, and without the server's secret key it cannot be turned back into an address.</p>
+  <p>The site runs on Laravel Cloud. Like any host, its servers see your IP address when you connect and may keep it in their own logs. This site does not control those logs.</p>
+
+  <h2 class="mb-2 mt-8 text-lg font-medium text-paper">Cookies</h2>
+  <p>Browsing sets no cookies. Only the admin sign-in page and signed-in admins get session cookies.</p>
+
+  <h2 class="mb-2 mt-8 text-lg font-medium text-paper">Machines not running Omarchy</h2>
+  <p>If you run the script on a machine that is not running Omarchy, it checks that machine on your computer and sends nothing unless you answer yes. A yes sends the same hardware facts, the verdict and the name of your distro as a candidate report. Candidates are never shown or counted on public pages. You are only told how many machines of that model have reported running Omarchy.</p>
+
+  <h2 class="mb-2 mt-8 text-lg font-medium text-paper">Who can see reports</h2>
+  <p>Reports from machines running Omarchy are public, grouped by model. Admins can see every report, including candidates, and can hide a report from public pages. Admin accounts store an email address and a password hash. Nobody else has an account.</p>
 </article>
