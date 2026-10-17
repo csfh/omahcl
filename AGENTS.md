@@ -33,4 +33,4 @@ Rails 8.1 app for Omarchy HCL (omahcl.csfh.dev), an unofficial public database o
 - Collector env vars are `OMAHCL_*` only. The URL placeholder is `__OMAHCL_URL__` and must change together with `CollectsController`.
 - Production site URLs use `https://omahcl.csfh.dev/`. Production runs on Laravel Cloud, which builds from the Gemfile and ignores the Dockerfile. Its deploy command must be `bin/rails db:prepare`; keep the `aarch64-linux` lockfile platforms.
 - There are no GitHub Actions workflows and none should be added. Run `bin/rails test`, `bin/rubocop`, `bin/brakeman`, `bin/bundler-audit`, and `bin/importmap audit` locally before every push (or `bin/ci`).
-- Develop the slice with tests, then commit, merge into `main`, and push `origin/main`. Whether a push auto-deploys on Laravel Cloud is not recorded here; ask before assuming it.
+- Develop the slice with tests, then commit, merge into `main`, and push `origin/main`. Pushing `main` deploys to production: Laravel Cloud has push-to-deploy on.
