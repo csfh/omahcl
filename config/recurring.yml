@@ -13,6 +13,9 @@ production:
   delete_expired_challenges:
     command: "Challenge.expired.delete_all"
     schedule: every 5 minutes
+  delete_old_cache_entries:
+    command: "SolidCache::Entry.where(created_at: ...Rails.cache.max_age.seconds.ago).delete_all"
+    schedule: every 5 minutes
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
