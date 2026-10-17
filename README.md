@@ -51,7 +51,7 @@ Attach and set:
 | Deploy command | `bin/rails db:prepare`. Cloud runs it before a new deployment takes traffic. The Docker entrypoint does this elsewhere, but Cloud's start command skips the entrypoint. |
 | Build command | The default, `SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile`. |
 
-Nothing else is needed: no Redis, object storage, mail, or persistent disk. Do not set `SOLID_QUEUE_IN_PUMA`; nothing enqueues jobs.
+Nothing else is needed: no Redis, object storage, mail, or persistent disk. Solid Queue must run for the recurring jobs in `config/recurring.yml`, which delete expired challenges. Either set `SOLID_QUEUE_IN_PUMA=true`, which runs it inside Puma, or run `bin/jobs` as a separate process.
 
 Things to know:
 

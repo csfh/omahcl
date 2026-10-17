@@ -48,7 +48,6 @@ CREATE TABLE public.challenges (
     nonce_digest character varying NOT NULL,
     expires_at timestamp(6) without time zone NOT NULL,
     consumed_at timestamp(6) without time zone,
-    issued_ip_digest character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -107,7 +106,7 @@ CREATE TABLE public.reports (
     source character varying DEFAULT 'omarchy'::character varying NOT NULL,
     verdict character varying,
     host_os character varying,
-    CONSTRAINT reports_source_check CHECK (((source)::text = ANY ((ARRAY['omarchy'::character varying, 'candidate'::character varying])::text[])))
+    CONSTRAINT reports_source_check CHECK (((source)::text = ANY (ARRAY[('omarchy'::character varying)::text, ('candidate'::character varying)::text])))
 );
 
 
@@ -146,8 +145,6 @@ CREATE TABLE public.schema_migrations (
 CREATE TABLE public.sessions (
     id bigint NOT NULL,
     user_id bigint NOT NULL,
-    ip_address character varying,
-    user_agent character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -352,6 +349,7 @@ ALTER TABLE ONLY public.sessions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261016150000'),
 ('20261016140000'),
 ('20261016130000'),
 ('20261016120300'),

@@ -18,7 +18,6 @@ Rails.application.routes.draw do
       post :hide, on: :member
       post :unhide, on: :member
     end
-    resources :challenges, only: %i[index show]
   end
   root "pages#home"
 end

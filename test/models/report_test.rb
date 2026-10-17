@@ -38,7 +38,7 @@ class ReportTest < ActiveSupport::TestCase
 
   test "replayed nonce is rejected" do
     payload = omarchy_payload
-    nonce, _challenge = Challenge.issue!(ip: "203.0.113.10")
+    nonce, _challenge = Challenge.issue!
     Report.ingest(payload.merge("nonce" => nonce), ip: "203.0.113.10")
 
     assert_raises(ReportSanitizer::Rejected) do
@@ -48,7 +48,7 @@ class ReportTest < ActiveSupport::TestCase
 
   test "expired nonce is rejected" do
     payload = omarchy_payload
-    nonce, challenge = Challenge.issue!(ip: "203.0.113.10")
+    nonce, challenge = Challenge.issue!
     challenge.update!(expires_at: 1.minute.ago)
 
     error = assert_raises(ReportSanitizer::Rejected) do

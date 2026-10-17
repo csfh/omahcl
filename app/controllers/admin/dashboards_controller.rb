@@ -11,9 +11,6 @@ module Admin
       @recent_reports = Report.order(updated_at: :desc).limit(8)
 
       @open_challenge_count = Challenge.still_open.count
-      @consumed_challenge_count = Challenge.consumed.count
-      @expired_challenge_count = Challenge.expired.count
-      @challenges_week = Challenge.created_since(since).count
 
       @user_count = User.count
       @admin_count = User.where(admin: true).count

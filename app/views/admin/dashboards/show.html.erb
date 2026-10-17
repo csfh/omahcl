@@ -47,19 +47,7 @@
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
   <div class="rounded-md bg-panel p-4">
     <dt class="text-sm text-muted">Open</dt>
-    <dd class="mt-1"><%= link_to "#{@open_challenge_count} open", admin_challenges_path(status: "open") %></dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Consumed</dt>
-    <dd class="mt-1"><%= link_to "#{@consumed_challenge_count} consumed", admin_challenges_path(status: "consumed") %></dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Expired</dt>
-    <dd class="mt-1"><%= link_to "#{@expired_challenge_count} expired", admin_challenges_path(status: "expired") %></dd>
-  </div>
-  <div class="rounded-md bg-panel p-4">
-    <dt class="text-sm text-muted">Issued this week</dt>
-    <dd class="mt-1"><%= @challenges_week %></dd>
+    <dd class="mt-1"><%= @open_challenge_count %> open</dd>
   </div>
 </dl>
 
