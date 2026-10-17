@@ -64,9 +64,10 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Serve only the canonical host. Pages and the collector script build URLs
-  # from the request, so a forged Host or X-Forwarded-Host must be rejected.
-  config.hosts = [ host ]
+  # Serve only our own hosts: the custom domain and the domain Laravel Cloud
+  # assigned, which its docs say to allow. Pages and the collector script build
+  # URLs from the request, so a forged Host or X-Forwarded-Host must be rejected.
+  config.hosts = [ host, "omarchy-hcl-production-2mzewm.laravel.cloud" ]
 
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }

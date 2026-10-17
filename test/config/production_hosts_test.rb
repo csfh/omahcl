@@ -12,6 +12,7 @@ class ProductionHostsTest < ActiveSupport::TestCase
       forged_host: request.("/collect", "HTTP_HOST" => "evil.example").status,
       forged_forwarded_host: request.("/collect", "HTTP_HOST" => "omahcl.csfh.dev", "HTTP_X_FORWARDED_HOST" => "evil.example").status,
       health_check: request.("/up", "HTTP_HOST" => "10.0.0.5").status,
+      cloud_domain: request.("/collect", "HTTP_HOST" => "omarchy-hcl-production-2mzewm.laravel.cloud").status,
       collect_url_line: request.("/collect", "HTTP_HOST" => "omahcl.csfh.dev").body[/^OMAHCL_URL=.*$/]
     }
     puts "PROBE #{results.to_json}"
@@ -27,6 +28,7 @@ class ProductionHostsTest < ActiveSupport::TestCase
     assert_equal 403, results["forged_host"]
     assert_equal 403, results["forged_forwarded_host"]
     assert_equal 200, results["health_check"]
+    assert_equal 200, results["cloud_domain"], "Laravel Cloud's docs say to allow the Cloud domain"
     assert_equal "OMAHCL_URL=${OMAHCL_URL:-https://omahcl.csfh.dev}", results["collect_url_line"]
   end
 end
