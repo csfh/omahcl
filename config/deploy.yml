@@ -22,7 +22,7 @@ servers:
 #
 # proxy:
 #   ssl: true
-#   host: omahcl.csfh.dev
+#   host: omahcl.com
 
 # Where you keep your container images.
 registry:

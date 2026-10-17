@@ -1,6 +1,6 @@
 # Agent notes
 
-Rails 8.1 app for Omarchy HCL (omahcl.csfh.dev), an unofficial public database of hardware that runs Omarchy.
+Rails 8.1 app for Omarchy HCL (omahcl.com), an unofficial public database of hardware that runs Omarchy.
 
 ## Run
 
@@ -31,6 +31,6 @@ Rails 8.1 app for Omarchy HCL (omahcl.csfh.dev), an unofficial public database o
 - Drop migrations are irreversible by design. Never edit an old migration; add a new one.
 - The display name is Omarchy HCL. Internal identifiers use `omahcl`, and the Rails module is `HCL`. The collector's `omarchy-market-instance-v1` and `omarchy-market-candidate-v1` digest domains keep their old names on purpose: renaming them re-keys every machine. A collector test pins the exact digests.
 - Collector env vars are `OMAHCL_*` only. The URL placeholder is `__OMAHCL_URL__` and must change together with `CollectsController`.
-- Production site URLs use `https://omahcl.csfh.dev/`. Production runs on Laravel Cloud, which builds from the Gemfile and ignores the Dockerfile. Its deploy command must be `bin/rails db:prepare`; keep the `aarch64-linux` lockfile platforms.
+- Production site URLs use `https://omahcl.com/`. Production runs on Laravel Cloud, which builds from the Gemfile and ignores the Dockerfile. Its deploy command must be `bin/rails db:prepare`; keep the `aarch64-linux` lockfile platforms.
 - There are no GitHub Actions workflows and none should be added. Run `bin/rails test`, `bin/rubocop`, `bin/brakeman`, `bin/bundler-audit`, and `bin/importmap audit` locally before every push (or `bin/ci`).
 - Develop the slice with tests, then commit, merge into `main`, and push `origin/main`. Pushing `main` deploys to production: Laravel Cloud has push-to-deploy on.

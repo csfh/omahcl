@@ -1,6 +1,6 @@
 # Omarchy HCL
 
-A public hardware compatibility list for [Omarchy](https://omarchy.org), at `https://omahcl.csfh.dev/`. It is unofficial.
+A public hardware compatibility list for [Omarchy](https://omarchy.org), at `https://omahcl.com/`. It is unofficial.
 
 People already running Omarchy send an anonymous hardware report with one command. Everyone else can look up whether a vendor and model has been seen running Omarchy. There are no accounts, listings, or email.
 
@@ -40,7 +40,7 @@ Do not commit `config/master.key`.
 
 ### Laravel Cloud
 
-Production runs on [Laravel Cloud](https://laravel.com/cloud/docs/deploy-guides/ruby) at `https://omahcl.csfh.dev/`. Cloud builds a Ruby app from the Gemfile; it does not use the Dockerfile (that is for Kamal or `docker run`).
+Production runs on [Laravel Cloud](https://laravel.com/cloud/docs/deploy-guides/ruby) at `https://omahcl.com/`. Cloud builds a Ruby app from the Gemfile; it does not use the Dockerfile (that is for Kamal or `docker run`).
 
 Attach and set:
 
@@ -64,7 +64,7 @@ Things to know:
 - For the custom domain, add a CNAME in Cloudflare to the origin Cloud shows. Keep the `_acme-challenge` records DNS only (not proxied) or certificate issuance fails.
 - Pushing `main` deploys: push-to-deploy is on.
 - Hibernation is on. While the app sleeps, so do the recurring jobs, and they catch up within 5 minutes of it waking.
-- `config.hosts` allows `omahcl.csfh.dev` and the environment's Cloud domain, `omarchy-hcl-production-2mzewm.laravel.cloud`. A recreated environment gets a new Cloud domain. Add it there, or that domain answers 403; the `Blocked hosts` log line names it.
+- `config.hosts` allows `omahcl.com` and the environment's Cloud domain, `omarchy-hcl-production-2mzewm.laravel.cloud`. A recreated environment gets a new Cloud domain. Add it there, or that domain answers 403; the `Blocked hosts` log line names it.
 - The `cloud` CLI reads its organization and app from `.cloud/config.json`.
 - Filesystem is reset on every deploy. Nothing here writes to it.
 - Logs are under Monitoring, then Logs. One-off commands go in the Commands tab, and they must be non-interactive, so use `bin/rails runner`. `bin/rails admin:create EMAIL=…` works there.
@@ -72,7 +72,7 @@ Things to know:
 ## Collector
 
 ```sh
-curl -fsSL https://omahcl.csfh.dev/collect | bash
+curl -fsSL https://omahcl.com/collect | bash
 ```
 
 Against a local server:
