@@ -229,6 +229,47 @@ class CollectorTest < ActiveSupport::TestCase
     assert_includes output, "Could not reach Omarchy HCL"
   end
 
+  test "on omarchy sends nothing when the person declines" do
+    status, output = run_collector("OMAHCL_SUBMIT" => "no")
+
+    assert_equal 0, status
+    assert_includes output, "LENOVO ThinkPad X220"
+    assert_includes output, "Nothing was sent."
+    refute_includes output, "Could not reach"
+  end
+
+  test "on omarchy sends nothing without a terminal to ask on" do
+    skip "setsid is not available" unless system("command -v setsid >/dev/null 2>&1")
+
+    status, output = run_collector({}, true)
+
+    assert_equal 0, status
+    assert_includes output, "Run this in a terminal"
+    refute_includes output, "Could not reach"
+  end
+
+  test "on omarchy sends only after a yes" do
+    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
+
+    refute_equal 0, status
+    assert_includes output, "Could not reach Omarchy HCL"
+  end
+
+  test "both modes explain the privacy policy and link to it before asking" do
+    _status, omarchy = run_collector("OMAHCL_SUBMIT" => "no")
+    leave_omarchy
+    _status, candidate = run_collector("OMAHCL_SUBMIT" => "no")
+
+    { "omarchy" => omarchy, "candidate" => candidate }.each do |mode, output|
+      assert_includes output, "Privacy policy: http://example.test/privacy", mode
+      assert_includes output, "plus the DMI serials when run with sudo", mode
+      assert_includes output, "never sends serial numbers, MAC addresses, your hostname or username", mode
+      assert_includes output, "IP address", mode
+    end
+    assert_includes omarchy, "The report is public."
+    assert_includes candidate, "Candidate reports are never shown publicly."
+  end
+
   test "macos is explained and never inspected" do
     status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "arm64")
 
