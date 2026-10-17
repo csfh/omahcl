@@ -5,5 +5,7 @@
 # See the ActiveSupport::ParameterFilter documentation for supported notations and behaviors.
 Rails.application.config.filter_parameters += [
   :passw, :email, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc,
-  :submitted_ip_digest
+  # A machine or IP digest, a challenge nonce, or a search term can tie a log
+  # line to one person. Search is matched exactly: :q would hide every key with a "q".
+  :digest, :nonce, /\Aq\z/
 ]
