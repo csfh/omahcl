@@ -8,8 +8,8 @@ class CollectorTest < ActiveSupport::TestCase
   SECURE_BOOT_VAR = "sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c".freeze
 
   setup do
-    @root = Dir.mktmpdir("omarify-sys")
-    @bin = Dir.mktmpdir("omarify-bin")
+    @root = Dir.mktmpdir("omahcl-sys")
+    @bin = Dir.mktmpdir("omahcl-bin")
     write("etc/os-release", <<~OS)
       NAME="Omarchy"
       ID=omarchy
@@ -41,7 +41,7 @@ class CollectorTest < ActiveSupport::TestCase
   end
 
   test "on omarchy a dry run emits allowlisted json without serials" do
-    status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
     payload = JSON.parse(output)
 
     assert_equal 0, status
@@ -59,34 +59,16 @@ class CollectorTest < ActiveSupport::TestCase
     refute_includes source, "omarchy-channel-current"
   end
 
-  test "the older MARKET_ environment names still work" do
-    leave_omarchy
-
-    status, output = run_collector("OMARIFY_DRY_RUN" => nil, "MARKET_DRY_RUN" => "1")
-
-    assert_equal 0, status
-    assert_equal "candidate", JSON.parse(output.lines.last)["source"]
-  end
-
-  test "the new names win over the older ones" do
-    leave_omarchy
-
-    status, output = run_collector("OMARIFY_SUBMIT" => "no", "MARKET_SUBMIT" => "yes")
-
-    assert_equal 0, status
-    refute_includes output, "Could not reach"
-  end
-
   test "on omarchy the channel comes from the package repository" do
     write("etc/pacman.conf", "[omarchy]\nServer = https://pkgs.omarchy.org/edge/$arch\n")
 
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
 
     assert_equal "edge", JSON.parse(output).dig("omarchy", "channel")
   end
 
   test "the omarchy payload passes the server sanitizer" do
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
 
     attrs = ReportSanitizer.clean!(JSON.parse(output))
 
@@ -98,15 +80,15 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     write("proc/meminfo", "MemTotal:        8000000 kB\n")
 
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
 
     assert_includes output, "8 GB memory"
   end
 
   test "instance digests are pinned so a rename cannot split existing machines" do
-    _status, omarchy = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, omarchy = run_collector("OMAHCL_DRY_RUN" => "1")
     leave_omarchy
-    _status, candidate = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
 
     expected_omarchy = Digest::SHA256.hexdigest("omarchy-market-instance-v1\0" + "0123456789abcdef0123456789abcdef\0SHOULD-NOT-BE-READ\0BOARD-SERIAL")
     expected_candidate = Digest::SHA256.hexdigest("omarchy-market-candidate-v1\0" + "0123456789abcdef0123456789abcdef\0SHOULD-NOT-BE-READ\0BOARD-SERIAL")
@@ -117,7 +99,7 @@ class CollectorTest < ActiveSupport::TestCase
   test "off omarchy a clean machine is likely and the dry run is a candidate payload" do
     leave_omarchy
 
-    status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
     payload = JSON.parse(output.lines.last)
 
     assert_equal 0, status
@@ -132,7 +114,7 @@ class CollectorTest < ActiveSupport::TestCase
   test "the candidate payload passes the server sanitizer" do
     leave_omarchy
 
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
     attrs = ReportSanitizer.clean!(JSON.parse(output.lines.last))
 
     assert_equal "candidate", attrs[:source]
@@ -141,9 +123,9 @@ class CollectorTest < ActiveSupport::TestCase
   end
 
   test "candidate and omarchy digests differ for the same machine" do
-    _status, omarchy = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, omarchy = run_collector("OMAHCL_DRY_RUN" => "1")
     leave_omarchy
-    _status, candidate = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
 
     refute_equal JSON.parse(omarchy)["instance_digest"], JSON.parse(candidate.lines.last)["instance_digest"]
   end
@@ -152,7 +134,7 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     secure_boot(:on)
 
-    status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
 
     assert_equal 0, status
     assert_includes output, "Verdict: likely, once you change the BIOS settings below."
@@ -164,7 +146,7 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     FileUtils.rm(File.join(@root, SECURE_BOOT_VAR))
 
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
 
     assert_includes output, "Verdict: unclear."
     assert_includes output, "Could not read the Secure Boot state"
@@ -176,7 +158,7 @@ class CollectorTest < ActiveSupport::TestCase
       00:02.0 "VGA compatible controller" "NVIDIA Corporation" "GA106 [GeForce RTX 3060]" -ra1
     LSPCI
 
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1", "OMARIFY_SKIP_CMDS" => nil)
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_SKIP_CMDS" => nil)
 
     assert_includes output, "Verdict: unclear."
     assert_includes output, "NVIDIA GPU"
@@ -188,7 +170,7 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     write("sys/class/dmi/id/sys_vendor", "Apple Inc.")
 
-    status, output = run_collector("OMARIFY_DRY_RUN" => "1", "OMARIFY_ARCH" => "aarch64")
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
 
     assert_equal 0, status
     assert_includes output, "Verdict: unlikely."
@@ -200,7 +182,7 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     FileUtils.mkdir_p(File.join(@root, "sys/class/tpm"))
 
-    _status, output = run_collector("OMARIFY_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
 
     assert_includes output, "A TPM is visible"
     assert_includes output, "Verdict: likely, once you change the BIOS settings below."
@@ -210,7 +192,7 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     FileUtils.rm_rf(File.join(@root, "sys/class/dmi"))
 
-    status, output = run_collector("OMARIFY_SUBMIT" => "yes")
+    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
 
     assert_equal 0, status
     assert_includes output, "nothing to share"
@@ -220,7 +202,7 @@ class CollectorTest < ActiveSupport::TestCase
   test "off omarchy sends nothing when the person declines" do
     leave_omarchy
 
-    status, output = run_collector("OMARIFY_SUBMIT" => "no")
+    status, output = run_collector("OMAHCL_SUBMIT" => "no")
 
     assert_equal 0, status
     assert_includes output, "Verdict:"
@@ -241,28 +223,28 @@ class CollectorTest < ActiveSupport::TestCase
   test "off omarchy says yes only when told to, and then tries the server" do
     leave_omarchy
 
-    status, output = run_collector("OMARIFY_SUBMIT" => "yes")
+    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
 
     refute_equal 0, status
     assert_includes output, "Could not reach Omarchy HCL"
   end
 
   test "macos is explained and never inspected" do
-    status, output = run_collector("OMARIFY_KERNEL" => "Darwin", "OMARIFY_ARCH" => "arm64")
+    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "arm64")
 
     assert_equal 0, status
     assert_includes output, "Apple silicon"
     assert_includes output, "unlikely"
     refute_includes output, "Could not reach"
 
-    status, output = run_collector("OMARIFY_KERNEL" => "Darwin", "OMARIFY_ARCH" => "x86_64")
+    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "x86_64")
 
     assert_equal 0, status
     assert_includes output, "Intel Mac"
   end
 
   test "an unsupported kernel exits cleanly" do
-    status, output = run_collector("OMARIFY_KERNEL" => "FreeBSD")
+    status, output = run_collector("OMAHCL_KERNEL" => "FreeBSD")
 
     assert_equal 2, status
     assert_includes output, "only runs on Linux"
@@ -312,10 +294,10 @@ class CollectorTest < ActiveSupport::TestCase
 
     def run_collector(extra = {}, detach = false)
       env = {
-        "OMARIFY_SYS_ROOT" => @root,
-        "OMARIFY_URL" => "http://example.test",
-        "OMARIFY_SKIP_CMDS" => "1",
-        "OMARIFY_ARCH" => "x86_64",
+        "OMAHCL_SYS_ROOT" => @root,
+        "OMAHCL_URL" => "http://example.test",
+        "OMAHCL_SKIP_CMDS" => "1",
+        "OMAHCL_ARCH" => "x86_64",
         "PATH" => "#{@bin}:#{ENV['PATH']}"
       }.merge(extra)
       script = Rails.root.join("lib/collectors/omarchy.sh").to_s

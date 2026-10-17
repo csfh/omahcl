@@ -78,13 +78,13 @@ curl -fsSL http://127.0.0.1:62951/collect | bash
 The script has two modes:
 
 - **On Omarchy** (`ID=omarchy` in `/etc/os-release`) it sends an anonymous hardware report, which becomes public.
-- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. It sends nothing unless you answer yes at the prompt, and then it files a private *candidate* report. Candidates never appear on public pages. With no terminal to ask on, the answer is no. Set `OMARIFY_SUBMIT=yes` to answer for a script.
+- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. It sends nothing unless you answer yes at the prompt, and then it files a private *candidate* report. Candidates never appear on public pages. With no terminal to ask on, the answer is no. Set `OMAHCL_SUBMIT=yes` to answer for a script.
 
 Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
 
 Serials are hashed into `instance_digest` in memory and never sent. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
 
-Environment variables: `OMARIFY_URL`, `OMARIFY_DRY_RUN` (print the payload, send nothing), `OMARIFY_SUBMIT` (`yes` or `no`), and `OMARIFY_SYS_ROOT`, `OMARIFY_ARCH`, `OMARIFY_KERNEL` and `OMARIFY_SKIP_CMDS` (for tests). The older `MARKET_*` names still work.
+Environment variables: `OMAHCL_URL`, `OMAHCL_DRY_RUN` (print the payload, send nothing), `OMAHCL_SUBMIT` (`yes` or `no`), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
 
 ## Tests
 
