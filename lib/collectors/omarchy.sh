@@ -412,7 +412,8 @@ confirm_submit() {
     echo "Candidate reports are never shown publicly."
   fi
   echo "The server keeps a keyed hash of your IP address to tell networks apart, and"
-  echo "keeps per-IP request counts for about an hour to limit abuse."
+  echo "keeps per-IP request counts for about an hour to limit abuse. Database"
+  echo "backups keep those counts for up to a day after that."
   echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
   case ${OMAHCL_SUBMIT:-} in
     yes | y | 1) return 0 ;;
