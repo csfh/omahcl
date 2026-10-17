@@ -36,6 +36,14 @@ class RequestLoggingTest < ActionDispatch::IntegrationTest
     assert_no_match CLIENT_IP, @log.string
   end
 
+  # Action Cable writes its own "Started … for <ip>" line, outside AnonymousRequestLogger.
+  test "the unused Action Cable endpoint is not served and logs no IP" do
+    get "/cable", headers: { "REMOTE_ADDR" => CLIENT_IP }
+
+    assert_response :not_found
+    assert_no_match CLIENT_IP, @log.string
+  end
+
   test "search logs leave out the query" do
     get hardware_models_path(q: "x220-search-term")
     get suggestions_hardware_models_path(q: "x220-search-term")
