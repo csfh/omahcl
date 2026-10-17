@@ -35,7 +35,7 @@ port ENV.fetch("PORT", 3000)
 plugin :tmp_restart
 
 # Run Solid Queue inside Puma. Async mode avoids a second copied process, which
-# OOMs the 512MB App Platform instance.
+# OOMs a 512MB instance.
 if ENV["SOLID_QUEUE_IN_PUMA"]
   plugin :solid_queue
   solid_queue_mode :async

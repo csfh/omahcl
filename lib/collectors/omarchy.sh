@@ -135,7 +135,7 @@ sha256_hex() {
 
 instance_digest() {
   local vendor=$1 product=$2 cpu_model=$3
-  # These domain strings predate the name Omarify. Never rename them: that would
+  # These domain strings predate the current name. Never rename them: that would
   # give every machine a new instance_digest and split its history.
   local domain=${4:-omarchy-market-instance-v1}
   local machine_id product_serial board_serial material
@@ -412,13 +412,13 @@ confirm_submit() {
 fetch_challenge() {
   local body
   body=$(curl -fsS -A "omarify-collect/2" --max-time 30 "${OMARIFY_URL%/}/challenges") || {
-    echo "Could not reach Omarify at $OMARIFY_URL" >&2
+    echo "Could not reach Omarchy HCL at $OMARIFY_URL" >&2
     exit 1
   }
   local nonce
   nonce=$(printf '%s' "$body" | sed -n 's/.*"nonce"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)
   if [[ -z $nonce ]]; then
-    echo "Omarify did not return a challenge nonce." >&2
+    echo "Omarchy HCL did not return a challenge nonce." >&2
     exit 1
   fi
   printf '%s' "$nonce"
@@ -431,7 +431,7 @@ submit() {
     -H "Content-Type: application/json" \
     -d "$body" \
     "${OMARIFY_URL%/}/reports"); then
-    echo "Omarify rejected the report." >&2
+    echo "Omarchy HCL rejected the report." >&2
     exit 1
   fi
   printf '%s' "$response"
@@ -544,7 +544,7 @@ run_macos() {
 
 main() {
   if [[ $OMARIFY_URL == __* ]]; then
-    echo "Set OMARIFY_URL, or download this script from Omarify so the URL is filled in." >&2
+    echo "Set OMARIFY_URL, or download this script from Omarchy HCL so the URL is filled in." >&2
     exit 1
   fi
 

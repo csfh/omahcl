@@ -1,6 +1,6 @@
 # Agent notes
 
-Rails 8.1 app for Omarify, a public database of hardware that runs Omarchy.
+Rails 8.1 app for Omarchy HCL (omahcl.csfh.dev), an unofficial public database of hardware that runs Omarchy.
 
 ## Run
 
@@ -29,7 +29,7 @@ Rails 8.1 app for Omarify, a public database of hardware that runs Omarchy.
 - Schema format is SQL (`db/structure.sql`) because of `pg_trgm` GIN indexes. Dump with a Postgres 16 client.
 - Cache, queue, and cable share `DATABASE_URL`. Keep their tables in `db/cache_migrate`, `db/queue_migrate`, and `db/cable_migrate` so `db:prepare` creates them on an already-populated Postgres.
 - Drop migrations are irreversible by design. Never edit an old migration; add a new one.
-- The name is Omarify. The collector's `omarchy-market-instance-v1` and `omarchy-market-candidate-v1` digest domains keep their old names on purpose: renaming them re-keys every machine. A collector test pins the exact digests.
+- The display name is Omarchy HCL. Internal identifiers keep the earlier name Omarify on purpose (Rails module, `omarify_*` databases, Compose project, `OMARIFY_*` collector vars), so renaming the product again does not need a database or volume change. The collector's `omarchy-market-instance-v1` and `omarchy-market-candidate-v1` digest domains keep their old names on purpose: renaming them re-keys every machine. A collector test pins the exact digests.
 - Collector env vars are `OMARIFY_*`; the older `MARKET_*` names still work as fallbacks. The URL placeholder is `__OMARIFY_URL__` and must change together with `CollectsController`.
-- Production site URLs use `https://market-app-blg2k.ondigitalocean.app/`.
-- Develop the slice with tests, then commit, merge into `main`, and push `origin/main` so DigitalOcean App Platform deploys. Watch the deploy until it is ACTIVE.
+- Production site URLs use `https://omahcl.csfh.dev/`. The app is not hosted on DigitalOcean.
+- Develop the slice with tests, then commit, merge into `main`, and push `origin/main`. How production deploys is not recorded here; ask before assuming a deploy pipeline.

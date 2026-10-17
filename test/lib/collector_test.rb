@@ -244,7 +244,7 @@ class CollectorTest < ActiveSupport::TestCase
     status, output = run_collector("OMARIFY_SUBMIT" => "yes")
 
     refute_equal 0, status
-    assert_includes output, "Could not reach Omarify"
+    assert_includes output, "Could not reach Omarchy HCL"
   end
 
   test "macos is explained and never inspected" do
