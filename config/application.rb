@@ -23,6 +23,9 @@ module HCL
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks collectors])
 
+    # Nothing uses Action Cable, and its /cable endpoint logs each client's IP.
+    config.action_cable.mount_path = nil
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
