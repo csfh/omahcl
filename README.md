@@ -2,7 +2,7 @@
 
 A public hardware compatibility list for [Omarchy](https://omarchy.org), at `https://omahcl.com/`. It is unofficial.
 
-People already running Omarchy send an anonymous hardware report with one command. Everyone else can look up whether a vendor and model has been seen running Omarchy. There are no accounts, listings, or email.
+People already running Omarchy can send an anonymous hardware report with one command. Everyone else can look up whether a vendor and model has been seen running Omarchy. There are no accounts, listings, or email.
 
 ## Local setup
 
@@ -81,10 +81,12 @@ Against a local server:
 curl -fsSL http://127.0.0.1:62951/collect | bash
 ```
 
-The script has two modes:
+The script never sends anything without a yes. Before asking, it lists what it would send, says what it never sends and how IP addresses are handled, and links to `/privacy`. The answer defaults to no, and with no terminal to ask on the answer is no. Set `OMAHCL_SUBMIT=yes` or `no` to answer for a script.
 
-- **On Omarchy** (`ID=omarchy` in `/etc/os-release`) it sends an anonymous hardware report, which becomes public.
-- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. It sends nothing unless you answer yes at the prompt, and then it files a private *candidate* report. Candidates never appear on public pages. With no terminal to ask on, the answer is no. Set `OMAHCL_SUBMIT=yes` to answer for a script.
+It has two modes:
+
+- **On Omarchy** (`ID=omarchy` in `/etc/os-release`), a yes sends an anonymous hardware report, which becomes public.
+- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. A yes files a private *candidate* report. Candidates never appear on public pages.
 
 Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
 

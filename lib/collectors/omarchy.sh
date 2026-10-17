@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Hardware check for Omarchy.
+# Hardware check for Omarchy. It sends nothing unless you say yes.
 #
-#   On Omarchy:      sends an anonymous hardware report.
+#   On Omarchy:      asks, then sends a public hardware report.
 #   Anywhere else:   checks locally whether this machine looks able to run Omarchy,
-#                    and sends nothing unless you say yes.
+#                    then asks whether to send a private candidate report.
 
 set -euo pipefail
 
@@ -362,10 +362,14 @@ print_list() {
   done
 }
 
-print_verdict() {
+print_machine() {
   echo
   echo "${F_vendor:-Unknown vendor} ${F_product:-unknown model}"
   echo "$F_cpu_model, $(((F_mem + 536870912) / 1073741824)) GB memory, $F_arch"
+}
+
+print_verdict() {
+  print_machine
   echo
   case $VERDICT in
     likely)
@@ -386,7 +390,30 @@ print_verdict() {
   echo "Not checked: Wi-Fi, Bluetooth, audio, suspend, fingerprint reader. The manual has no hardware list."
 }
 
+# Shows what a send shares and the privacy policy, then asks. Every send needs an
+# explicit yes, from the prompt or OMAHCL_SUBMIT; no terminal means no.
 confirm_submit() {
+  local mode=$1
+  echo
+  echo "Nothing has been sent yet. If you answer yes, this sends:"
+  echo "  - vendor, model, product family, chassis type, CPU, memory size and GPU names"
+  echo "  - whether the machine uses UEFI, has a TPM and has Secure Boot on"
+  if [[ $mode == omarchy ]]; then
+    echo "  - the Omarchy version and release channel"
+  else
+    echo "  - the verdict above and your distro's name"
+  fi
+  echo "  - a one-way hash of the machine-id, plus the DMI serials when run with sudo,"
+  echo "    so running this again updates one entry instead of adding another"
+  echo "It never sends serial numbers, MAC addresses, your hostname or username."
+  if [[ $mode == omarchy ]]; then
+    echo "The report is public."
+  else
+    echo "Candidate reports are never shown publicly."
+  fi
+  echo "The server keeps a keyed hash of your IP address to tell networks apart, and"
+  echo "keeps per-IP request counts for about an hour to limit abuse."
+  echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
   case ${OMAHCL_SUBMIT:-} in
     yes | y | 1) return 0 ;;
     no | n | 0) return 1 ;;
@@ -397,10 +424,6 @@ confirm_submit() {
   fi
   local answer=
   echo
-  echo "Nothing has been sent. You can add this machine to the list as a candidate."
-  echo "It sends: vendor and model, CPU, memory size, GPU names, UEFI/TPM/Secure Boot,"
-  echo "the verdict above, your distro name, and a one-way hash of your machine-id so"
-  echo "running this again updates one entry. No serials, hostname, or username."
   read -r -p "Send it? [y/N] " answer </dev/tty || true
   case $answer in
     y | Y | yes | YES | Yes) return 0 ;;
@@ -479,7 +502,13 @@ run_omarchy() {
   if dry_run_print "$payload"; then
     return 0
   fi
+  print_machine
+  if ! confirm_submit omarchy; then
+    echo "Nothing was sent."
+    return 0
+  fi
   post_payload "$payload"
+  echo
   echo "Submitted a hardware report."
   local model_url
   model_url=$(json_string_field "$RESULT" model_url)
@@ -504,7 +533,8 @@ run_check() {
   if dry_run_print "$payload"; then
     return 0
   fi
-  if ! confirm_submit; then
+  if ! confirm_submit candidate; then
+    echo "Nothing was sent."
     return 0
   fi
   post_payload "$payload"
