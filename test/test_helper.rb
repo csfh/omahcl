@@ -37,7 +37,7 @@ module ActiveSupport
     end
 
     def ingest_report!(payload = omarchy_payload, ip: "203.0.113.10")
-      nonce, _challenge = Challenge.issue!(ip: ip)
+      nonce, _challenge = Challenge.issue!
       Report.ingest(payload.merge("nonce" => nonce), ip: ip)
     end
   end

@@ -1,24 +1,19 @@
 require "test_helper"
 
 class ChallengeTest < ActiveSupport::TestCase
-  test "status_label follows consume and expiry" do
-    nonce, challenge = Challenge.issue!(ip: "203.0.113.10")
-
-    assert challenge.still_open?
-    assert_equal "Open", challenge.status_label
-
+  test "expired covers every challenge past its expiry, consumed or not" do
+    nonce, open_challenge = Challenge.issue!
     Challenge.consume!(nonce)
-    challenge.reload
+    _nonce, unused = Challenge.issue!
+    consumed_and_expired = Challenge.create!(nonce_digest: Challenge.digest_nonce("a"), expires_at: 1.minute.ago, consumed_at: 2.minutes.ago)
+    expired = Challenge.create!(nonce_digest: Challenge.digest_nonce("b"), expires_at: 1.minute.ago)
 
-    assert challenge.consumed?
-    assert_equal "Consumed", challenge.status_label
+    assert_equal [ consumed_and_expired, expired ].sort_by(&:id), Challenge.expired.order(:id).to_a
+    assert_includes Challenge.still_open, unused
+    refute_includes Challenge.still_open, open_challenge.reload
+  end
 
-    stale = Challenge.create!(
-      nonce_digest: Challenge.digest_nonce("stale"),
-      expires_at: 1.minute.ago
-    )
-
-    assert stale.expired?
-    assert_equal "Expired", stale.status_label
+  test "challenges keep no IP data" do
+    refute_includes Challenge.column_names, "issued_ip_digest"
   end
 end

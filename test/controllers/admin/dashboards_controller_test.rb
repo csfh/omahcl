@@ -23,9 +23,7 @@ class Admin::DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: /ThinkPad X220/
     assert_select "a", text: /ThinkPad X230/
     assert_select "a", text: "3 accounts"
-    assert_select "a", text: "0 open"
-    assert_select "a", text: "2 consumed"
+    assert_select "dd", text: "0 open"
     assert_select "nav[aria-label=Admin] a", text: "Home"
-    assert_select "nav[aria-label=Admin] a", text: "Challenges"
   end
 end

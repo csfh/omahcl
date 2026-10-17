@@ -1,19 +1,14 @@
 class Challenge < ApplicationRecord
   TTL = 5.minutes
 
-  scope :newest_first, -> { order(created_at: :desc) }
-  scope :created_since, ->(time) { where(created_at: time..) }
   scope :still_open, -> { where(consumed_at: nil).where("expires_at > ?", Time.current) }
-  scope :consumed, -> { where.not(consumed_at: nil) }
-  scope :expired, -> { where(consumed_at: nil).where("expires_at <= ?", Time.current) }
+  # Consumed or not, a challenge past its expiry is useless, and a recurring
+  # task deletes it.
+  scope :expired, -> { where(expires_at: ..Time.current) }
 
-  def self.issue!(ip:)
+  def self.issue!
     nonce = SecureRandom.urlsafe_base64(32)
-    challenge = create!(
-      nonce_digest: digest_nonce(nonce),
-      expires_at: TTL.from_now,
-      issued_ip_digest: Report.digest_ip(ip)
-    )
+    challenge = create!(nonce_digest: digest_nonce(nonce), expires_at: TTL.from_now)
     [ nonce, challenge ]
   end
 
@@ -27,24 +22,5 @@ class Challenge < ApplicationRecord
 
   def self.digest_nonce(nonce)
     ::Digest::SHA256.hexdigest(nonce.to_s)
-  end
-
-  def consumed?
-    consumed_at.present?
-  end
-
-  def expired?
-    consumed_at.nil? && expires_at.past?
-  end
-
-  def still_open?
-    consumed_at.nil? && expires_at.future?
-  end
-
-  def status_label
-    return "Consumed" if consumed?
-    return "Expired" if expired?
-
-    "Open"
   end
 end
