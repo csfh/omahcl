@@ -38,11 +38,30 @@ The image boots in `RAILS_ENV=production`. It decrypts `config/credentials.yml.e
 
 Do not commit `config/master.key`.
 
-### Environment
+### Laravel Cloud
 
-Set `RAILS_MASTER_KEY` (the contents of local `config/master.key`) as a secret, and `DATABASE_URL` for Postgres. Production primary, cache, queue, and cable connections all use that URL. The Dockerfile never contains the key. `CLOUDFLARE_EMAIL_API_TOKEN` from earlier versions is no longer read and can be removed.
+Production runs on [Laravel Cloud](https://laravel.com/cloud/docs/deploy-guides/ruby) at `https://omahcl.csfh.dev/`. Cloud builds a Ruby app from the Gemfile; it does not use the Dockerfile (that is for Kamal or `docker run`).
 
-HTTP port for this image is **80** (Thruster). `config/deploy.yml` holds a Kamal setup if you deploy that way.
+Attach and set:
+
+| What | Value |
+| --- | --- |
+| Postgres database | Attach one. Cloud then sets `DATABASE_URL`, and every connection here (primary, cache, queue, cable) uses it. |
+| `RAILS_MASTER_KEY` | Contents of local `config/master.key`, as a secret. Or set `SECRET_KEY_BASE` instead. |
+| Deploy command | `bin/rails db:prepare`. Cloud runs it before a new deployment takes traffic. The Docker entrypoint does this elsewhere, but Cloud's start command skips the entrypoint. |
+| Build command | The default, `SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile`. |
+
+Nothing else is needed: no Redis, object storage, mail, or persistent disk. Do not set `SOLID_QUEUE_IN_PUMA`; nothing enqueues jobs.
+
+Things to know:
+
+- The first migration runs `CREATE EXTENSION pg_trgm`. Cloud's docs do not say whether its Postgres allows it. If a deploy fails there, the error names the extension.
+- If the database URL uses the pooled `-pooler` host, run migrations over the direct host. Migrations take an advisory lock that a transaction pooler breaks.
+- The app runs on ARM64 and the lockfile carries the `aarch64-linux` platforms. Keep them when updating gems.
+- TLS ends at Cloud's proxy, so `assume_ssl` and `force_ssl` are on. `/up` is exempt from the redirect for health checks.
+- For the custom domain, add a CNAME in Cloudflare to the origin Cloud shows. Keep the `_acme-challenge` records DNS only (not proxied) or certificate issuance fails.
+- Filesystem is reset on every deploy. Nothing here writes to it.
+- Logs are under Monitoring, then Logs. One-off commands go in the Commands tab, and they must be non-interactive, so use `bin/rails runner`. `bin/rails admin:create EMAIL=…` works there.
 
 ## Collector
 
