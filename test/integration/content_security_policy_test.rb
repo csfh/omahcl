@@ -1,28 +1,27 @@
 require "test_helper"
 
 class ContentSecurityPolicyTest < ActionDispatch::IntegrationTest
-  test "pages send a same-origin policy whose nonce covers the page's own scripts" do
+  test "pages allow inline scripts and Cloudflare's script hosts" do
     get root_path
 
     policy = response.headers["Content-Security-Policy"].to_s
-    nonce = policy[/'nonce-([^']+)'/, 1]
+    nonce = policy[/style-src [^;]*'nonce-([^']+)'/, 1]
 
-    assert nonce, "script-src carries a nonce: #{policy}"
-    assert_includes policy, "default-src 'self'"
-    assert_includes policy, "script-src 'self' 'nonce-#{nonce}'"
+    # Browsers ignore 'unsafe-inline' while script-src carries a nonce or hash.
+    assert_equal "script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com " \
+      "https://static.cloudflareinsights.com https://challenges.cloudflare.com", policy[/script-src [^;]*/]
+    assert nonce, "style-src carries a nonce: #{policy}"
     assert_includes policy, "style-src 'self' 'nonce-#{nonce}'"
+    assert_includes policy, "default-src 'self'"
+    assert_includes policy, "connect-src 'self' https://cloudflareinsights.com"
+    assert_includes policy, "frame-src 'self' https://challenges.cloudflare.com"
     assert_includes policy, "object-src 'none'"
     assert_includes policy, "base-uri 'self'"
     assert_includes policy, "form-action 'self'"
     assert_includes policy, "frame-ancestors 'none'"
-    assert_select "script[type=importmap][nonce=?]", nonce
-    assert_select "script[type=module][nonce=?]", nonce
-    assert_select "meta[name=csp-nonce][content=?]", nonce
   end
 
-  # Cloudflare copies the nonce from this header onto the bot-detection script it
-  # injects, so the header must carry it rather than a meta tag.
-  test "each response gets its own nonce, without a session cookie" do
+  test "each response gets its own style nonce, without a session cookie" do
     get root_path
     first = response.headers["Content-Security-Policy"][/'nonce-([^']+)'/, 1]
     get root_path
