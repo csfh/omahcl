@@ -1,7 +1,7 @@
 <% page_title @report.display_name %>
 
 <p class="text-sm text-muted"><%= link_to "All reports", admin_reports_path %></p>
-<h1 class="mt-2 text-3xl font-semibold"><%= @report.display_name %></h1>
+<h1 class="mt-2 heading-page"><%= @report.display_name %></h1>
 <p class="mt-2 text-muted">
   Last reported <%= @report.updated_at.to_fs(:long) %>
   ·
@@ -21,35 +21,35 @@
 </div>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Public id</dt>
     <dd class="mt-1 break-all"><%= @report.public_id %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Instance digest</dt>
     <dd class="mt-1 break-all font-mono text-sm"><%= @report.instance_digest %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Omarchy</dt>
     <dd class="mt-1"><%= @report.source_candidate? ? "Not installed" : "#{@report.omarchy_version} · #{@report.omarchy_channel}" %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Memory</dt>
     <dd class="mt-1"><%= memory_label(@report.memory_bytes) %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">CPU</dt>
     <dd class="mt-1"><%= [@report.cpu_model, @report.cpu_vendor, @report.cpu_arch, pluralize(@report.cpu_cores, "core")].compact.join(" · ") %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">GPUs</dt>
     <dd class="mt-1"><%= @report.gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Family / chassis</dt>
     <dd class="mt-1"><%= [@report.family, @report.chassis].compact.join(" · ").presence || "Not reported" %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Firmware</dt>
     <dd class="mt-1">
       UEFI <%= @report.uefi? ? "yes" : "no" %>

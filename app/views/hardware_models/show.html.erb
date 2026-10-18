@@ -1,26 +1,26 @@
 <% page_title @sample.display_name %>
 
 <p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path %></p>
-<h1 class="mt-2 text-3xl font-semibold"><%= @sample.display_name %></h1>
+<h1 class="mt-2 heading-page"><%= @sample.display_name %></h1>
 <p class="mt-2 flex flex-wrap items-center gap-3 text-muted">
   <%= machines_status(@machines_count, @networks_count) %>
   <span><%= machines_ran_omarchy(@machines_count) %></span>
 </p>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Memory seen</dt>
     <dd class="mt-1"><%= memory_label(@reports.minimum(:memory_bytes)) %> – <%= memory_label(@reports.maximum(:memory_bytes)) %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">CPU models</dt>
     <dd class="mt-1"><%= @cpu_models.join(", ") %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">GPUs</dt>
     <dd class="mt-1"><%= @gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Omarchy versions</dt>
     <dd class="mt-1"><%= @versions.join(", ") %></dd>
   </div>

@@ -21,6 +21,23 @@ class ContentSecurityPolicyTest < ActionDispatch::IntegrationTest
     assert_includes policy, "frame-ancestors 'none'"
   end
 
+  # Read the source, not app/assets/builds, which is gitignored and absent on a
+  # fresh checkout. Propshaft turns each bare name into a digested /assets/ URL.
+  test "fonts and the hero image are bundled assets the policy allows" do
+    source = Rails.root.join("app/assets/tailwind/application.css").read
+    names = source.scan(/url\(["']([^"')]+)["']\)/).flatten
+
+    assert_equal %w[jetbrains-mono-latin-wght-normal.woff2 press-start-2p-latin-400-normal.woff2 pixel-scatter.svg].sort, names.sort
+    names.each do |name|
+      assert Rails.application.assets.load_path.find(name), "#{name} is in the asset load path"
+    end
+
+    get root_path
+    policy = response.headers["Content-Security-Policy"].to_s
+    assert_includes policy, "font-src 'self'"
+    assert_includes policy, "img-src 'self'"
+  end
+
   test "each response gets its own style nonce, without a session cookie" do
     get root_path
     first = response.headers["Content-Security-Policy"][/'nonce-([^']+)'/, 1]
