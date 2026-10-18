@@ -1,0 +1,20 @@
+<%# rows: Report::Stats::Row list. percent: bars show each row's share of row.of instead of a count. %>
+<% percent = local_assigns.fetch(:percent, false) %>
+<% max = percent ? rows.map(&:of).max.to_i : rows.map(&:count).max.to_i %>
+<% if rows.any? %>
+<section class="panel flex min-w-0 flex-col gap-3" aria-labelledby="<%= id %>">
+  <h3 id="<%= id %>" class="heading-section"><%= title %></h3>
+  <ul class="flex flex-col gap-2 text-xs" role="list">
+    <% rows.each do |row| %>
+      <li class="grid grid-cols-[7.5rem_1fr_2.75rem] items-center gap-3">
+        <span class="truncate" title="<%= row.label %>"><%= row.label %></span>
+        <%= block_cells(row.count, max, label: "#{row.label}: #{bar_value(row, percent)}") %>
+        <span class="text-right tabular-nums text-accent"><%= bar_value(row, percent) %></span>
+      </li>
+    <% end %>
+  </ul>
+  <% if local_assigns[:note].present? %>
+    <p class="text-xs text-muted"><%= note %></p>
+  <% end %>
+</section>
+<% end %>
