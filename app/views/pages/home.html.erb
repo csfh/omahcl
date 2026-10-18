@@ -8,6 +8,8 @@
   <%= render "hardware_models/lookup_form", query: @query, submit_label: "Look up" %>
 </section>
 
+<%= render "stats/dashboard", stats: @stats if @stats.machines.positive? %>
+
 <% if @models.any? %>
   <section class="mt-12">
     <h2 class="heading-section">Machines people run</h2>

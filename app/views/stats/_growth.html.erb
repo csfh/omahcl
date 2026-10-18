@@ -1,0 +1,20 @@
+<% if points.size > 1 %>
+  <section class="panel flex min-w-0 flex-col gap-3 sm:col-span-2" aria-labelledby="stats-growth">
+    <h3 id="stats-growth" class="heading-section">Machines over time</h3>
+    <%= growth_columns(points) %>
+    <p class="flex justify-between gap-4 text-xs tabular-nums text-muted">
+      <span>Week of <%= week_label(points.first.week) %></span>
+      <span>Week of <%= week_label(points.last.week) %>: <%= number_with_delimiter(points.last.total) %></span>
+    </p>
+    <p class="text-xs text-muted">Running total of machines, one column per week.</p>
+    <table class="sr-only">
+      <caption>Machines over time, running total by week</caption>
+      <thead><tr><th scope="col">Week starting</th><th scope="col">Machines</th></tr></thead>
+      <tbody>
+        <% points.each do |point| %>
+          <tr><th scope="row"><%= l(point.week, format: :long) %></th><td><%= point.total %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>

@@ -4,6 +4,7 @@ class PagesController < ApplicationController
   def home
     @query = params[:q].to_s
     @models = Report.grouped_models(@query).limit(12)
+    @stats = Report::Stats.new
   end
 
   def privacy
