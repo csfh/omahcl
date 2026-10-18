@@ -82,6 +82,37 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", /ThinkPad X220/
     assert_match(/1 machine reported running Omarchy/, response.body)
     assert_match(/Only a few machines so far/, response.body)
+    assert_select "section[aria-labelledby=model-security] li", text: /UEFI.*1 of 1/m
+    assert_select "section[aria-labelledby=model-security] p", text: "Out of all 1 machine of this model."
+  end
+
+  test "show charts only that model, counting its machines out of its total" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "a" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "b" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "c" * 64))
+    ingest_report!(candidate_payload(product: "ThinkPad X220"))
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_response :success
+    assert_select "section[aria-labelledby=model-security] li", text: /UEFI.*2 of 2/m
+    assert_select "section[aria-labelledby=model-security] li", text: /Secure Boot on.*0 of 2/m
+    assert_select "section[aria-labelledby=model-memory] li", 1
+    assert_select "section[aria-labelledby=model-version] li", text: /4\.0\.2.*2/m
+    assert_select "#main [style]", false
+  end
+
+  test "show leaves out text panels that repeat a chart, and charts architecture" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "d" * 64))
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_select "dt", text: "Memory seen", count: 0
+    assert_select "dt", text: "Omarchy versions", count: 0
+    assert_select "dt", text: "CPU models"
+    assert_select "dt", text: "GPUs"
+    assert_select "#model-version", "Version"
+    assert_select "section[aria-labelledby=model-architecture] li", text: /x86_64.*1/m
   end
 
   test "hidden reports are not public" do

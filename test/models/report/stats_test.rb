@@ -21,6 +21,18 @@ class Report::StatsTest < ActiveSupport::TestCase
 
   def counts(rows) = rows.to_h { |row| [ row.label, row.count ] }
 
+  test "a scope narrows every figure, and is still limited to visible machines" do
+    add(product: "X220")
+    add(product: "X220", memory_gib: 16).update!(hidden_at: Time.current)
+    ingest_report!(candidate_payload(product: "X220"))
+    add(product: "X230")
+
+    one_model = Report::Stats.new(Report.where(model_slug: "lenovo-x220"))
+
+    assert_equal 1, one_model.machines
+    assert_equal({ "8 GB" => 1 }, counts(one_model.memory).select { |_, count| count.positive? })
+  end
+
   test "an empty database gives zeros and no rows" do
     assert_equal 0, stats.machines
     assert_equal 0, stats.models
@@ -73,6 +85,35 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_equal 8, stats.vendor_count
   end
 
+  # The collector sends the raw DMI chassis_type number (SMBIOS spec), not a name.
+  test "chassis numbers are named and grouped, and unknown ones fall under Other" do
+    %w[9 10 14].each { |type| add(chassis: type) }
+    add(chassis: "3")
+    add(chassis: "35")
+    add(chassis: "2")
+    add(chassis: "99")
+    add(chassis: "138") # bit 7 is the chassis lock flag, so this is 10 again
+
+    assert_equal({ "Laptop" => 4, "Desktop" => 1, "Mini PC" => 1, "Other" => 2 }, counts(stats.by_chassis))
+    assert_equal 4, stats.chassis_count
+  end
+
+  test "chassis text is kept as sent and a blank one is left out" do
+    add(chassis: "Notebook")
+    add(chassis: nil)
+
+    assert_equal({ "Notebook" => 1 }, counts(stats.by_chassis))
+  end
+
+  test "extra chassis kinds fold into the one Other row" do
+    add(chassis: "1")
+    add(chassis: "Alpha")
+    add(chassis: "Beta")
+    add(chassis: "Gamma")
+
+    assert_equal({ "Alpha" => 1, "Beta" => 1, "Other" => 2 }, counts(stats.by_chassis(limit: 2)))
+  end
+
   test "memory is bucketed to the next common size" do
     [ 2, 3.8, 7.4, 15.2, 16, 31, 63, 128 ].each { |gib| add(memory_gib: gib) }
 
@@ -80,6 +121,15 @@ class Report::StatsTest < ActiveSupport::TestCase
       { "4 GB or less" => 2, "8 GB" => 1, "16 GB" => 2, "32 GB" => 1, "64 GB" => 1, "More than 64 GB" => 1 },
       counts(stats.memory)
     )
+  end
+
+  test "machines that sent no memory or core count are left out of those charts" do
+    add(memory_gib: 0, cores: 0)
+    add(memory_gib: 8, cores: 4)
+
+    assert_equal 1, counts(stats.memory).values.sum
+    assert_equal 1, counts(stats.cores).values.sum
+    assert_equal 2, stats.machines
   end
 
   test "core counts are bucketed" do

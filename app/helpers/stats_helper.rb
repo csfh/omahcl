@@ -32,12 +32,12 @@ module StatsHelper
     block_svg(points.size * 2 * STEP - 2, GROWTH_ROWS * STEP - 2, cells, label: nil, class: "block h-40 w-full", aspect: "none")
   end
 
-  def bar_value(row, percent)
-    percent ? number_to_percentage(row.count * 100.0 / row.of, precision: 0) : number_with_delimiter(row.count)
-  end
-
-  def tally_sentence(rows)
-    rows.map { |row| "#{row.label} #{number_with_delimiter(row.count)}" }.join(", ")
+  def bar_value(row, mode)
+    case mode
+    when :percent then number_to_percentage(row.count * 100.0 / row.of, precision: 0)
+    when :fraction then "#{number_with_delimiter(row.count)} of #{number_with_delimiter(row.of)}"
+    else number_with_delimiter(row.count)
+    end
   end
 
   def week_label(date)

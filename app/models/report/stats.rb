@@ -1,7 +1,8 @@
-# What the home page charts. Every figure starts from Report.visible, so
-# candidates and hidden machines never show, and counts distinct machines
-# (instance_digest). It deliberately never reads submitted_ip_digest except to
-# apply the Verified rule.
+# What the home and model pages chart. Every figure is limited to
+# Report.visible, so candidates and hidden machines never show, and counts
+# distinct machines (instance_digest). It deliberately never reads
+# submitted_ip_digest except to apply the Verified rule. Pass a scope, such as
+# one model's reports, to narrow every figure.
 class Report::Stats
   GIB = 1024**3
 
@@ -10,10 +11,26 @@ class Report::Stats
   end
   Point = Data.define(:week, :total)
 
+  # The collector sends the raw DMI chassis_type number, so name it. Numbers are
+  # the SMBIOS System Enclosure types (section 7.4.1; names as in dmidecode).
+  # Bit 7 is the chassis lock flag, so it is masked off. Anything else is "Other".
+  CHASSIS_GROUPS = {
+    "Laptop" => [ 8, 9, 10, 14 ],
+    "Desktop" => [ 3, 4, 5, 6, 7, 15, 16 ],
+    "All-in-one" => [ 13 ],
+    "Mini PC" => [ 34, 35, 36 ],
+    "Tablet or 2-in-1" => [ 11, 30, 31, 32 ],
+    "Server" => [ 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29 ]
+  }.flat_map { |label, types| types.map { |type| [ type, label ] } }.to_h.freeze
+
   MEMORY_EDGES = [ 4, 8, 16, 32, 64 ].map { |gib| gib * GIB }.freeze
   MEMORY_LABELS = [ "4 GB or less", "8 GB", "16 GB", "32 GB", "64 GB", "More than 64 GB" ].freeze
   CORE_EDGES = [ 2, 4, 8, 16 ].freeze
   CORE_LABELS = [ "1–2", "3–4", "5–8", "9–16", "17 or more" ].freeze
+
+  def initialize(scope = Report.all)
+    @scope = scope.merge(Report.visible)
+  end
 
   def machines
     @machines ||= scope.distinct.count(:instance_digest)
@@ -33,9 +50,16 @@ class Report::Stats
   end
 
   def by_vendor(limit: 6) = fold(tally(:vendor), limit)
-  def by_chassis(limit: 6) = fold(tally(:chassis), limit)
+  def by_chassis(limit: 6)
+    other = chassis_kinds.find { |row| row.label == "Other" }&.count.to_i
+    named = chassis_kinds.reject { |row| row.label == "Other" }
+    other += named.drop(limit).sum(&:count)
+    shown = named.first(limit)
+    other.positive? ? shown + [ Row.new(label: "Other", count: other) ] : shown
+  end
+
   def vendor_count = tally(:vendor).size
-  def chassis_count = tally(:chassis).size
+  def chassis_count = chassis_kinds.size
 
   def cpu_vendors = tally(:cpu_vendor)
   def architectures = tally(:cpu_arch)
@@ -91,7 +115,7 @@ class Report::Stats
   end
 
   private
-    def scope = Report.visible
+    attr_reader :scope
 
     def distinct_machines = Report.arel_table[:instance_digest].count(true)
 
@@ -107,6 +131,19 @@ class Report::Stats
       end
     end
 
+    # Numbers are named and merged; text from a report is kept as sent.
+    def chassis_kinds
+      @chassis_kinds ||= tally(:chassis)
+        .each_with_object(Hash.new(0)) { |row, kinds| kinds[chassis_label(row.label)] += row.count }
+        .map { |label, count| Row.new(label: label, count: count) }
+        .sort_by { |row| [ -row.count, row.label.downcase ] }
+    end
+
+    def chassis_label(raw)
+      text = raw.to_s.strip
+      text.match?(/\A\d+\z/) ? CHASSIS_GROUPS.fetch(text.to_i & 0x7F, "Other") : text
+    end
+
     def rows_from(pairs)
       pairs.map { |label, count| Row.new(label: label, count: count) }
         .sort_by { |row| [ -row.count, row.label.downcase ] }
@@ -119,11 +156,12 @@ class Report::Stats
     end
 
     # Fixed categories, in size order, so a chart keeps its shape as data grows.
+    # The sanitizer stores a missing value as 0, which would otherwise land in the smallest bucket.
     def bucketed(column, edges, labels)
       attribute = Report.arel_table[column]
       index = edges.each_with_index.inject(Arel::Nodes::Case.new) { |kase, (edge, i)| kase.when(attribute.lteq(edge)).then(i) }
         .else(edges.size)
-      by_index = scope.group(index).pluck(index, distinct_machines).to_h
+      by_index = scope.where(column => 1..).group(index).pluck(index, distinct_machines).to_h
       labels.each_with_index.map { |label, i| Row.new(label: label, count: by_index.fetch(i, 0)) }
     end
 

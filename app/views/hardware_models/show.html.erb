@@ -9,10 +9,6 @@
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
   <div class="panel">
-    <dt class="text-sm text-muted">Memory seen</dt>
-    <dd class="mt-1"><%= memory_label(@reports.minimum(:memory_bytes)) %> – <%= memory_label(@reports.maximum(:memory_bytes)) %></dd>
-  </div>
-  <div class="panel">
     <dt class="text-sm text-muted">CPU models</dt>
     <dd class="mt-1"><%= @cpu_models.join(", ") %></dd>
   </div>
@@ -20,8 +16,12 @@
     <dt class="text-sm text-muted">GPUs</dt>
     <dd class="mt-1"><%= @gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
   </div>
-  <div class="panel">
-    <dt class="text-sm text-muted">Omarchy versions</dt>
-    <dd class="mt-1"><%= @versions.join(", ") %></dd>
-  </div>
 </dl>
+
+<div class="mt-4 grid gap-4 sm:grid-cols-2">
+  <%= render "stats/block_bars", id: "model-memory", title: "Memory", rows: @stats.memory.reject { |row| row.count.zero? } %>
+  <%= render "stats/block_bars", id: "model-version", title: "Version", rows: @stats.recent_versions %>
+  <%= render "stats/block_bars", id: "model-architecture", title: "Architecture", rows: @stats.architectures %>
+  <%= render "stats/block_bars", id: "model-security", title: "Boot and security", rows: @stats.security, mode: :fraction,
+        note: "Out of all #{number_with_delimiter(@stats.machines)} #{"machine".pluralize(@stats.machines)} of this model." %>
+</div>
