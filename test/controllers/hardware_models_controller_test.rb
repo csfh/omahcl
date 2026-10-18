@@ -102,6 +102,19 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#main [style]", false
   end
 
+  test "show leaves out text panels that repeat a chart, and charts architecture" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "d" * 64))
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_select "dt", text: "Memory seen", count: 0
+    assert_select "dt", text: "Omarchy versions", count: 0
+    assert_select "dt", text: "CPU models"
+    assert_select "dt", text: "GPUs"
+    assert_select "#model-version", "Version"
+    assert_select "section[aria-labelledby=model-architecture] li", text: /x86_64.*1/m
+  end
+
   test "hidden reports are not public" do
     report = ingest_report!(omarchy_payload(product: "ThinkPad X220"))
     report.update!(hidden_at: Time.current)

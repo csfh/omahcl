@@ -21,7 +21,6 @@ class HardwareModelsController < ApplicationController
     @networks_count = @reports.unscope(:order).distinct.count(:submitted_ip_digest)
     @cpu_models = @reports.unscope(:order).distinct.pluck(:cpu_model)
     @gpus = @reports.flat_map { |report| report.gpus }.uniq
-    @versions = @reports.unscope(:order).distinct.pluck(:omarchy_version)
     @stats = Report::Stats.new(@reports.unscope(:order))
   end
 end

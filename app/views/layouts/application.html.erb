@@ -9,8 +9,9 @@
     <%= csrf_meta_tags if authenticated? %>
     <%= csp_meta_tag %>
     <%= yield :head %>
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%# Digested asset URLs: files in public/ are cached for a year, so a new icon would never reach returning visitors. %>
+    <%= favicon_link_tag "icon.png", type: "image/png" %>
+    <%= favicon_link_tag "icon.svg", type: "image/svg+xml" %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>

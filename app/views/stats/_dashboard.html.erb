@@ -10,7 +10,7 @@
       [ "Machines", stats.machines ],
       [ "Models", stats.models ],
       [ "Verified models", stats.verified_models ],
-      [ "Omarchy versions", stats.version_count ]
+      [ "Versions", stats.version_count ]
     ].each do |label, value| %>
       <div class="panel panel-raised flex flex-col-reverse gap-2">
         <dt class="text-xs text-muted"><%= label %></dt>
@@ -22,17 +22,17 @@
   <div class="mt-4 grid gap-4 sm:grid-cols-2">
     <%= render "stats/block_bars", id: "stats-vendor", title: "By vendor", rows: stats.by_vendor,
           note: ("Top 6 of #{stats.vendor_count} vendors." if stats.vendor_count > 6) %>
-    <%= render "stats/block_bars", id: "stats-chassis", title: "By chassis", rows: stats.by_chassis,
-          note: ("Top 6 of #{stats.chassis_count} kinds." if stats.chassis_count > 6) %>
+    <%= render "stats/block_bars", id: "stats-chassis", title: "Form factor", rows: stats.by_chassis,
+          note: "From the machine's chassis type: laptop, desktop and so on." %>
     <%= render "stats/block_bars", id: "stats-memory", title: "Memory", rows: stats.memory,
           note: "Rounded up to the next common size." %>
     <%= render "stats/block_bars", id: "stats-cores", title: "CPU cores", rows: stats.cores %>
-    <%= render "stats/block_bars", id: "stats-cpu", title: "CPU", rows: stats.cpu_vendors,
-          note: "Architecture: #{tally_sentence(stats.architectures)}." %>
+    <%= render "stats/block_bars", id: "stats-cpu", title: "CPU", rows: stats.cpu_vendors %>
+    <%= render "stats/block_bars", id: "stats-architecture", title: "Architecture", rows: stats.architectures %>
     <%= render "stats/block_bars", id: "stats-gpu", title: "GPU", rows: stats.gpu_vendors,
           note: "Machines with a GPU from each maker. A machine with two makers counts under both." %>
-    <%= render "stats/block_bars", id: "stats-version", title: "Omarchy version", rows: stats.recent_versions,
-          note: "Channel: #{tally_sentence(stats.channels)}." %>
+    <%= render "stats/block_bars", id: "stats-version", title: "Version", rows: stats.recent_versions %>
+    <%= render "stats/block_bars", id: "stats-channel", title: "Channel", rows: stats.channels %>
     <%= render "stats/block_bars", id: "stats-security", title: "Boot and security", rows: stats.security, mode: :percent,
           note: "Share of all #{number_with_delimiter(stats.machines)} machines." %>
     <%= render "stats/growth", points: stats.growth %>

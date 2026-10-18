@@ -85,6 +85,35 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_equal 8, stats.vendor_count
   end
 
+  # The collector sends the raw DMI chassis_type number (SMBIOS spec), not a name.
+  test "chassis numbers are named and grouped, and unknown ones fall under Other" do
+    %w[9 10 14].each { |type| add(chassis: type) }
+    add(chassis: "3")
+    add(chassis: "35")
+    add(chassis: "2")
+    add(chassis: "99")
+    add(chassis: "138") # bit 7 is the chassis lock flag, so this is 10 again
+
+    assert_equal({ "Laptop" => 4, "Desktop" => 1, "Mini PC" => 1, "Other" => 2 }, counts(stats.by_chassis))
+    assert_equal 4, stats.chassis_count
+  end
+
+  test "chassis text is kept as sent and a blank one is left out" do
+    add(chassis: "Notebook")
+    add(chassis: nil)
+
+    assert_equal({ "Notebook" => 1 }, counts(stats.by_chassis))
+  end
+
+  test "extra chassis kinds fold into the one Other row" do
+    add(chassis: "1")
+    add(chassis: "Alpha")
+    add(chassis: "Beta")
+    add(chassis: "Gamma")
+
+    assert_equal({ "Alpha" => 1, "Beta" => 1, "Other" => 2 }, counts(stats.by_chassis(limit: 2)))
+  end
+
   test "memory is bucketed to the next common size" do
     [ 2, 3.8, 7.4, 15.2, 16, 31, 63, 128 ].each { |gib| add(memory_gib: gib) }
 

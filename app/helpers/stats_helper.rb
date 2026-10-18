@@ -40,10 +40,6 @@ module StatsHelper
     end
   end
 
-  def tally_sentence(rows)
-    rows.map { |row| "#{row.label} #{number_with_delimiter(row.count)}" }.join(", ")
-  end
-
   def week_label(date)
     date.strftime("%-d %b")
   end
