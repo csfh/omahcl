@@ -90,7 +90,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
 
     post_report omarchy_payload(instance_digest: digest)
 
-    report = Report.find_by!(instance_digest: digest)
+    report = Report.find_by!(instance_digest: Report.digest_instance(digest))
     assert report.source_omarchy?
     assert_nil report.verdict
     assert_equal 1, Report.grouped_models.first.machines_count

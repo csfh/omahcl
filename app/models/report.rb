@@ -54,6 +54,7 @@ class Report < ApplicationRecord
     raise ReportSanitizer::Rejected, "nonce is required" if nonce.blank?
 
     attrs = ReportSanitizer.clean!(payload.except("nonce"))
+    attrs = attrs.merge(instance_digest: digest_instance(attrs[:instance_digest]))
     Challenge.consume!(nonce)
 
     report = find_or_initialize_by(instance_digest: attrs[:instance_digest])
@@ -68,6 +69,14 @@ class Report < ApplicationRecord
 
   def self.digest_ip(ip)
     ::Digest::SHA256.hexdigest("#{Rails.application.secret_key_base}:#{ip}")
+  end
+
+  # Anyone who can read a machine's /etc/machine-id can recompute the digest the
+  # collector sends, so the server stores it keyed. HashInstanceDigests converted
+  # the rows stored before this and must use the same key.
+  def self.digest_instance(client_digest)
+    key = Rails.application.key_generator.generate_key("report instance digest")
+    OpenSSL::HMAC.hexdigest("SHA256", key, client_digest)
   end
 
   def hidden?

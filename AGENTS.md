@@ -21,6 +21,7 @@ Rails 8.1 app for Omarchy HCL (omahcl.com), an unofficial public database of har
 - Candidate reports (`source = candidate`) are never counted or shown publicly, never overwrite an Omarchy report with the same digest, and are rate limited harder than Omarchy reports. Their `instance_digest` uses a different domain prefix than Omarchy reports.
 - Set `PATH`-stubbed commands and `OMAHCL_SYS_ROOT` fixtures in `test/lib/collector_test.rb` for every collector branch. Collector errors must exit non-zero; remember `set -e` is off inside `||` and `if` contexts.
 - Ingest is allowlist-only JSON with `nonce` and `instance_digest`. Reject serial/MAC/hostname fields in `ReportSanitizer`.
+- The server stores `instance_digest` as `Report.digest_instance` of the client's value, an HMAC keyed from `secret_key_base`. Look machines up through it. Changing `secret_key_base` gives every machine a new report on its next post.
 - Every accepted Omarchy report is public unless an admin hides it (`hidden_at`; a hidden machine stays hidden when it reports again). Public lookup counts distinct `instance_digest` values per model, so reposting one machine never raises a count. A model is "Verified" only with 3+ machines from 2+ distinct `submitted_ip_digest` values, because the client computes `instance_digest`.
 - Users exist only for admins. Only admins can sign in. There is no signup and no password reset mail; create or reset an admin with `bin/rails admin:create EMAIL=… [PASSWORD=…]`.
 - Do not vendor atmos `hw-inventory.py`.

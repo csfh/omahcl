@@ -90,7 +90,7 @@ It has two modes:
 
 Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
 
-Serials are hashed into `instance_digest` in memory and never sent. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
+Serials are hashed into `instance_digest` in memory and never sent. The server stores that digest keyed again (`Report.digest_instance`), so a copy of the database can't be matched to a machine through its `/etc/machine-id`. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
 
 Environment variables: `OMAHCL_URL`, `OMAHCL_DRY_RUN` (print the payload, send nothing), `OMAHCL_SUBMIT` (`yes` or `no`), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
 

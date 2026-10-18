@@ -29,6 +29,15 @@ class ReportTest < ActiveSupport::TestCase
     assert_equal "4.1.0", again.reload.omarchy_version
   end
 
+  test "ingest stores a keyed hash of the machine digest, not the one the client sent" do
+    digest = "c" * 64
+    report = ingest_report!(omarchy_payload(instance_digest: digest))
+
+    assert_equal Report.digest_instance(digest), report.reload.instance_digest
+    refute_equal digest, report.instance_digest
+    assert_match(/\A[a-f0-9]{64}\z/, report.instance_digest)
+  end
+
   test "reposting one machine does not raise its machine count" do
     digest = "f" * 64
     2.times { ingest_report!(omarchy_payload(instance_digest: digest)) }

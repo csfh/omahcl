@@ -1,6 +1,6 @@
 if Rails.env.development?
   def ensure_report(vendor:, product:, key:, cpu_model:, memory_bytes:, cpu_cores: 2)
-    digest = Digest::SHA256.hexdigest("market-seed:#{key}")
+    digest = Report.digest_instance(Digest::SHA256.hexdigest("market-seed:#{key}"))
     report = Report.find_or_initialize_by(instance_digest: digest)
     report.assign_attributes(
       omarchy_version: "4.0.2",
