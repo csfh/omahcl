@@ -1,35 +1,35 @@
 <% page_title "Admin" %>
 
-<h1 class="text-3xl font-semibold">Admin</h1>
+<h1 class="heading-page">Admin</h1>
 <p class="mt-2 text-muted">Collector submissions, challenges, and admin accounts. Week means the last seven days.</p>
 
-<h2 class="mt-10 text-lg font-medium">Collections submitted</h2>
+<h2 class="mt-10 heading-section">Collections submitted</h2>
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Machines collected</dt>
     <dd class="mt-1"><%= link_to pluralize(@collection_count, "collection"), admin_reports_path %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">New this week</dt>
     <dd class="mt-1"><%= @collections_created_week %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Updated this week</dt>
     <dd class="mt-1"><%= @collections_updated_week %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Candidates (not running Omarchy)</dt>
     <dd class="mt-1"><%= link_to pluralize(@candidate_count, "candidate"), admin_reports_path(source: "candidate") %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Machine types running Omarchy</dt>
     <dd class="mt-1"><%= pluralize(@model_count, "type") %></dd>
   </div>
 </dl>
 
-<h2 class="mt-10 text-lg font-medium">Recent collections</h2>
+<h2 class="mt-10 heading-section">Recent collections</h2>
 <% if @recent_reports.any? %>
-  <ul class="mt-4 divide-y divide-white/10 border-y border-white/10">
+  <ul class="mt-4 divide-y-2 divide-line border-y-2 border-line">
     <% @recent_reports.each do |report| %>
       <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
         <div>
@@ -43,21 +43,21 @@
   <p class="mt-4 text-muted">None yet.</p>
 <% end %>
 
-<h2 class="mt-10 text-lg font-medium">Challenges</h2>
+<h2 class="mt-10 heading-section">Challenges</h2>
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Open</dt>
     <dd class="mt-1"><%= @open_challenge_count %> open</dd>
   </div>
 </dl>
 
-<h2 class="mt-10 text-lg font-medium">Accounts</h2>
+<h2 class="mt-10 heading-section">Accounts</h2>
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">People</dt>
     <dd class="mt-1"><%= link_to pluralize(@user_count, "account"), admin_users_path %></dd>
   </div>
-  <div class="rounded-md bg-panel p-4">
+  <div class="panel">
     <dt class="text-sm text-muted">Admins</dt>
     <dd class="mt-1"><%= @admin_count %></dd>
   </div>

@@ -16,30 +16,33 @@
   </head>
   <body class="min-h-screen">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:bg-accent focus:px-3 focus:py-2 focus:text-ink">Skip to content</a>
-    <header class="border-b border-white/10">
+    <header class="border-b-2 border-line">
       <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4">
-        <p class="whitespace-nowrap text-sm tracking-wide">
-          <%= link_to "Omarchy HCL", root_path, class: "text-paper no-underline hover:text-accent" %>
-          <span class="text-muted"> · hardware compatibility</span>
+        <p class="flex items-center gap-3 whitespace-nowrap text-sm">
+          <svg class="size-6 shrink-0 text-accent" viewBox="0 0 10 10" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M2 0h6v2H2zM0 2h2v6H0zM8 2h2v6H8zM2 8h6v2H2z"/><path class="text-teal-mid" d="M4 4h2v2H4z" fill="currentColor"/></svg>
+          <%= link_to "Omarchy HCL", root_path, class: "font-pixel text-xs text-paper no-underline hover:text-accent" %>
+          <span class="hidden text-muted sm:inline">unofficial</span>
         </p>
         <nav class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm">
           <%= link_to "Machines", hardware_models_path, class: "text-paper no-underline hover:text-accent" %>
+          <%= link_to "Privacy", privacy_path, class: "text-paper no-underline hover:text-accent" %>
           <% if authenticated? %>
             <% if current_user.admin? %>
               <%= link_to "Admin", admin_root_path, class: "text-paper no-underline hover:text-accent" %>
             <% end %>
             <%= button_to "Sign out", session_path, method: :delete, class: "cursor-pointer text-paper hover:text-accent" %>
           <% end %>
+          <%= link_to "Report your machine", root_path(anchor: "report"), class: button_class %>
         </nav>
       </div>
     </header>
     <main id="main" class="mx-auto max-w-5xl px-5 py-10">
       <%= render "admin/nav" if controller_path.start_with?("admin/") %>
       <% if notice = flash[:notice] %>
-        <div class="mb-6 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-sm text-accent" role="status"><%= notice %></div>
+        <div class="mb-6 border-2 border-accent bg-accent/10 px-3 py-2 text-sm text-accent" role="status"><%= notice %></div>
       <% end %>
       <% if alert = flash[:alert] %>
-        <div class="mb-6 rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-200" role="alert"><%= alert %></div>
+        <div class="mb-6 border-2 border-red-400 bg-red-400/10 px-3 py-2 text-sm text-red-200" role="alert"><%= alert %></div>
       <% end %>
       <%= yield %>
     </main>
@@ -47,6 +50,7 @@
       <%= link_to "Privacy", privacy_path, class: "text-muted hover:text-paper" %>
       ·
       <%= link_to "omarchy.org", "https://omarchy.org", class: "text-muted hover:text-paper" %>
+      · Unofficial community database. Not affiliated with Omarchy.
     </footer>
   </body>
 </html>

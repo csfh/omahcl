@@ -89,7 +89,7 @@ export default class extends Controller {
   #highlight() {
     this.#options().forEach((option, i) => {
       option.setAttribute("aria-selected", i === this.index ? "true" : "false")
-      option.classList.toggle("bg-white/10", i === this.index)
+      option.classList.toggle("bg-line", i === this.index)
     })
     this.#options()[this.index]?.scrollIntoView({ block: "nearest" })
   }

@@ -1,12 +1,12 @@
 <% page_title "Machines" %>
 
-<h1 class="text-3xl font-semibold">Machines that run Omarchy</h1>
+<h1 class="heading-page">Machines that run Omarchy</h1>
 <p class="mt-2 text-muted">Search a vendor or model. Every machine here has reported running Omarchy.</p>
 
 <%= render "lookup_form", query: @query, submit_label: "Search" %>
 
 <% if @models.any? %>
-  <ul class="mt-8 divide-y divide-white/10 border-y border-white/10">
+  <ul class="mt-8 divide-y-2 divide-line border-y-2 border-line">
     <% @models.each do |model| %>
       <li class="flex items-center justify-between gap-4 py-3">
         <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>

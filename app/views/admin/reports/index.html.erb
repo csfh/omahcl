@@ -1,6 +1,6 @@
 <% page_title "Reports" %>
 
-<h1 class="text-3xl font-semibold">Reports</h1>
+<h1 class="heading-page">Reports</h1>
 
 <%= form_with url: admin_reports_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
   <div>
@@ -18,7 +18,7 @@
   <%= form.submit "Filter", class: button_class %>
 <% end %>
 
-<ul class="mt-8 divide-y divide-white/10 border-y border-white/10">
+<ul class="mt-8 divide-y-2 divide-line border-y-2 border-line">
   <% @reports.each do |report| %>
     <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
       <div>
