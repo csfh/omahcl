@@ -25,3 +25,10 @@
     <dd class="mt-1"><%= @versions.join(", ") %></dd>
   </div>
 </dl>
+
+<div class="mt-4 grid gap-4 sm:grid-cols-2">
+  <%= render "stats/block_bars", id: "model-memory", title: "Memory", rows: @stats.memory.reject { |row| row.count.zero? } %>
+  <%= render "stats/block_bars", id: "model-version", title: "Omarchy version", rows: @stats.recent_versions %>
+  <%= render "stats/block_bars", id: "model-security", title: "Boot and security", rows: @stats.security, mode: :fraction,
+        note: "Out of all #{number_with_delimiter(@stats.machines)} #{"machine".pluralize(@stats.machines)} of this model." %>
+</div>

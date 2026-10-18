@@ -21,6 +21,18 @@ class Report::StatsTest < ActiveSupport::TestCase
 
   def counts(rows) = rows.to_h { |row| [ row.label, row.count ] }
 
+  test "a scope narrows every figure, and is still limited to visible machines" do
+    add(product: "X220")
+    add(product: "X220", memory_gib: 16).update!(hidden_at: Time.current)
+    ingest_report!(candidate_payload(product: "X220"))
+    add(product: "X230")
+
+    one_model = Report::Stats.new(Report.where(model_slug: "lenovo-x220"))
+
+    assert_equal 1, one_model.machines
+    assert_equal({ "8 GB" => 1 }, counts(one_model.memory).select { |_, count| count.positive? })
+  end
+
   test "an empty database gives zeros and no rows" do
     assert_equal 0, stats.machines
     assert_equal 0, stats.models
@@ -80,6 +92,15 @@ class Report::StatsTest < ActiveSupport::TestCase
       { "4 GB or less" => 2, "8 GB" => 1, "16 GB" => 2, "32 GB" => 1, "64 GB" => 1, "More than 64 GB" => 1 },
       counts(stats.memory)
     )
+  end
+
+  test "machines that sent no memory or core count are left out of those charts" do
+    add(memory_gib: 0, cores: 0)
+    add(memory_gib: 8, cores: 4)
+
+    assert_equal 1, counts(stats.memory).values.sum
+    assert_equal 1, counts(stats.cores).values.sum
+    assert_equal 2, stats.machines
   end
 
   test "core counts are bucketed" do

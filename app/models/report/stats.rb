@@ -1,7 +1,8 @@
-# What the home page charts. Every figure starts from Report.visible, so
-# candidates and hidden machines never show, and counts distinct machines
-# (instance_digest). It deliberately never reads submitted_ip_digest except to
-# apply the Verified rule.
+# What the home and model pages chart. Every figure is limited to
+# Report.visible, so candidates and hidden machines never show, and counts
+# distinct machines (instance_digest). It deliberately never reads
+# submitted_ip_digest except to apply the Verified rule. Pass a scope, such as
+# one model's reports, to narrow every figure.
 class Report::Stats
   GIB = 1024**3
 
@@ -14,6 +15,10 @@ class Report::Stats
   MEMORY_LABELS = [ "4 GB or less", "8 GB", "16 GB", "32 GB", "64 GB", "More than 64 GB" ].freeze
   CORE_EDGES = [ 2, 4, 8, 16 ].freeze
   CORE_LABELS = [ "1–2", "3–4", "5–8", "9–16", "17 or more" ].freeze
+
+  def initialize(scope = Report.all)
+    @scope = scope.merge(Report.visible)
+  end
 
   def machines
     @machines ||= scope.distinct.count(:instance_digest)
@@ -91,7 +96,7 @@ class Report::Stats
   end
 
   private
-    def scope = Report.visible
+    attr_reader :scope
 
     def distinct_machines = Report.arel_table[:instance_digest].count(true)
 
@@ -119,11 +124,12 @@ class Report::Stats
     end
 
     # Fixed categories, in size order, so a chart keeps its shape as data grows.
+    # The sanitizer stores a missing value as 0, which would otherwise land in the smallest bucket.
     def bucketed(column, edges, labels)
       attribute = Report.arel_table[column]
       index = edges.each_with_index.inject(Arel::Nodes::Case.new) { |kase, (edge, i)| kase.when(attribute.lteq(edge)).then(i) }
         .else(edges.size)
-      by_index = scope.group(index).pluck(index, distinct_machines).to_h
+      by_index = scope.where(column => 1..).group(index).pluck(index, distinct_machines).to_h
       labels.each_with_index.map { |label, i| Row.new(label: label, count: by_index.fetch(i, 0)) }
     end
 

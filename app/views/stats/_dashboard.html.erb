@@ -33,7 +33,7 @@
           note: "Machines with a GPU from each maker. A machine with two makers counts under both." %>
     <%= render "stats/block_bars", id: "stats-version", title: "Omarchy version", rows: stats.recent_versions,
           note: "Channel: #{tally_sentence(stats.channels)}." %>
-    <%= render "stats/block_bars", id: "stats-security", title: "Boot and security", rows: stats.security, percent: true,
+    <%= render "stats/block_bars", id: "stats-security", title: "Boot and security", rows: stats.security, mode: :percent,
           note: "Share of all #{number_with_delimiter(stats.machines)} machines." %>
     <%= render "stats/growth", points: stats.growth %>
   </div>
