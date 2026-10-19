@@ -134,80 +134,28 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     get hardware_model_path("lenovo-thinkpad-x220")
 
     assert_match(/3 machines reported running Omarchy/, response.body)
-    assert_select "span", text: "Established"
+    assert_select "span", text: "Verified"
   end
 
-  test "card shows the model with the Omarchy Verified seal for a single machine" do
-    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+  test "model page lists one card link per CPU" do
+    ingest_report!(omarchy_payload(product: "Laptop 13", cpu: "AMD Ryzen 7 7840U", instance_digest: "a" * 64))
+    ingest_report!(omarchy_payload(product: "Laptop 13", cpu: "Intel Core Ultra 5", instance_digest: "b" * 64))
 
-    get card_hardware_model_path("lenovo-thinkpad-x220")
+    get hardware_model_path(Report.first.model_slug)
 
     assert_response :success
-    assert_select "[data-controller=holo-card] [data-holo-card-target=card][aria-label^='Omarchy Verified: '][aria-label*='X220']"
-    assert_select "h2", /ThinkPad X220/
-    assert_select "p", text: "Omarchy Verified"
-    assert_select "[style]", count: 0
-    assert_select "a[href=?][download]", card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
-    assert_no_match(/public_id|instance_digest/, response.body)
+    assert_select "h2", "Omarchy Verified cards"
+    assert_select "a[href^='/cards/']", count: 2
+    assert_select "a[href^='/cards/'] img[src$='.png'][alt*='Ryzen']"
+    assert_select "meta[property='og:image'][content*='/cards/']"
   end
 
-  test "model page links to the card" do
-    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+  test "model page with one CPU links to its card" do
+    report = ingest_report!(omarchy_payload(product: "ThinkPad X220"))
 
     get hardware_model_path("lenovo-thinkpad-x220")
 
-    assert_select "a[href=?]", card_hardware_model_path("lenovo-thinkpad-x220")
-  end
-
-  test "card is not found for unknown, candidate-only and hidden models" do
-    get card_hardware_model_path("lenovo-thinkpad-x220")
-    assert_response :not_found
-
-    ingest_report!(candidate_payload(product: "ThinkPad X220"))
-    get card_hardware_model_path("lenovo-thinkpad-x220")
-    assert_response :not_found
-
-    Report.delete_all
-    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
-    Report.update_all(hidden_at: Time.current)
-    get card_hardware_model_path("lenovo-thinkpad-x220")
-    assert_response :not_found
-  end
-
-  test "card png is a 1200x630 image with caching headers" do
-    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
-
-    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
-
-    assert_response :success
-    assert_equal "image/png", response.media_type
-    assert_equal "\x89PNG\r\n\x1a\n".b, response.body.b[0, 8]
-    assert_equal [ 1200, 630 ], response.body.b[16, 8].unpack("NN")
-    assert_match(/public/, response.headers["Cache-Control"])
-
-    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png), headers: { "If-None-Match" => response.headers["ETag"] }
-    assert_response :not_modified
-  end
-
-  test "card png is not found for unknown and hidden models" do
-    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
-    assert_response :not_found
-
-    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
-    Report.update_all(hidden_at: Time.current)
-    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
-    assert_response :not_found
-  end
-
-  test "card and model pages carry link preview tags pointing at the png" do
-    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
-    png = card_hardware_model_url("lenovo-thinkpad-x220", format: :png)
-
-    [ card_hardware_model_path("lenovo-thinkpad-x220"), hardware_model_path("lenovo-thinkpad-x220") ].each do |path|
-      get path
-      assert_select "meta[property='og:image'][content=?]", png
-      assert_select "meta[property='og:image:width'][content='1200']"
-      assert_select "meta[name='twitter:card'][content='summary_large_image']"
-    end
+    assert_select "h2", "Omarchy Verified card"
+    assert_select "a[href=?]", card_path(report.card_key)
   end
 end

@@ -1,7 +1,7 @@
 <% page_title "#{@sample.display_name} card" %>
-<%= render "hardware_models/og", title: "#{@sample.display_name} is Omarchy Verified", url: card_hardware_model_url(@sample.model_slug) %>
+<%= render "cards/og", title: "#{@sample.display_name} is Omarchy Verified", url: card_url(params[:key]), key: params[:key], machines: @machines_count %>
 
-<p class="text-sm text-muted"><%= link_to @sample.display_name, hardware_model_path(@sample.model_slug) %></p>
+<p class="text-sm text-muted"><%= link_to @sample.display_name, hardware_model_path(@sample.model_slug) %> · <%= @card[:cpu] %></p>
 <h1 class="mt-2 heading-page">Omarchy Verified card</h1>
 <p class="mt-2 text-muted">Share it, or tilt it around. It shows only what the model page already shows.</p>
 
@@ -37,6 +37,6 @@
 </div>
 
 <p class="mt-8 text-center">
-  <%= link_to "Download as an image (PNG)", card_hardware_model_path(@sample.model_slug, format: :png),
+  <%= link_to "Download as an image (PNG)", card_path(params[:key], format: :png),
         class: ghost_button_class, download: "omarchy-verified-#{@sample.model_slug}.png" %>
 </p>

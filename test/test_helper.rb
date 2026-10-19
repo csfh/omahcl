@@ -11,7 +11,7 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    def omarchy_payload(product: "ThinkPad X220", instance_digest: ::Digest::SHA256.hexdigest(SecureRandom.hex(16)))
+    def omarchy_payload(product: "ThinkPad X220", cpu: "Intel Core i5-2520M", instance_digest: ::Digest::SHA256.hexdigest(SecureRandom.hex(16)))
       {
         "omarchy" => { "version" => "4.0.2", "channel" => "stable" },
         "hardware" => {
@@ -19,7 +19,7 @@ module ActiveSupport
           "product" => product,
           "family" => product,
           "chassis" => "Notebook",
-          "cpu" => { "model" => "Intel Core i5-2520M", "vendor" => "Intel", "arch" => "x86_64", "cores" => 2 },
+          "cpu" => { "model" => cpu, "vendor" => "Intel", "arch" => "x86_64", "cores" => 2 },
           "memory_bytes" => 2_147_483_648,
           "gpus" => [ { "vendor" => "Intel", "name" => "HD Graphics 3000" } ],
           "uefi" => true,
@@ -30,8 +30,8 @@ module ActiveSupport
       }
     end
 
-    def candidate_payload(product: "ThinkPad X220", instance_digest: ::Digest::SHA256.hexdigest(SecureRandom.hex(16)), verdict: "likely")
-      omarchy_payload(product: product, instance_digest: instance_digest)
+    def candidate_payload(product: "ThinkPad X220", cpu: "Intel Core i5-2520M", instance_digest: ::Digest::SHA256.hexdigest(SecureRandom.hex(16)), verdict: "likely")
+      omarchy_payload(product: product, cpu: cpu, instance_digest: instance_digest)
         .except("omarchy")
         .merge("source" => "candidate", "verdict" => verdict, "host_os" => "ubuntu")
     end

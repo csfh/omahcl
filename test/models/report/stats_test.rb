@@ -36,7 +36,7 @@ class Report::StatsTest < ActiveSupport::TestCase
   test "an empty database gives zeros and no rows" do
     assert_equal 0, stats.machines
     assert_equal 0, stats.models
-    assert_equal 0, stats.established_models
+    assert_equal 0, stats.verified_models
     assert_empty stats.by_vendor
     assert_empty stats.growth
   end
@@ -59,7 +59,7 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_equal({ "LENOVO" => 1 }, counts(stats.by_vendor))
   end
 
-  test "counts models and established models with the established rule" do
+  test "counts models and verified models with the established rule" do
     add(ip: "203.0.113.1")
     add(ip: "203.0.113.2")
     add(ip: "203.0.113.3")
@@ -69,7 +69,7 @@ class Report::StatsTest < ActiveSupport::TestCase
 
     assert_equal 6, stats.machines
     assert_equal 2, stats.models
-    assert_equal 1, stats.established_models, "X230 has 3 machines but only one network"
+    assert_equal 1, stats.verified_models, "X230 has 3 machines but only one network"
   end
 
   test "vendors merge across letter case and the rest fold into Other" do

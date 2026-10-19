@@ -1,18 +1,19 @@
 <%# Link-preview tags. The image is the same Omarchy Verified card, drawn server-side. %>
-<% description = "#{machines_ran_omarchy(@card[:machines])} See which Omarchy hardware works." %>
+<% description = "#{machines_ran_omarchy(machines)} See which Omarchy hardware works." %>
+<% image = card_url(key, format: :png) %>
 <% content_for :head do %>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omarchy HCL">
   <meta property="og:title" content="<%= title %>">
   <meta property="og:description" content="<%= description %>">
   <meta property="og:url" content="<%= url %>">
-  <meta property="og:image" content="<%= card_hardware_model_url(@sample.model_slug, format: :png) %>">
+  <meta property="og:image" content="<%= image %>">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Omarchy Verified card for <%= @card[:name] %>">
+  <meta property="og:image:alt" content="Omarchy Verified card for <%= @sample.display_name %>">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= title %>">
   <meta name="twitter:description" content="<%= description %>">
-  <meta name="twitter:image" content="<%= card_hardware_model_url(@sample.model_slug, format: :png) %>">
+  <meta name="twitter:image" content="<%= image %>">
 <% end %>

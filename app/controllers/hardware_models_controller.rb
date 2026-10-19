@@ -1,7 +1,7 @@
 class HardwareModelsController < ApplicationController
   allow_unauthenticated_access
 
-  before_action :load_model, only: %i[show card]
+  before_action :load_model, only: :show
 
   def index
     @query = params[:q].to_s
@@ -19,18 +19,6 @@ class HardwareModelsController < ApplicationController
     @stats = Report::Stats.new(@reports.unscope(:order))
   end
 
-  def card
-    respond_to do |format|
-      format.html
-      format.png do
-        return unless stale?(etag: [ "card-png-2", @card.except(:machines) ], public: true)
-
-        expires_in 1.hour, public: true
-        send_data CardImage.new(**@card.except(:machines)).png, type: "image/png", disposition: "inline"
-      end
-    end
-  end
-
   private
 
   def load_model
@@ -41,12 +29,6 @@ class HardwareModelsController < ApplicationController
     @machines_count = @reports.unscope(:order).distinct.count(:instance_digest)
     @cpu_models = @reports.unscope(:order).distinct.pluck(:cpu_model)
     @gpus = @reports.flat_map { |report| report.gpus }.uniq
-    @card = {
-      name: @sample.display_name,
-      cpu: @cpu_models.first,
-      gpu: @gpus.map { |gpu| [ gpu["vendor"], gpu["name"] ].compact.join(" ") }.first.presence || "None reported",
-      version: @sample.omarchy_version.presence || "Unknown",
-      machines: @machines_count
-    }
+    @cards = @reports.unscope(:order).group(:card_key).order(Arel.sql("MAX(cpu_model)")).pluck(:card_key, Arel.sql("MAX(cpu_model)"))
   end
 end

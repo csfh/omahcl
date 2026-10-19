@@ -106,6 +106,7 @@ CREATE TABLE public.reports (
     source character varying DEFAULT 'omarchy'::character varying NOT NULL,
     verdict character varying,
     host_os character varying,
+    card_key character varying NOT NULL,
     CONSTRAINT reports_source_check CHECK (((source)::text = ANY (ARRAY[('omarchy'::character varying)::text, ('candidate'::character varying)::text])))
 );
 
@@ -286,6 +287,13 @@ CREATE UNIQUE INDEX index_challenges_on_nonce_digest ON public.challenges USING 
 
 
 --
+-- Name: index_reports_on_card_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_reports_on_card_key ON public.reports USING btree (card_key);
+
+
+--
 -- Name: index_reports_on_instance_digest; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -349,6 +357,7 @@ ALTER TABLE ONLY public.sessions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261019120000'),
 ('20261017120000'),
 ('20261016150000'),
 ('20261016140000'),

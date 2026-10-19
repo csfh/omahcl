@@ -71,6 +71,14 @@ class Report < ApplicationRecord
     ::Digest::SHA256.hexdigest("#{Rails.application.secret_key_base}:#{ip}")
   end
 
+  # One key per model and CPU, so a Framework Laptop 13 with another CPU has its own
+  # card. Plain SHA-256, not keyed with secret_key_base: shared links and cached
+  # previews must survive a key rotation. The version prefix lets the formula change.
+  def self.card_key_for(model_key, cpu_model)
+    cpu = cpu_model.to_s.strip.gsub(/\s+/, " ").downcase
+    ::Digest::SHA256.hexdigest("omahcl-card-v1|#{model_key}|#{cpu}")[0, 16]
+  end
+
   # Anyone who can read a machine's /etc/machine-id can recompute the digest the
   # collector sends, so the server stores it keyed. HashInstanceDigests converted
   # the rows stored before this and must use the same key.
@@ -97,6 +105,7 @@ class Report < ApplicationRecord
       self.product = product.to_s.strip
       self.model_key = [ vendor.downcase, product.downcase ].join("|")
       self.model_slug = [ vendor, product ].join(" ").parameterize
+      self.card_key = self.class.card_key_for(model_key, cpu_model)
       self.search_document = [ vendor, product, family ].compact.join(" ")
     end
 end
