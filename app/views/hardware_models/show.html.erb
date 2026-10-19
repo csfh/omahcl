@@ -6,6 +6,7 @@
   <%= machines_status(@machines_count, @networks_count) %>
   <span><%= machines_ran_omarchy(@machines_count) %></span>
 </p>
+<p class="mt-4"><%= link_to "Get the Omarchy Verified card", card_hardware_model_path(@sample.model_slug), class: ghost_button_class %></p>
 
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
   <div class="panel">

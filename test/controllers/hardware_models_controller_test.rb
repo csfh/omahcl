@@ -134,6 +134,42 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     get hardware_model_path("lenovo-thinkpad-x220")
 
     assert_match(/3 machines reported running Omarchy/, response.body)
-    assert_select "span", text: "Verified"
+    assert_select "span", text: "Established"
+  end
+
+  test "card shows the model with the Omarchy Verified seal for a single machine" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+
+    get card_hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_response :success
+    assert_select "[data-controller=holo-card] [data-holo-card-target=card][aria-label^='Omarchy Verified: '][aria-label*='X220']"
+    assert_select "h2", /ThinkPad X220/
+    assert_select "p", text: "Omarchy Verified"
+    assert_select "[style]", count: 0
+    assert_no_match(/public_id|instance_digest/, response.body)
+  end
+
+  test "model page links to the card" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_select "a[href=?]", card_hardware_model_path("lenovo-thinkpad-x220")
+  end
+
+  test "card is not found for unknown, candidate-only and hidden models" do
+    get card_hardware_model_path("lenovo-thinkpad-x220")
+    assert_response :not_found
+
+    ingest_report!(candidate_payload(product: "ThinkPad X220"))
+    get card_hardware_model_path("lenovo-thinkpad-x220")
+    assert_response :not_found
+
+    Report.delete_all
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+    Report.update_all(hidden_at: Time.current)
+    get card_hardware_model_path("lenovo-thinkpad-x220")
+    assert_response :not_found
   end
 end

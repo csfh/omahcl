@@ -1,0 +1,39 @@
+<% page_title "#{@sample.display_name} card" %>
+
+<p class="text-sm text-muted"><%= link_to @sample.display_name, hardware_model_path(@sample.model_slug) %></p>
+<h1 class="mt-2 heading-page">Omarchy Verified card</h1>
+<p class="mt-2 text-muted">Share it, or tilt it around. It shows only what the model page already shows.</p>
+
+<div class="mt-10 flex justify-center">
+  <div class="holo-stage" data-controller="holo-card">
+    <article class="holo-card" data-holo-card-target="card" aria-label="Omarchy Verified: <%= @sample.display_name %>">
+      <div class="holo-foil" aria-hidden="true"></div>
+      <div class="holo-sparkle" aria-hidden="true"></div>
+      <div class="holo-glare" aria-hidden="true"></div>
+
+      <div class="holo-content">
+        <p class="font-pixel text-[0.6rem] leading-relaxed text-accent">Omarchy Verified</p>
+
+        <svg class="holo-seal" viewBox="0 0 9 9" aria-hidden="true" shape-rendering="crispEdges">
+          <path class="fill-teal-deep" d="M2 0h5v1h2v7h-2v1h-5v-1h-2v-7h2z" />
+          <path class="fill-accent" d="M2 1h5v1h1v5h-1v1h-5v-1h-1v-5h1z" />
+          <path class="fill-ink" d="M2 4h1v1h-1zM3 5h1v1h-1zM4 6h1v1h-1zM5 5h1v1h-1zM6 4h1v1h-1zM7 3h1v1h-1zM3 4h1v1h-1zM4 5h1v1h-1zM5 4h1v1h-1zM6 3h1v1h-1z" />
+        </svg>
+
+        <div>
+          <h2 class="font-pixel text-xs leading-relaxed text-paper"><%= @sample.display_name %></h2>
+          <dl class="mt-3 space-y-1 text-xs text-muted">
+            <div class="flex justify-between gap-3"><dt>CPU</dt><dd class="text-right text-paper"><%= @cpu_models.first %></dd></div>
+            <div class="flex justify-between gap-3"><dt>GPU</dt><dd class="text-right text-paper"><%= @gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.first.presence || "None reported" %></dd></div>
+            <div class="flex justify-between gap-3"><dt>Omarchy</dt><dd class="text-right text-paper"><%= @sample.omarchy_version.presence || "Unknown" %></dd></div>
+          </dl>
+        </div>
+
+        <p class="flex items-center justify-between text-[0.65rem] text-muted">
+          <span><%= pluralize(@machines_count, "machine") %></span>
+          <span>omahcl.com</span>
+        </p>
+      </div>
+    </article>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 # What the home and model pages chart. Every figure is limited to
 # Report.visible, so candidates and hidden machines never show, and counts
 # distinct machines (instance_digest). It deliberately never reads
-# submitted_ip_digest except to apply the Verified rule. Pass a scope, such as
+# submitted_ip_digest except to apply the Established rule. Pass a scope, such as
 # one model's reports, to narrow every figure.
 class Report::Stats
   GIB = 1024**3
@@ -40,8 +40,8 @@ class Report::Stats
     @models ||= scope.distinct.count(:model_key)
   end
 
-  def verified_models
-    @verified_models ||= scope.group(:model_key, :model_slug)
+  def established_models
+    @established_models ||= scope.group(:model_key, :model_slug)
       .having(
         "COUNT(DISTINCT instance_digest) >= ? AND COUNT(DISTINCT submitted_ip_digest) >= ?",
         Report::ESTABLISHED_MACHINES, Report::ESTABLISHED_NETWORKS

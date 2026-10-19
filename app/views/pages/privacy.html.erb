@@ -11,7 +11,7 @@
   <h2 class="mb-2 mt-8 heading-section">IP addresses</h2>
   <p>The site's own logs record which pages were requested, when, and the hardware facts in each submitted report. They do not record IP addresses, search terms or machine hashes.</p>
   <p>To limit abuse, the server counts report submissions and sign-in attempts per IP address over a few minutes. Those counts are deleted within about an hour. The site sleeps when nobody uses it, and counts left at that point are deleted within minutes of it waking up. Database backups keep the counts for up to a day after that.</p>
-  <p>Each report keeps a hash of the IP address that last sent it, made with a secret key. It lets the site mark a model Verified once enough machines from more than one network have reported it. The hash is never shown, and without the server's secret key it cannot be turned back into an address.</p>
+  <p>Each report keeps a hash of the IP address that last sent it, made with a secret key. It lets the site mark a model Established once enough machines from more than one network have reported it. The hash is never shown, and without the server's secret key it cannot be turned back into an address.</p>
   <p>The site runs on Laravel Cloud, behind Cloudflare. Both see your IP address when you connect and can keep it in their own logs. Laravel Cloud's access logs record each request's IP address, country, user agent and path. This site does not control those logs.</p>
 
   <h2 class="mb-2 mt-8 heading-section">Cookies</h2>

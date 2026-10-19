@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   post "reports", to: "reports#create"
   resources :hardware_models, path: "models", param: :slug, only: %i[index show] do
     get :suggestions, on: :collection
+    get :card, on: :member
   end
   get "privacy", to: "pages#privacy", as: :privacy
   namespace :admin do
