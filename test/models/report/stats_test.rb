@@ -24,7 +24,6 @@ class Report::StatsTest < ActiveSupport::TestCase
   test "a scope narrows every figure, and is still limited to visible machines" do
     add(product: "X220")
     add(product: "X220", memory_gib: 16).update!(hidden_at: Time.current)
-    ingest_report!(candidate_payload(product: "X220"))
     add(product: "X230")
 
     one_model = Report::Stats.new(Report.where(model_slug: "lenovo-x220"))
@@ -41,9 +40,8 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_empty stats.growth
   end
 
-  test "candidates and hidden machines are never counted" do
+  test "hidden machines are never counted" do
     add
-    ingest_report!(candidate_payload)
     add(product: "X230").update!(hidden_at: Time.current)
 
     assert_equal 1, stats.machines

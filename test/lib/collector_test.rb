@@ -72,164 +72,60 @@ class CollectorTest < ActiveSupport::TestCase
 
     attrs = ReportSanitizer.clean!(JSON.parse(output))
 
-    assert_equal "omarchy", attrs[:source]
     assert_equal "ThinkPad X220", attrs[:product]
+    assert_equal "4.0.2", attrs[:omarchy_version]
   end
 
   test "memory is rounded to the nearest gigabyte" do
-    leave_omarchy
     write("proc/meminfo", "MemTotal:        8000000 kB\n")
 
-    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_SUBMIT" => "no")
 
     assert_includes output, "8 GB memory"
   end
 
-  test "instance digests are pinned so a rename cannot split existing machines" do
+  test "the instance digest is pinned so a rename cannot split existing machines" do
     _status, omarchy = run_collector("OMAHCL_DRY_RUN" => "1")
-    leave_omarchy
-    _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
 
     # Serials are root-only on a real machine and never feed the digest, so this is
     # the value every machine had before they were dropped from the formula. The
     # serial fixtures in setup stay readable to prove they are ignored.
-    expected_omarchy = "88c68e85e1b0276e7cd71f109df70d796ceea8ee464a18b88c664e25e0eb932f"
-    expected_candidate = Digest::SHA256.hexdigest("omarchy-market-candidate-v1\0" + "0123456789abcdef0123456789abcdef\0LENOVO\0ThinkPad X220\0Intel Core i5-2520M")
-    assert_equal expected_omarchy, JSON.parse(omarchy)["instance_digest"]
-    assert_equal expected_candidate, JSON.parse(candidate.lines.last)["instance_digest"]
+    assert_equal "88c68e85e1b0276e7cd71f109df70d796ceea8ee464a18b88c664e25e0eb932f", JSON.parse(omarchy)["instance_digest"]
   end
 
-  test "off omarchy a clean machine is likely and the dry run is a candidate payload" do
-    leave_omarchy
-
-    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
-    payload = JSON.parse(output.lines.last)
-
-    assert_equal 0, status
-    assert_includes output, "Verdict: likely."
-    assert_equal "candidate", payload["source"]
-    assert_equal "likely", payload["verdict"]
-    assert_equal "arch", payload["host_os"]
-    assert_nil payload["omarchy"]
-    refute_includes JSON.generate(payload).downcase, "serial"
-  end
-
-  test "the candidate payload passes the server sanitizer" do
-    leave_omarchy
-
-    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
-    attrs = ReportSanitizer.clean!(JSON.parse(output.lines.last))
-
-    assert_equal "candidate", attrs[:source]
-    assert_equal "likely", attrs[:verdict]
-    assert_nil attrs[:omarchy_version]
-  end
-
-  test "candidate and omarchy digests differ for the same machine" do
-    _status, omarchy = run_collector("OMAHCL_DRY_RUN" => "1")
-    leave_omarchy
-    _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
-
-    refute_equal JSON.parse(omarchy)["instance_digest"], JSON.parse(candidate.lines.last)["instance_digest"]
-  end
-
-  test "off omarchy secure boot on is a fix, not a blocker" do
-    leave_omarchy
+  test "on omarchy secure boot, a tpm and uefi show in the payload" do
     secure_boot(:on)
-
-    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
-
-    assert_equal 0, status
-    assert_includes output, "Verdict: likely, once you change the BIOS settings below."
-    assert_includes output, "Secure Boot is on"
-    assert_equal "likely", JSON.parse(output.lines.last)["verdict"]
-  end
-
-  test "off omarchy an unreadable secure boot state is unclear" do
-    leave_omarchy
-    FileUtils.rm(File.join(@root, SECURE_BOOT_VAR))
+    FileUtils.mkdir_p(File.join(@root, "sys/class/tpm"))
 
     _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
+    hardware = JSON.parse(output)["hardware"]
 
-    assert_includes output, "Verdict: unclear."
-    assert_includes output, "Could not read the Secure Boot state"
+    assert_equal true, hardware.dig("secure_boot", "enabled")
+    assert_equal true, hardware.dig("tpm", "present")
+    assert_equal true, hardware["uefi"]
   end
 
-  test "off omarchy an nvidia gpu is unclear and says to verify" do
-    leave_omarchy
+  test "on omarchy the gpus come from lspci" do
     fake_lspci(<<~LSPCI)
       00:02.0 "VGA compatible controller" "NVIDIA Corporation" "GA106 [GeForce RTX 3060]" -ra1
     LSPCI
 
     _status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_SKIP_CMDS" => nil)
 
-    assert_includes output, "Verdict: unclear."
-    assert_includes output, "NVIDIA GPU"
-    assert_includes output, "(to verify)"
-    assert_includes output, %("name":"GA106 [GeForce RTX 3060]")
+    assert_includes JSON.parse(output).dig("hardware", "gpus"), { "vendor" => "NVIDIA Corporation", "name" => "GA106 [GeForce RTX 3060]" }
   end
 
-  test "off omarchy an apple silicon machine is unlikely" do
+  test "off omarchy the script says so, sends nothing and exits non-zero, even with a yes" do
     leave_omarchy
-    write("sys/class/dmi/id/sys_vendor", "Apple Inc.")
-
-    status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
-
-    assert_equal 0, status
-    assert_includes output, "Verdict: unlikely."
-    assert_includes output, "not supported"
-    assert_equal "unlikely", JSON.parse(output.lines.last)["verdict"]
-  end
-
-  test "off omarchy a tpm is a change to make before installing" do
-    leave_omarchy
-    FileUtils.mkdir_p(File.join(@root, "sys/class/tpm"))
-
-    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
-
-    assert_includes output, "A TPM is visible"
-    assert_includes output, "Verdict: likely, once you change the BIOS settings below."
-  end
-
-  test "off omarchy a machine without dmi has nothing to share" do
-    leave_omarchy
-    FileUtils.rm_rf(File.join(@root, "sys/class/dmi"))
+    fake_curl
 
     status, output = run_collector("OMAHCL_SUBMIT" => "yes")
 
-    assert_equal 0, status
-    assert_includes output, "nothing to share"
-    refute_includes output, "Could not reach"
-  end
-
-  test "off omarchy sends nothing when the person declines" do
-    leave_omarchy
-
-    status, output = run_collector("OMAHCL_SUBMIT" => "no")
-
-    assert_equal 0, status
-    assert_includes output, "Verdict:"
-    refute_includes output, "Could not reach"
-  end
-
-  test "off omarchy sends nothing without a terminal to ask on" do
-    skip "setsid is not available" unless system("command -v setsid >/dev/null 2>&1")
-    leave_omarchy
-
-    status, output = run_collector({}, true)
-
-    assert_equal 0, status
-    assert_includes output, "Run this in a terminal"
-    refute_includes output, "Could not reach"
-  end
-
-  test "off omarchy says yes only when told to, and then tries the server" do
-    leave_omarchy
-
-    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
-
-    refute_equal 0, status
-    assert_includes output, "Could not reach Omarchy HCL"
+    assert_equal 2, status
+    assert_includes output, "not running Omarchy"
+    assert_includes output, "sent nothing"
+    refute_includes output, "Verdict"
+    assert_empty curl_calls
   end
 
   test "on omarchy sends nothing when the person declines" do
@@ -258,33 +154,25 @@ class CollectorTest < ActiveSupport::TestCase
     assert_includes output, "Could not reach Omarchy HCL"
   end
 
-  test "both modes explain the privacy policy and link to it before asking" do
-    _status, omarchy = run_collector("OMAHCL_SUBMIT" => "no")
-    leave_omarchy
-    _status, candidate = run_collector("OMAHCL_SUBMIT" => "no")
+  test "on omarchy the notice explains the privacy policy and links to it before asking" do
+    _status, output = run_collector("OMAHCL_SUBMIT" => "no")
 
-    { "omarchy" => omarchy, "candidate" => candidate }.each do |mode, output|
-      assert_includes output, "Privacy policy: http://example.test/privacy", mode
-      assert_includes output, "a one-way hash of the machine-id, model and CPU", mode
-      assert_includes output, "never sends serial numbers, MAC addresses, your hostname or username", mode
-      assert_includes output, "stores no IP address with the report", mode
-    end
-    assert_includes omarchy, "The report is public."
-    assert_includes candidate, "Candidate reports are never shown publicly."
+    assert_includes output, "Privacy policy: http://example.test/privacy"
+    assert_includes output, "a one-way hash of the machine-id, model and CPU"
+    assert_includes output, "never sends serial numbers, MAC addresses, your hostname or username"
+    assert_includes output, "stores no IP address with the report"
+    assert_includes output, "The report is public."
+    refute_match(/candidate/i, output)
   end
 
-  test "macos is explained and never inspected" do
-    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "arm64")
+  test "macos is not an omarchy machine and sends nothing" do
+    fake_curl
 
-    assert_equal 0, status
-    assert_includes output, "Apple silicon"
-    assert_includes output, "unlikely"
-    refute_includes output, "Could not reach"
+    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "arm64", "OMAHCL_SUBMIT" => "yes")
 
-    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "x86_64")
-
-    assert_equal 0, status
-    assert_includes output, "Intel Mac"
+    assert_equal 2, status
+    assert_includes output, "only reports machines running Omarchy"
+    assert_empty curl_calls
   end
 
   test "an unsupported kernel exits cleanly" do
@@ -303,19 +191,16 @@ class CollectorTest < ActiveSupport::TestCase
     assert_includes output, "Could not read /proc and /sys"
   end
 
-  test "delete rebuilds exactly the digests the collector sends, on omarchy and off it" do
+  test "delete rebuilds exactly the digest the collector sends, on omarchy and off it" do
     _status, collected = run_collector("OMAHCL_DRY_RUN" => "1")
-    leave_omarchy
-    _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
-    expected = [ JSON.parse(collected)["instance_digest"], JSON.parse(candidate.lines.last)["instance_digest"] ]
+    expected = JSON.parse(collected)["instance_digest"]
 
     [ true, false ].each do |on_omarchy|
-      write("etc/os-release", "NAME=\"Omarchy\"\nID=omarchy\n") if on_omarchy
+      leave_omarchy unless on_omarchy
       status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_DRY_RUN" => "1")
 
       assert_equal 0, status
-      assert_equal({ "instance_digests" => expected }, JSON.parse(output), "on_omarchy=#{on_omarchy}")
-      leave_omarchy
+      assert_equal({ "instance_digest" => expected }, JSON.parse(output), "on_omarchy=#{on_omarchy}")
     end
   end
 
@@ -342,7 +227,7 @@ class CollectorTest < ActiveSupport::TestCase
     assert_empty curl_calls
   end
 
-  test "delete posts both digests with a nonce after a yes" do
+  test "delete posts the digest with a nonce after a yes" do
     fake_curl(deletions: '{"deleted":2}')
 
     status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "yes")
@@ -352,9 +237,9 @@ class CollectorTest < ActiveSupport::TestCase
     post = curl_calls.find { |call| call.include?("/deletions") }
     assert_includes post, "http://example.test/deletions"
     body = JSON.parse(post[/-d (\{.*\}) http/, 1])
-    assert_equal [ "instance_digests", "nonce" ], body.keys
+    assert_equal [ "instance_digest", "nonce" ], body.keys
     assert_equal "test-nonce", body["nonce"]
-    assert_equal 2, body["instance_digests"].size
+    assert_match(/\A\h{64}\z/, body["instance_digest"])
     refute_includes post, "0123456789abcdef"
   end
 

@@ -39,7 +39,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.headers["Content-Disposition"], 'filename="collect.sh"'
-    assert_match(/Hardware check for Omarchy/, response.body)
+    assert_match(/Hardware report for Omarchy/, response.body)
     assert_includes response.body, "#!/usr/bin/env bash"
     assert_includes response.body, "http://www.example.com"
     refute_includes response.body, "__OMAHCL_URL__"
@@ -47,57 +47,18 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "omarchy-channel-current"
   end
 
-  test "a candidate is stored but never counted publicly" do
-    assert_difference -> { Report.source_candidate.count }, 1 do
-      post_report candidate_payload
-    end
-
-    assert_response :created
-    body = JSON.parse(response.body)
-    assert_equal 0, body["known_machines"]
-    assert_nil body["model_url"]
-    assert_empty Report.grouped_models
-    get hardware_models_path, params: { q: "X220" }
-    assert_select "a", text: /ThinkPad X220/, count: 0
-  end
-
-  test "a candidate learns how many machines of its model run omarchy" do
+  test "a report learns how many machines of its model have reported" do
     ingest_report!(omarchy_payload(instance_digest: "1" * 64))
-    ingest_report!(omarchy_payload(instance_digest: "2" * 64))
 
-    post_report candidate_payload(instance_digest: "3" * 64)
+    post_report omarchy_payload(instance_digest: "3" * 64)
 
     body = JSON.parse(response.body)
     assert_equal 2, body["known_machines"]
     assert_includes body["model_url"], "/models/lenovo-thinkpad-x220"
-    assert_equal 2, Report.grouped_models.first.machines_count
   end
 
-  test "a candidate cannot overwrite a machine that reported from omarchy" do
-    digest = "4" * 64
-    report = ingest_report!(omarchy_payload(instance_digest: digest))
-
-    post_report candidate_payload(instance_digest: digest, verdict: "unlikely")
-
-    assert_response :ok
-    assert report.reload.source_omarchy?
-    assert_nil report.verdict
-  end
-
-  test "a candidate that later runs omarchy becomes a public report" do
-    digest = "5" * 64
-    ingest_report!(candidate_payload(instance_digest: digest))
-
-    post_report omarchy_payload(instance_digest: digest)
-
-    report = Report.find_by!(instance_digest: Report.digest_instance(digest))
-    assert report.source_omarchy?
-    assert_nil report.verdict
-    assert_equal 1, Report.grouped_models.first.machines_count
-  end
-
-  test "create rejects a candidate that claims omarchy details" do
-    post_report candidate_payload.merge("omarchy" => { "version" => "4.0.2" })
+  test "a payload that names a candidate source is rejected" do
+    post_report omarchy_payload.merge("source" => "candidate", "verdict" => "likely")
 
     assert_response :unprocessable_entity
     assert_equal 0, Report.count
@@ -105,7 +66,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
 
   test "an oversized body is refused before it is parsed" do
     padding = "x" * 70.kilobytes
-    body = JSON.generate(source: "candidate", verdict: "likely", pad: padding)
+    body = JSON.generate(pad: padding)
 
     post reports_path, params: body, headers: { "CONTENT_TYPE" => "application/json" }
 

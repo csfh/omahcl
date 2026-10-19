@@ -59,8 +59,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#main [style]", false
   end
 
-  test "candidates and hidden machines are not charted" do
-    ingest_report!(candidate_payload)
+  test "hidden machines are not charted" do
     ingest_report!.update!(hidden_at: Time.current)
 
     get root_path

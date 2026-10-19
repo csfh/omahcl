@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Hardware check for Omarchy. It sends nothing unless you say yes.
+# Hardware report for Omarchy. It sends nothing unless you say yes.
 #
-#   On Omarchy:      asks, then sends a public hardware report.
-#   Anywhere else:   checks locally whether this machine looks able to run Omarchy,
-#                    then asks whether to send a private candidate report.
-#   Served as /delete: rebuilds this machine's hashes, then asks whether to delete
-#                    any report the site holds for them.
+#   On Omarchy:       asks, then sends a public hardware report. Anywhere else it
+#                     says so and sends nothing.
+#   Served as /delete: rebuilds this machine's hash, then asks whether to delete
+#                     the report the site holds for it.
 
 set -euo pipefail
 
@@ -139,9 +138,9 @@ sha256_hex() {
 
 instance_digest() {
   local vendor=$1 product=$2 cpu_model=$3
-  # These domain strings predate the current name. Never rename them: that would
+  # This domain string predates the current name. Never rename it: that would
   # give every machine a new instance_digest and split its history.
-  local domain=${4:-omarchy-market-instance-v1}
+  local domain=omarchy-market-instance-v1
   local machine_id
   machine_id=$(read_strip "$(root etc/machine-id)")
   printf '%s\0%s\0%s\0%s\0%s' "$domain" "$machine_id" "$vendor" "$product" "$cpu_model" | sha256_hex
@@ -283,89 +282,8 @@ omarchy_payload() {
     "$(json_escape "$version")" "$(json_escape "$channel")" "$(hardware_json)" "$digest"
 }
 
-candidate_payload() {
-  local host_os digest
-  host_os=$(clean "$(os_field ID)" 40)
-  [[ -n $host_os ]] || host_os=unknown
-  digest=$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model" omarchy-market-candidate-v1)
-  printf '{"source":"candidate","verdict":"%s","host_os":"%s","hardware":%s,"instance_digest":"%s"}' \
-    "$VERDICT" "$(json_escape "$host_os")" "$(hardware_json)" "$digest"
-}
-
-# Both digests, whatever this machine runs, because it may have sent either kind.
 delete_payload() {
-  printf '{"instance_digests":["%s","%s"]}' \
-    "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")" \
-    "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model" omarchy-market-candidate-v1)"
-}
-
-# Each rule cites where it comes from. Anything the Omarchy manual does not
-# settle is labelled "to verify" instead of being stated as fact.
-evaluate() {
-  GOOD=() BLOCKERS=() FIXES=() UNSURE=()
-  local lower_vendor=${F_vendor,,}
-
-  case $F_arch in
-    x86_64)
-      GOOD+=("x86_64 CPU. The manual names no architecture requirement, so this is not a guarantee.")
-      ;;
-    aarch64 | arm64)
-      if [[ $lower_vendor == apple* ]]; then
-        BLOCKERS+=("Apple silicon Mac. The manual says installing on an M-series Mac is not supported.")
-      else
-        UNSURE+=("ARM CPU ($F_arch). The manual does not say whether Omarchy installs on ARM (to verify).")
-      fi
-      ;;
-    *)
-      UNSURE+=("CPU architecture $F_arch. The manual does not say whether it is supported (to verify).")
-      ;;
-  esac
-
-  if [[ $lower_vendor == apple* && $F_arch == x86_64 ]]; then
-    UNSURE+=("Intel Mac. Supported since Omarchy 3, but the manual says sound and the Touch Bar do not work. It does not mention T2 Macs (to verify).")
-  fi
-
-  if [[ $F_uefi == true ]]; then
-    case $F_sb in
-      on) FIXES+=("Secure Boot is on. Turn it off in the BIOS before installing; the manual says the installer needs it off.") ;;
-      unknown) UNSURE+=("Could not read the Secure Boot state. The manual says it must be off to install.") ;;
-      off) GOOD+=("Secure Boot is off, as the installer needs.") ;;
-    esac
-  else
-    UNSURE+=("Booted in legacy BIOS mode. The manual does not say whether Omarchy supports it (to verify).")
-  fi
-
-  if [[ $F_tpm == true ]]; then
-    FIXES+=("A TPM is visible. The manual says to turn off Secure Boot and/or TPM in the BIOS before installing, so check that setting.")
-  fi
-
-  if [[ $F_mem -gt 0 && $F_mem -lt 1610612736 ]]; then
-    UNSURE+=("Under 2 GB of memory. The Omarchy site shows a 2 GB ThinkPad X220 running it; less is untested (to verify).")
-  fi
-
-  if printf '%s' "$F_gpus" | grep -qi nvidia; then
-    UNSURE+=("NVIDIA GPU. The manual lists no supported generations or drivers (to verify).")
-  fi
-
-  if [[ ${#BLOCKERS[@]} -gt 0 ]]; then
-    VERDICT=unlikely
-  elif [[ ${#UNSURE[@]} -gt 0 ]]; then
-    VERDICT=unclear
-  else
-    VERDICT=likely
-  fi
-}
-
-print_list() {
-  local heading=$1 marker=$2
-  shift 2
-  [[ $# -gt 0 ]] || return 0
-  echo
-  echo "$heading"
-  local item
-  for item in "$@"; do
-    echo "  $marker $item"
-  done
+  printf '{"instance_digest":"%s"}' "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")"
 }
 
 print_machine() {
@@ -374,49 +292,18 @@ print_machine() {
   echo "$F_cpu_model, $(((F_mem + 536870912) / 1073741824)) GB memory, $F_arch"
 }
 
-print_verdict() {
-  print_machine
-  echo
-  case $VERDICT in
-    likely)
-      if [[ ${#FIXES[@]} -gt 0 ]]; then
-        echo "Verdict: likely, once you change the BIOS settings below."
-      else
-        echo "Verdict: likely. Nothing here stands in the way of installing Omarchy."
-      fi
-      ;;
-    unclear) echo "Verdict: unclear. Some things below are not covered by the Omarchy manual." ;;
-    unlikely) echo "Verdict: unlikely. See what blocks it below." ;;
-  esac
-  print_list "Blocks it:" "x" "${BLOCKERS[@]+"${BLOCKERS[@]}"}"
-  print_list "Change before installing:" "!" "${FIXES[@]+"${FIXES[@]}"}"
-  print_list "Not settled by the manual:" "?" "${UNSURE[@]+"${UNSURE[@]}"}"
-  print_list "Looks fine:" "+" "${GOOD[@]+"${GOOD[@]}"}"
-  echo
-  echo "Not checked: Wi-Fi, Bluetooth, audio, suspend, fingerprint reader. The manual has no hardware list."
-}
-
 # Shows what a send shares and the privacy policy, then asks. Every send needs an
 # explicit yes, from the prompt or OMAHCL_SUBMIT; no terminal means no.
 confirm_submit() {
-  local mode=$1
   echo
   echo "Nothing has been sent yet. If you answer yes, this sends:"
   echo "  - vendor, model, product family, chassis type, CPU, memory size and GPU names"
   echo "  - whether the machine uses UEFI, has a TPM and has Secure Boot on"
-  if [[ $mode == omarchy ]]; then
-    echo "  - the Omarchy version and release channel"
-  else
-    echo "  - the verdict above and your distro's name"
-  fi
+  echo "  - the Omarchy version and release channel"
   echo "  - a one-way hash of the machine-id, model and CPU, so running this again"
   echo "    updates one entry instead of adding another"
   echo "It never sends serial numbers, MAC addresses, your hostname or username."
-  if [[ $mode == omarchy ]]; then
-    echo "The report is public."
-  else
-    echo "Candidate reports are never shown publicly."
-  fi
+  echo "The report is public."
   echo "The server stores no IP address with the report. It keeps per-IP request"
   echo "counts for about an hour to limit abuse. Database backups keep those"
   echo "counts for up to a day after that."
@@ -448,9 +335,8 @@ ask_yes() {
 confirm_delete() {
   echo
   echo "Nothing has been sent yet. If you answer yes, this sends:"
-  echo "  - two one-way hashes of this machine's machine-id, model and CPU, one for a"
-  echo "    public report and one for a candidate report"
-  echo "It sends nothing else. The server deletes any report that matches them right away."
+  echo "  - a one-way hash of this machine's machine-id, model and CPU"
+  echo "It sends nothing else. The server deletes the report that matches it right away."
   echo "Database backups keep a deleted report for up to a day after that."
   echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
   ask_yes "Delete it? [y/N] " "delete it"
@@ -528,7 +414,7 @@ run_omarchy() {
     return 0
   fi
   print_machine
-  if ! confirm_submit omarchy; then
+  if ! confirm_submit; then
     echo "Nothing was sent."
     return 0
   fi
@@ -539,39 +425,6 @@ run_omarchy() {
   model_url=$(json_string_field "$RESULT" model_url)
   if [[ -n $model_url ]]; then
     echo "Compatibility page: $model_url"
-  fi
-}
-
-run_check() {
-  gather_facts
-  evaluate
-  print_verdict
-
-  if [[ -z $F_vendor || -z $F_product ]]; then
-    echo
-    echo "No vendor and model in DMI (a virtual machine or container?), so there is nothing to share."
-    return 0
-  fi
-  local payload
-  payload=$(candidate_payload)
-  refuse_identifiers "$payload"
-  if dry_run_print "$payload"; then
-    return 0
-  fi
-  if ! confirm_submit candidate; then
-    echo "Nothing was sent."
-    return 0
-  fi
-  post_payload "$payload"
-  echo
-  echo "Thanks, your machine was added as a candidate."
-  local known model_url
-  known=$(json_number_field "$RESULT" known_machines)
-  model_url=$(json_string_field "$RESULT" model_url)
-  if [[ ${known:-0} -gt 0 && -n $model_url ]]; then
-    echo "${known} machine(s) of this model have reported running Omarchy: $model_url"
-  else
-    echo "No machine of this model has reported running Omarchy yet."
   fi
 }
 
@@ -604,27 +457,6 @@ run_delete() {
   fi
 }
 
-# macOS has no /proc or /sys, so say what the manual says about Macs and stop.
-run_macos() {
-  local arch
-  arch=$(cpu_arch)
-  echo "This is macOS, so nothing here can read your hardware."
-  echo
-  case $arch in
-    arm64 | aarch64)
-      echo "Verdict: unlikely. This is an Apple silicon Mac, and the Omarchy manual says"
-      echo "installing on an M-series Mac is not supported."
-      ;;
-    *)
-      echo "This is an Intel Mac. Omarchy 3 added support for Intel Macs, but installing wipes"
-      echo "the drive, and the manual says sound and the Touch Bar do not work."
-      echo "It does not mention T2 Macs (to verify)."
-      ;;
-  esac
-  echo
-  echo "For a real check, boot a Linux live USB on the machine and run this again."
-}
-
 main() {
   if [[ $OMAHCL_URL == __* ]]; then
     echo "Set OMAHCL_URL, or download this script from Omarchy HCL so the URL is filled in." >&2
@@ -639,8 +471,8 @@ main() {
         echo "This is macOS, where this script cannot read your hardware, so it never sent a report to delete."
         return 0
       fi
-      run_macos
-      return 0
+      echo "This is macOS. This script only reports machines running Omarchy, so it sent nothing." >&2
+      exit 2
       ;;
     Linux) ;;
     *)
@@ -665,7 +497,9 @@ main() {
   elif [[ $(os_field ID) == omarchy ]]; then
     run_omarchy
   else
-    run_check
+    echo "This machine is not running Omarchy. This script only reports machines running" >&2
+    echo "Omarchy, so it sent nothing." >&2
+    exit 2
   fi
 }
 

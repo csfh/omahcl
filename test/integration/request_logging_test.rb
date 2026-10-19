@@ -41,7 +41,7 @@ class RequestLoggingTest < ActionDispatch::IntegrationTest
     nonce = JSON.parse(response.body)["nonce"]
     digest = "e" * 64
 
-    post deletions_path, params: { instance_digests: [ digest ], nonce: nonce }, as: :json, headers: { "REMOTE_ADDR" => CLIENT_IP }
+    post deletions_path, params: { instance_digest: digest, nonce: nonce }, as: :json, headers: { "REMOTE_ADDR" => CLIENT_IP }
 
     assert_response :success
     assert_match "Parameters:", @log.string

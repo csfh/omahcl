@@ -90,7 +90,7 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "a" * 64))
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "b" * 64))
     ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "c" * 64))
-    ingest_report!(candidate_payload(product: "ThinkPad X220"))
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "e" * 64)).update!(hidden_at: Time.current)
 
     get hardware_model_path("lenovo-thinkpad-x220")
 

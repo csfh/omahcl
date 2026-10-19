@@ -1,19 +1,15 @@
 class Report < ApplicationRecord
   ESTABLISHED_MACHINES = 3
 
-  enum :source, { omarchy: "omarchy", candidate: "candidate" }, prefix: true
-
   before_validation :assign_public_id, on: :create
   before_validation :assign_model_identity
 
-  validates :omarchy_version, presence: true, if: :source_omarchy?
-  validates :verdict, inclusion: { in: ReportSanitizer::VERDICTS }, if: :source_candidate?
-  validates :public_id, :vendor, :product, :cpu_model, :cpu_arch, :model_key, :model_slug, :instance_digest, presence: true
+  validates :public_id, :omarchy_version, :vendor, :product, :cpu_model, :cpu_arch, :model_key, :model_slug, :instance_digest, presence: true
   validates :instance_digest, uniqueness: true
   validates :memory_bytes, :cpu_cores, numericality: { greater_than_or_equal_to: 0 }
 
-  # What public pages count: reports from machines running Omarchy that no admin hid.
-  scope :visible, -> { source_omarchy.where(hidden_at: nil) }
+  # What public pages count: reports that no admin hid.
+  scope :visible, -> { where(hidden_at: nil) }
   scope :unhidden, -> { where(hidden_at: nil) }
   scope :hidden, -> { where.not(hidden_at: nil) }
   scope :created_since, ->(time) { where(created_at: time..) }
@@ -56,32 +52,28 @@ class Report < ApplicationRecord
     Challenge.consume!(nonce)
 
     report = find_or_initialize_by(instance_digest: attrs[:instance_digest])
-    # A candidate post must never replace what a running Omarchy machine reported.
-    return report if report.persisted? && report.source_omarchy? && attrs[:source] == "candidate"
-
     report.assign_attributes(attrs)
     report.save!
     report
   end
 
-  # Deletes every report whose client digest is listed, hidden ones included, so
-  # asking to be erased always works. The client holds both digests (omarchy and
-  # candidate); knowing one is the proof that the machine is theirs. Returns the
-  # number of reports deleted.
+  # Deletes the report whose client digest is given, hidden or not, so asking to be
+  # erased always works. Knowing the digest is the proof that the machine is theirs.
+  # Returns the number of reports deleted.
   def self.erase(raw)
     payload = raw.is_a?(Hash) ? raw.deep_stringify_keys : {}
-    unless payload.keys.sort == %w[instance_digests nonce]
-      raise ReportSanitizer::Rejected, "expected instance_digests and nonce"
+    unless payload.keys.sort == %w[instance_digest nonce]
+      raise ReportSanitizer::Rejected, "expected instance_digest and nonce"
     end
 
-    digests = payload["instance_digests"]
-    valid = digests.is_a?(Array) && digests.size.between?(1, 2) &&
-      digests.all? { |digest| digest.is_a?(String) && digest.match?(ReportSanitizer::INSTANCE_DIGEST) }
-    raise ReportSanitizer::Rejected, "instance_digests must hold 1 or 2 64-character hex digests" unless valid
+    digest = payload["instance_digest"]
+    unless digest.is_a?(String) && digest.match?(ReportSanitizer::INSTANCE_DIGEST)
+      raise ReportSanitizer::Rejected, "instance_digest must be 64 hex characters"
+    end
     raise ReportSanitizer::Rejected, "nonce is required" if payload["nonce"].blank?
 
     Challenge.consume!(payload["nonce"])
-    where(instance_digest: digests.map { |digest| digest_instance(digest) }).delete_all
+    where(instance_digest: digest_instance(digest)).delete_all
   end
 
   # One key per model and CPU, so a Framework Laptop 13 with another CPU has its own
