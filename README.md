@@ -93,7 +93,7 @@ On a machine running Omarchy (`ID=omarchy` in `/etc/os-release`), a yes sends an
 curl -fsSL https://omahcl.com/delete | bash
 ```
 
-`/delete` serves the same script with its action set to `delete` (`OMAHCL_ACTION`). It rebuilds this machine's two digests with the same `instance_digest` code as the collector, one for each domain, and after a yes `POST`s them with a challenge nonce to `/deletions`. The server HMACs each one and deletes the matching reports, hidden ones included. It cannot reach reports whose digest has since changed: a reinstall, a different model or CPU string, or a report from before DMI serials left the formula.
+`/delete` serves the same script with its action set to `delete` (`OMAHCL_ACTION`). It rebuilds this machine's digest with the same `instance_digest` code as the collector and, after a yes, `POST`s it with a challenge nonce to `/deletions`. The server HMACs it and deletes the matching report, hidden or not. It cannot reach reports whose digest has since changed: a reinstall, a different model or CPU string, or a report from before DMI serials left the formula.
 
 Environment variables: `OMAHCL_URL`, `OMAHCL_ACTION`, `OMAHCL_DRY_RUN` (on Omarchy, print the payload and send nothing), `OMAHCL_SUBMIT` (`yes` or `no`, which also answers the delete prompt), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
 

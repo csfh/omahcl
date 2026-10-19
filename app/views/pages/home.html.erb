@@ -33,7 +33,7 @@
   </div>
   <p class="mt-2 text-sm text-muted">No account is needed. Read the script first at <%= link_to "/collect", collect_path %>, and see <%= link_to "what we keep", privacy_path %>.</p>
   <h3 class="mt-6 text-sm text-paper">Remove your machine</h3>
-  <p class="mt-2 text-sm text-muted">This rebuilds your machine's hashes and asks before it deletes any report you sent. Read it at <%= link_to "/delete", delete_script_path %>.</p>
+  <p class="mt-2 text-sm text-muted">This rebuilds your machine's hash and asks before it deletes any report you sent. Read it at <%= link_to "/delete", delete_script_path %>.</p>
   <div class="mt-4">
     <%= render "application/collect_command", command: delete_command %>
   </div>
