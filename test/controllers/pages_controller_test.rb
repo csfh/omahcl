@@ -77,4 +77,13 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#stats-growth"
     assert_select "#{chart('stats-growth')} table.sr-only tbody tr", 3
   end
+
+  test "privacy points to deleting a report near the top and explains how" do
+    get privacy_path
+
+    assert_response :success
+    assert_select "article > p a[href='#deleting']", text: "delete your report"
+    assert_select "h2#deleting", text: "Deleting your report"
+    assert_select "code", text: /\/delete \| bash/
+  end
 end
