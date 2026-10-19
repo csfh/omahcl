@@ -2,8 +2,8 @@
 # Hardware check for Omarchy. It sends nothing unless you say yes.
 #
 #   On Omarchy:      asks, then sends a public hardware report.
-#   Anywhere else:   checks locally whether this machine looks able to run Omarchy,
-#                    then asks whether to send a private candidate report.
+#   Anywhere else:   checks locally whether this machine looks able to run Omarchy.
+#                    It sends nothing.
 #   Served as /delete: rebuilds this machine's hashes, then asks whether to delete
 #                    any report the site holds for them.
 
@@ -139,9 +139,9 @@ sha256_hex() {
 
 instance_digest() {
   local vendor=$1 product=$2 cpu_model=$3
-  # These domain strings predate the current name. Never rename them: that would
+  # This domain string predates the current name. Never rename it: that would
   # give every machine a new instance_digest and split its history.
-  local domain=${4:-omarchy-market-instance-v1}
+  local domain=omarchy-market-instance-v1
   local machine_id
   machine_id=$(read_strip "$(root etc/machine-id)")
   printf '%s\0%s\0%s\0%s\0%s' "$domain" "$machine_id" "$vendor" "$product" "$cpu_model" | sha256_hex
@@ -283,20 +283,8 @@ omarchy_payload() {
     "$(json_escape "$version")" "$(json_escape "$channel")" "$(hardware_json)" "$digest"
 }
 
-candidate_payload() {
-  local host_os digest
-  host_os=$(clean "$(os_field ID)" 40)
-  [[ -n $host_os ]] || host_os=unknown
-  digest=$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model" omarchy-market-candidate-v1)
-  printf '{"source":"candidate","verdict":"%s","host_os":"%s","hardware":%s,"instance_digest":"%s"}' \
-    "$VERDICT" "$(json_escape "$host_os")" "$(hardware_json)" "$digest"
-}
-
-# Both digests, whatever this machine runs, because it may have sent either kind.
 delete_payload() {
-  printf '{"instance_digests":["%s","%s"]}' \
-    "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")" \
-    "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model" omarchy-market-candidate-v1)"
+  printf '{"instance_digest":"%s"}' "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")"
 }
 
 # Each rule cites where it comes from. Anything the Omarchy manual does not
@@ -399,24 +387,15 @@ print_verdict() {
 # Shows what a send shares and the privacy policy, then asks. Every send needs an
 # explicit yes, from the prompt or OMAHCL_SUBMIT; no terminal means no.
 confirm_submit() {
-  local mode=$1
   echo
   echo "Nothing has been sent yet. If you answer yes, this sends:"
   echo "  - vendor, model, product family, chassis type, CPU, memory size and GPU names"
   echo "  - whether the machine uses UEFI, has a TPM and has Secure Boot on"
-  if [[ $mode == omarchy ]]; then
-    echo "  - the Omarchy version and release channel"
-  else
-    echo "  - the verdict above and your distro's name"
-  fi
+  echo "  - the Omarchy version and release channel"
   echo "  - a one-way hash of the machine-id, model and CPU, so running this again"
   echo "    updates one entry instead of adding another"
   echo "It never sends serial numbers, MAC addresses, your hostname or username."
-  if [[ $mode == omarchy ]]; then
-    echo "The report is public."
-  else
-    echo "Candidate reports are never shown publicly."
-  fi
+  echo "The report is public."
   echo "The server stores no IP address with the report. It keeps per-IP request"
   echo "counts for about an hour to limit abuse. Database backups keep those"
   echo "counts for up to a day after that."
@@ -448,8 +427,7 @@ ask_yes() {
 confirm_delete() {
   echo
   echo "Nothing has been sent yet. If you answer yes, this sends:"
-  echo "  - two one-way hashes of this machine's machine-id, model and CPU, one for a"
-  echo "    public report and one for a candidate report"
+  echo "  - a one-way hash of this machine's machine-id, model and CPU"
   echo "It sends nothing else. The server deletes any report that matches them right away."
   echo "Database backups keep a deleted report for up to a day after that."
   echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
@@ -528,7 +506,7 @@ run_omarchy() {
     return 0
   fi
   print_machine
-  if ! confirm_submit omarchy; then
+  if ! confirm_submit; then
     echo "Nothing was sent."
     return 0
   fi
@@ -546,33 +524,8 @@ run_check() {
   gather_facts
   evaluate
   print_verdict
-
-  if [[ -z $F_vendor || -z $F_product ]]; then
-    echo
-    echo "No vendor and model in DMI (a virtual machine or container?), so there is nothing to share."
-    return 0
-  fi
-  local payload
-  payload=$(candidate_payload)
-  refuse_identifiers "$payload"
-  if dry_run_print "$payload"; then
-    return 0
-  fi
-  if ! confirm_submit candidate; then
-    echo "Nothing was sent."
-    return 0
-  fi
-  post_payload "$payload"
   echo
-  echo "Thanks, your machine was added as a candidate."
-  local known model_url
-  known=$(json_number_field "$RESULT" known_machines)
-  model_url=$(json_string_field "$RESULT" model_url)
-  if [[ ${known:-0} -gt 0 && -n $model_url ]]; then
-    echo "${known} machine(s) of this model have reported running Omarchy: $model_url"
-  else
-    echo "No machine of this model has reported running Omarchy yet."
-  fi
+  echo "Nothing was sent. This check ran on your machine only."
 }
 
 run_delete() {

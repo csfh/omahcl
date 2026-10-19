@@ -7,7 +7,6 @@ module Admin
       @collections_created_week = Report.created_since(since).count
       @collections_updated_week = Report.updated_since(since).count
       @model_count = Report.visible.distinct.count(:model_slug)
-      @candidate_count = Report.source_candidate.count
       @recent_reports = Report.order(updated_at: :desc).limit(8)
 
       @open_challenge_count = Challenge.still_open.count

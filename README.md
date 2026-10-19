@@ -86,7 +86,7 @@ The script never sends anything without a yes. Before asking, it lists what it w
 It has two modes:
 
 - **On Omarchy** (`ID=omarchy` in `/etc/os-release`), a yes sends an anonymous hardware report, which becomes public.
-- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. A yes files a private *candidate* report. Candidates never appear on public pages.
+- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. It sends nothing.
 
 Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
 
@@ -100,7 +100,7 @@ curl -fsSL https://omahcl.com/delete | bash
 
 `/delete` serves the same script with its action set to `delete` (`OMAHCL_ACTION`). It rebuilds this machine's two digests with the same `instance_digest` code as the collector, one for each domain, and after a yes `POST`s them with a challenge nonce to `/deletions`. The server HMACs each one and deletes the matching reports, hidden ones included. It cannot reach reports whose digest has since changed: a reinstall, a different model or CPU string, or a report from before DMI serials left the formula.
 
-Environment variables: `OMAHCL_URL`, `OMAHCL_ACTION`, `OMAHCL_DRY_RUN` (print the payload, send nothing), `OMAHCL_SUBMIT` (`yes` or `no`, which also answers the delete prompt), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
+Environment variables: `OMAHCL_URL`, `OMAHCL_ACTION`, `OMAHCL_DRY_RUN` (on Omarchy, print the payload and send nothing), `OMAHCL_SUBMIT` (`yes` or `no`, which also answers the delete prompt), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
 
 ## Tests
 

@@ -27,7 +27,7 @@
 
 <section id="report" class="mt-12 max-w-2xl scroll-mt-6">
   <h2 class="heading-section">Report your machine</h2>
-  <p class="mt-2 text-muted">Run this in a terminal. It shows what it would send, explains the privacy policy and sends nothing unless you say yes. On Omarchy a yes adds a public report. Anywhere else it first checks your machine locally, and a yes adds a private candidate report.</p>
+  <p class="mt-2 text-muted">Run this in a terminal. It shows what it would send, explains the privacy policy and sends nothing unless you say yes. On Omarchy a yes adds a public report. Anywhere else it only checks your machine locally and sends nothing.</p>
   <div class="mt-4">
     <%= render "application/collect_command", command: collect_command %>
   </div>

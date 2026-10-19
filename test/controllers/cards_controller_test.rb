@@ -52,15 +52,11 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "dd", text: "Intel Core i7-2640M"
   end
 
-  test "card is not found for malformed, unknown, candidate-only and hidden keys" do
+  test "card is not found for malformed, unknown and hidden keys" do
     get "/cards/not-a-key"
     assert_response :not_found
 
     get card_path("0" * 16)
-    assert_response :not_found
-
-    candidate = ingest_report!(candidate_payload(product: "ThinkPad T14", cpu: "AMD Ryzen 5"))
-    get card_path(candidate.card_key)
     assert_response :not_found
 
     @report.update!(hidden_at: Time.current)

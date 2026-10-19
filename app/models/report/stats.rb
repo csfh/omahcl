@@ -1,5 +1,5 @@
 # What the home and model pages chart. Every figure is limited to
-# Report.visible, so candidates and hidden machines never show, and counts
+# Report.visible, so hidden machines never show, and counts
 # distinct machines (instance_digest). Pass a scope, such as one model's
 # reports, to narrow every figure.
 class Report::Stats
