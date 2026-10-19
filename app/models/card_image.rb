@@ -80,18 +80,27 @@ class CardImage
     end
   end
 
-  # Union of rects on a 10x10 grid, with the check centred: it spans x 2-7, y 3-6. The left arm ends lower than the right tip.
-  OUTER = [ [ 3, 0, 4, 10 ], [ 1, 1, 8, 8 ], [ 0, 3, 10, 4 ] ].freeze
-  INNER = [ [ 3, 1, 4, 8 ], [ 2, 2, 6, 6 ], [ 1, 3, 8, 4 ] ].freeze
-  CHECK = [ [ 6, 3 ], [ 7, 3 ], [ 5, 4 ], [ 6, 4 ], [ 2, 5 ], [ 4, 5 ], [ 5, 5 ], [ 3, 6 ], [ 4, 6 ] ].freeze
+  # The seal is an octagon on a 12x12 grid. The rim is the outer shape and the fill is
+  # every cell of it whose four neighbours are also in it, so the two always line up.
+  # The check spans x 3-8, y 4-7: centred, with a two-cell margin to the fill's edge.
+  # Its left arm ends lower than its right tip.
+  SEAL_SIZE = 12
+  OUTER_RECTS = [ [ 4, 0, 4, 12 ], [ 2, 1, 8, 10 ], [ 1, 2, 10, 8 ], [ 0, 3, 12, 6 ] ].freeze
+  OUTER = OUTER_RECTS.flat_map { |x, y, w, h| (x...(x + w)).flat_map { |col| (y...(y + h)).map { |row| [ col, row ] } } }.uniq.freeze
+  INNER = OUTER.select { |x, y| [ [ 1, 0 ], [ -1, 0 ], [ 0, 1 ], [ 0, -1 ] ].all? { |dx, dy| OUTER.include?([ x + dx, y + dy ]) } }.freeze
+  CHECK = [ [ 7, 4 ], [ 8, 4 ], [ 6, 5 ], [ 7, 5 ], [ 3, 6 ], [ 5, 6 ], [ 6, 6 ], [ 4, 7 ], [ 5, 7 ] ].freeze
+
+  def self.cells_path(cells)
+    cells.map { |x, y| "M#{x} #{y}h1v1h-1z" }.join
+  end
 
   def seal
     unit = 5
-    ox = CARD[:x] + (CARD[:w] - 10 * unit) / 2
-    oy = CARD[:y] + 40
-    OUTER.each { |x, y, w, h| fill(ox + x * unit, oy + y * unit, w * unit, h * unit, TEAL_DEEP) }
-    INNER.each { |x, y, w, h| fill(ox + x * unit, oy + y * unit, w * unit, h * unit, ACCENT) }
-    CHECK.each { |x, y| fill(ox + x * unit, oy + y * unit, unit, unit, INK) }
+    ox = CARD[:x] + (CARD[:w] - SEAL_SIZE * unit) / 2
+    oy = CARD[:y] + 36
+    [ [ OUTER, TEAL_DEEP ], [ INNER, ACCENT ], [ CHECK, INK ] ].each do |cells, color|
+      cells.each { |x, y| fill(ox + x * unit, oy + y * unit, unit, unit, color) }
+    end
   end
 
   def copy

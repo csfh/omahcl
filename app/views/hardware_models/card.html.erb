@@ -15,10 +15,10 @@
       <div class="holo-content">
         <p class="font-pixel text-[0.6rem] leading-relaxed text-accent">Omarchy Verified</p>
 
-        <svg class="holo-seal" viewBox="0 0 10 10" aria-hidden="true" shape-rendering="crispEdges">
-          <path class="fill-teal-deep" d="M3 0h4v10h-4zM1 1h8v8h-8zM0 3h10v4h-10z" />
-          <path class="fill-accent" d="M3 1h4v8h-4zM2 2h6v6h-6zM1 3h8v4h-8z" />
-          <path class="fill-ink" d="<%= CardImage::CHECK.map { |x, y| "M#{x} #{y}h1v1h-1z" }.join %>" />
+        <svg class="holo-seal" viewBox="0 0 <%= CardImage::SEAL_SIZE %> <%= CardImage::SEAL_SIZE %>" aria-hidden="true" shape-rendering="crispEdges">
+          <path class="fill-teal-deep" d="<%= CardImage.cells_path(CardImage::OUTER) %>" />
+          <path class="fill-accent" d="<%= CardImage.cells_path(CardImage::INNER) %>" />
+          <path class="fill-ink" d="<%= CardImage.cells_path(CardImage::CHECK) %>" />
         </svg>
 
         <div>
