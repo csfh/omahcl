@@ -23,7 +23,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "home charts the machines people reported" do
-    3.times { |i| ingest_report!(omarchy_payload, ip: "203.0.113.#{i + 1}") }
+    3.times { ingest_report!(omarchy_payload) }
 
     get root_path
 

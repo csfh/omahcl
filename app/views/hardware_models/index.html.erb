@@ -11,7 +11,7 @@
       <li class="flex items-center justify-between gap-4 py-3">
         <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
         <span class="inline-flex items-center gap-3 text-sm text-muted">
-          <%= machines_status(model.machines_count, model.networks_count) %>
+          <%= machines_status(model.machines_count) %>
           <span><%= memory_label(model.min_memory_bytes) %>–<%= memory_label(model.max_memory_bytes) %></span>
         </span>
       </li>

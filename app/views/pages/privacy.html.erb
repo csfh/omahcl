@@ -6,12 +6,12 @@
 
   <h2 class="mb-2 mt-8 heading-section">What a report holds</h2>
   <p>A report holds the vendor, model, product family and chassis type; the CPU model, vendor, architecture and core count; the memory size; up to eight GPU names; whether the machine boots with UEFI, has a TPM and has Secure Boot on; and the Omarchy version and release channel. It never holds serial numbers, MAC addresses, hostnames, usernames or product UUIDs. The script and the server both refuse those fields.</p>
-  <p>The script also sends a one-way hash so that the same machine updates one report instead of adding new ones. It is computed on your machine from its machine-id, plus the DMI serials when the script can read them. The machine-id and serials are never sent, and the hash cannot be turned back into them. The server hashes it again with its secret key before storing it, so a copy of the database cannot be matched to your machine without that key.</p>
+  <p>The script also sends a one-way hash so that the same machine updates one report instead of adding new ones. It is computed on your machine from its machine-id, the model and the CPU. The machine-id is never sent, and the hash cannot be turned back into them. The server hashes it again with its secret key before storing it, so a copy of the database cannot be matched to your machine without that key.</p>
 
   <h2 class="mb-2 mt-8 heading-section">IP addresses</h2>
   <p>The site's own logs record which pages were requested, when, and the hardware facts in each submitted report. They do not record IP addresses, search terms or machine hashes.</p>
   <p>To limit abuse, the server counts report submissions and sign-in attempts per IP address over a few minutes. Those counts are deleted within about an hour. The site sleeps when nobody uses it, and counts left at that point are deleted within minutes of it waking up. Database backups keep the counts for up to a day after that.</p>
-  <p>Each report keeps a hash of the IP address that last sent it, made with a secret key. It lets the site mark a model Verified once enough machines from more than one network have reported it. The hash is never shown, and without the server's secret key it cannot be turned back into an address.</p>
+  <p>A report stores nothing derived from your IP address.</p>
   <p>The site runs on Laravel Cloud, behind Cloudflare. Both see your IP address when you connect and can keep it in their own logs. Laravel Cloud's access logs record each request's IP address, country, user agent and path. This site does not control those logs.</p>
 
   <h2 class="mb-2 mt-8 heading-section">Cookies</h2>

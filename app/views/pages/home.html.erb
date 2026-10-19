@@ -17,7 +17,7 @@
       <% @models.each do |model| %>
         <li class="flex items-center justify-between gap-4 py-3">
           <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
-          <%= machines_status(model.machines_count, model.networks_count) %>
+          <%= machines_status(model.machines_count) %>
         </li>
       <% end %>
     </ul>

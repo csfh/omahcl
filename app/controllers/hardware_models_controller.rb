@@ -15,7 +15,6 @@ class HardwareModelsController < ApplicationController
   end
 
   def show
-    @networks_count = @reports.unscope(:order).distinct.count(:submitted_ip_digest)
     @stats = Report::Stats.new(@reports.unscope(:order))
   end
 
