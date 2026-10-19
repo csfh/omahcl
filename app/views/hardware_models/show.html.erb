@@ -1,4 +1,5 @@
 <% page_title @sample.display_name %>
+<%= render "hardware_models/og", title: "#{@sample.display_name} on Omarchy HCL", url: hardware_model_url(@sample.model_slug) %>
 
 <p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path %></p>
 <h1 class="mt-2 heading-page"><%= @sample.display_name %></h1>

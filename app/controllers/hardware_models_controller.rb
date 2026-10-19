@@ -20,6 +20,15 @@ class HardwareModelsController < ApplicationController
   end
 
   def card
+    respond_to do |format|
+      format.html
+      format.png do
+        return unless stale?(etag: [ "card-png-1", @card ], public: true)
+
+        expires_in 1.hour, public: true
+        send_data CardImage.new(**@card).png, type: "image/png", disposition: "inline"
+      end
+    end
   end
 
   private
@@ -32,5 +41,12 @@ class HardwareModelsController < ApplicationController
     @machines_count = @reports.unscope(:order).distinct.count(:instance_digest)
     @cpu_models = @reports.unscope(:order).distinct.pluck(:cpu_model)
     @gpus = @reports.flat_map { |report| report.gpus }.uniq
+    @card = {
+      name: @sample.display_name,
+      cpu: @cpu_models.first,
+      gpu: @gpus.map { |gpu| [ gpu["vendor"], gpu["name"] ].compact.join(" ") }.first.presence || "None reported",
+      version: @sample.omarchy_version.presence || "Unknown",
+      machines: @machines_count
+    }
   end
 end

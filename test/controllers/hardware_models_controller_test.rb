@@ -147,6 +147,7 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", /ThinkPad X220/
     assert_select "p", text: "Omarchy Verified"
     assert_select "[style]", count: 0
+    assert_select "a[href=?][download]", card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
     assert_no_match(/public_id|instance_digest/, response.body)
   end
 
@@ -171,5 +172,42 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     Report.update_all(hidden_at: Time.current)
     get card_hardware_model_path("lenovo-thinkpad-x220")
     assert_response :not_found
+  end
+
+  test "card png is a 1200x630 image with caching headers" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+
+    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
+
+    assert_response :success
+    assert_equal "image/png", response.media_type
+    assert_equal "\x89PNG\r\n\x1a\n".b, response.body.b[0, 8]
+    assert_equal [ 1200, 630 ], response.body.b[16, 8].unpack("NN")
+    assert_match(/public/, response.headers["Cache-Control"])
+
+    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png), headers: { "If-None-Match" => response.headers["ETag"] }
+    assert_response :not_modified
+  end
+
+  test "card png is not found for unknown and hidden models" do
+    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
+    assert_response :not_found
+
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+    Report.update_all(hidden_at: Time.current)
+    get card_hardware_model_path("lenovo-thinkpad-x220", format: :png)
+    assert_response :not_found
+  end
+
+  test "card and model pages carry link preview tags pointing at the png" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+    png = card_hardware_model_url("lenovo-thinkpad-x220", format: :png)
+
+    [ card_hardware_model_path("lenovo-thinkpad-x220"), hardware_model_path("lenovo-thinkpad-x220") ].each do |path|
+      get path
+      assert_select "meta[property='og:image'][content=?]", png
+      assert_select "meta[property='og:image:width'][content='1200']"
+      assert_select "meta[name='twitter:card'][content='summary_large_image']"
+    end
   end
 end
