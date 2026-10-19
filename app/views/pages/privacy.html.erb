@@ -6,7 +6,7 @@
 
   <h2 class="mb-2 mt-8 heading-section">What a report holds</h2>
   <p>A report holds the vendor, model, product family and chassis type; the CPU model, vendor, architecture and core count; the memory size; up to eight GPU names; whether the machine boots with UEFI, has a TPM and has Secure Boot on; and the Omarchy version and release channel. It never holds serial numbers, MAC addresses, hostnames, usernames or product UUIDs. The script and the server both refuse those fields.</p>
-  <p>The script also sends a one-way hash so that the same machine updates one report instead of adding new ones. It is computed on your machine from its machine-id, the model and the CPU. The machine-id is never sent, and the hash cannot be turned back into them. The server hashes it again with its secret key before storing it, so a copy of the database cannot be matched to your machine without that key.</p>
+  <p>The script also sends a one-way hash so that the same machine updates one report instead of adding new ones. It is computed on your machine from its machine-id, the model and the CPU. The machine-id is never sent, and the hash cannot be turned back into it. The server hashes it again with its secret key before storing it, so a copy of the database cannot be matched to your machine without that key.</p>
 
   <h2 class="mb-2 mt-8 heading-section">IP addresses</h2>
   <p>The site's own logs record which pages were requested, when, and the hardware facts in each submitted report. They do not record IP addresses, search terms or machine hashes.</p>
