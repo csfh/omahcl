@@ -80,10 +80,10 @@ class CardImage
     end
   end
 
-  # Union of rects on a 10x10 grid, with the check centred: it spans x 2-7, y 3-6.
+  # Union of rects on a 10x10 grid, with the check centred: it spans x 2-7, y 3-6. The left arm ends lower than the right tip.
   OUTER = [ [ 3, 0, 4, 10 ], [ 1, 1, 8, 8 ], [ 0, 3, 10, 4 ] ].freeze
   INNER = [ [ 3, 1, 4, 8 ], [ 2, 2, 6, 6 ], [ 1, 3, 8, 4 ] ].freeze
-  CHECK = [ [ 2, 4 ], [ 3, 5 ], [ 4, 6 ], [ 5, 5 ], [ 6, 4 ], [ 7, 3 ], [ 3, 4 ], [ 4, 5 ], [ 5, 4 ], [ 6, 3 ] ].freeze
+  CHECK = [ [ 6, 3 ], [ 7, 3 ], [ 5, 4 ], [ 6, 4 ], [ 2, 5 ], [ 4, 5 ], [ 5, 5 ], [ 3, 6 ], [ 4, 6 ] ].freeze
 
   def seal
     unit = 5
