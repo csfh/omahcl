@@ -4,10 +4,15 @@
 #   On Omarchy:      asks, then sends a public hardware report.
 #   Anywhere else:   checks locally whether this machine looks able to run Omarchy,
 #                    then asks whether to send a private candidate report.
+#   Served as /delete: rebuilds this machine's hashes, then asks whether to delete
+#                    any report the site holds for them.
 
 set -euo pipefail
 
 OMAHCL_URL=${OMAHCL_URL:-__OMAHCL_URL__}
+# CollectsController fills this in for /collect and /delete. Anything but "delete"
+# collects.
+OMAHCL_ACTION=${OMAHCL_ACTION:-__OMAHCL_ACTION__}
 OMAHCL_SYS_ROOT=${OMAHCL_SYS_ROOT:-}
 OMAHCL_ARCH=${OMAHCL_ARCH:-}
 OMAHCL_KERNEL=${OMAHCL_KERNEL:-}
@@ -287,6 +292,13 @@ candidate_payload() {
     "$VERDICT" "$(json_escape "$host_os")" "$(hardware_json)" "$digest"
 }
 
+# Both digests, whatever this machine runs, because it may have sent either kind.
+delete_payload() {
+  printf '{"instance_digests":["%s","%s"]}' \
+    "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")" \
+    "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model" omarchy-market-candidate-v1)"
+}
+
 # Each rule cites where it comes from. Anything the Omarchy manual does not
 # settle is labelled "to verify" instead of being stated as fact.
 evaluate() {
@@ -409,21 +421,39 @@ confirm_submit() {
   echo "counts for about an hour to limit abuse. Database backups keep those"
   echo "counts for up to a day after that."
   echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
+  ask_yes "Send it? [y/N] " "share it"
+}
+
+# The only way anything gets sent: an explicit yes at a terminal, or
+# OMAHCL_SUBMIT=yes. No terminal means no.
+ask_yes() {
+  local prompt=$1 what=$2
   case ${OMAHCL_SUBMIT:-} in
     yes | y | 1) return 0 ;;
     no | n | 0) return 1 ;;
   esac
   if ! ( : </dev/tty ) 2>/dev/null; then
-    echo "Run this in a terminal to choose whether to share it, or set OMAHCL_SUBMIT=yes." >&2
+    echo "Run this in a terminal to choose whether to $what, or set OMAHCL_SUBMIT=yes." >&2
     return 1
   fi
   local answer=
   echo
-  read -r -p "Send it? [y/N] " answer </dev/tty || true
+  read -r -p "$prompt" answer </dev/tty || true
   case $answer in
     y | Y | yes | YES | Yes) return 0 ;;
     *) return 1 ;;
   esac
+}
+
+confirm_delete() {
+  echo
+  echo "Nothing has been sent yet. If you answer yes, this sends:"
+  echo "  - two one-way hashes of this machine's machine-id, model and CPU, one for a"
+  echo "    public report and one for a candidate report"
+  echo "It sends nothing else. The server deletes any report that matches them right away."
+  echo "Database backups keep a deleted report for up to a day after that."
+  echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
+  ask_yes "Delete it? [y/N] " "delete it"
 }
 
 fetch_challenge() {
@@ -442,13 +472,13 @@ fetch_challenge() {
 }
 
 submit() {
-  local body=$1
+  local body=$1 path=$2 what=$3
   local response
   if ! response=$(curl -fsS -A "omahcl-collect/2" --max-time 30 \
     -H "Content-Type: application/json" \
     -d "$body" \
-    "${OMAHCL_URL%/}/reports"); then
-    echo "Omarchy HCL rejected the report." >&2
+    "${OMAHCL_URL%/}/$path"); then
+    echo "Omarchy HCL rejected the $what." >&2
     exit 1
   fi
   printf '%s' "$response"
@@ -478,11 +508,11 @@ dry_run_print() {
 
 # Plain statement, never inside a condition, so set -e and the explicit exits apply.
 post_payload() {
-  local body=$1 nonce
+  local body=$1 path=${2:-reports} what=${3:-report} nonce
   nonce=$(fetch_challenge) || exit 1
   body=$(printf '%s' "$body" | sed 's/}$//')
   body+=$(printf ',"nonce":"%s"}' "$(json_escape "$nonce")")
-  RESULT=$(submit "$body") || exit 1
+  RESULT=$(submit "$body" "$path" "$what") || exit 1
 }
 
 run_omarchy() {
@@ -545,6 +575,35 @@ run_check() {
   fi
 }
 
+run_delete() {
+  gather_facts
+  if [[ -z $F_vendor || -z $F_product ]]; then
+    echo "Could not read machine vendor and product from DMI, so this machine's report cannot be found." >&2
+    exit 1
+  fi
+  local payload
+  payload=$(delete_payload)
+  if dry_run_print "$payload"; then
+    return 0
+  fi
+  print_machine
+  if ! confirm_delete; then
+    echo "Nothing was sent."
+    return 0
+  fi
+  post_payload "$payload" deletions "deletion request"
+  echo
+  local deleted
+  deleted=$(json_number_field "$RESULT" deleted)
+  if [[ ${deleted:-0} -gt 0 ]]; then
+    echo "Deleted ${deleted} report(s) for this machine."
+  else
+    echo "No report matched this machine. Reports are matched on the machine-id, vendor,"
+    echo "model and CPU, so a reinstall or a changed model or CPU string, or a report"
+    echo "sent before the hash dropped DMI serials, will not match."
+  fi
+}
+
 # macOS has no /proc or /sys, so say what the manual says about Macs and stop.
 run_macos() {
   local arch
@@ -576,6 +635,10 @@ main() {
   kernel=$(host_kernel)
   case $kernel in
     Darwin)
+      if [[ $OMAHCL_ACTION == delete ]]; then
+        echo "This is macOS, where this script cannot read your hardware, so it never sent a report to delete."
+        return 0
+      fi
       run_macos
       return 0
       ;;
@@ -597,7 +660,9 @@ main() {
     exit 2
   fi
 
-  if [[ $(os_field ID) == omarchy ]]; then
+  if [[ $OMAHCL_ACTION == delete ]]; then
+    run_delete
+  elif [[ $(os_field ID) == omarchy ]]; then
     run_omarchy
   else
     run_check

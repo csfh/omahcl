@@ -7,6 +7,10 @@ module ApplicationHelper
     "curl -fsSL #{root_url.chomp('/')}/collect | bash"
   end
 
+  def delete_command
+    "curl -fsSL #{root_url.chomp('/')}/delete | bash"
+  end
+
   def memory_label(bytes)
     number_to_human_size(bytes.to_i)
   end

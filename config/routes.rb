@@ -1,9 +1,11 @@
 Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
   get "up" => "rails/health#show", as: :rails_health_check
-  get "collect", to: "collects#show"
+  get "collect", to: "collects#show", defaults: { script: "collect" }
+  get "delete", to: "collects#show", defaults: { script: "delete" }, as: :delete_script
   get "challenges", to: "challenges#create"
   post "reports", to: "reports#create"
+  post "deletions", to: "deletions#create"
   resources :hardware_models, path: "models", param: :slug, only: %i[index show] do
     get :suggestions, on: :collection
   end

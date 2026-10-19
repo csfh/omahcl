@@ -36,6 +36,20 @@ class RequestLoggingTest < ActionDispatch::IntegrationTest
     assert_no_match CLIENT_IP, @log.string
   end
 
+  test "deletion logs leave out the machine digests and nonce" do
+    get challenges_path, headers: { "REMOTE_ADDR" => CLIENT_IP }
+    nonce = JSON.parse(response.body)["nonce"]
+    digest = "e" * 64
+
+    post deletions_path, params: { instance_digests: [ digest ], nonce: nonce }, as: :json, headers: { "REMOTE_ADDR" => CLIENT_IP }
+
+    assert_response :success
+    assert_match "Parameters:", @log.string
+    assert_no_match digest, @log.string
+    assert_no_match nonce, @log.string
+    assert_no_match CLIENT_IP, @log.string
+  end
+
   # Action Cable writes its own "Started … for <ip>" line, outside AnonymousRequestLogger.
   test "the unused Action Cable endpoint is not served and logs no IP" do
     get "/cable", headers: { "REMOTE_ADDR" => CLIENT_IP }
