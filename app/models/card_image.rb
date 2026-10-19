@@ -24,12 +24,11 @@ class CardImage
 
   CARD = { x: 24, y: 27, w: 112, h: 156 }.freeze
 
-  def initialize(name:, cpu:, gpu:, version:, machines:)
+  def initialize(name:, cpu:, gpu:, version:)
     @name = name
     @cpu = cpu
     @gpu = gpu
     @version = version
-    @machines = machines
     @pixels = Array.new(HEIGHT) { Array.new(WIDTH, INK) }
   end
 
@@ -105,10 +104,10 @@ class CardImage
 
   def copy
     left = 164
-    text("OMARCHY VERIFIED", left, 34, ACCENT)
-    fill(left, 48, 212, 2, TEAL_DEEP)
+    text("OMARCHY VERIFIED", centered_x("OMARCHY VERIFIED", left, 212, 2), 30, ACCENT, scale: 2)
+    fill(left, 52, 212, 2, TEAL_DEEP)
 
-    y = 62
+    y = 68
     wrap(@name, 18, 3).each do |line|
       text(line, left, y, PAPER, scale: 2)
       y += 18
@@ -121,8 +120,7 @@ class CardImage
       y += 14
     end
 
-    text("#{@machines} #{@machines == 1 ? "MACHINE" : "MACHINES"}", left, 176, MUTED)
-    text("OMAHCL.COM", WIDTH - 24 - width_of("OMAHCL.COM"), 176, ACCENT)
+    text("OMAHCL.COM", centered_x("OMAHCL.COM", left, 212, 1), 176, ACCENT)
   end
 
   def mix(color, other, amount)
@@ -154,8 +152,9 @@ class CardImage
     lines.map { |line| clip(line, limit) }
   end
 
-  def width_of(string, scale: 1)
-    string.length * 6 * scale
+  # The last glyph's trailing gap column is not ink, so leave it out when centring.
+  def centered_x(string, left, width, scale)
+    left + (width - (string.length * 6 - 1) * scale) / 2
   end
 
   def text(string, x, y, color, scale: 1)

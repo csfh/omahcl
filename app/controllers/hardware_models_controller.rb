@@ -23,10 +23,10 @@ class HardwareModelsController < ApplicationController
     respond_to do |format|
       format.html
       format.png do
-        return unless stale?(etag: [ "card-png-1", @card ], public: true)
+        return unless stale?(etag: [ "card-png-2", @card.except(:machines) ], public: true)
 
         expires_in 1.hour, public: true
-        send_data CardImage.new(**@card).png, type: "image/png", disposition: "inline"
+        send_data CardImage.new(**@card.except(:machines)).png, type: "image/png", disposition: "inline"
       end
     end
   end

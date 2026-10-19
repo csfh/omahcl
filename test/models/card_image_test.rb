@@ -2,7 +2,7 @@ require "test_helper"
 
 class CardImageTest < ActiveSupport::TestCase
   def png(**overrides)
-    CardImage.new(name: "ThinkPad X220", cpu: "Intel Core i5", gpu: "Intel HD", version: "4.0.2", machines: 3, **overrides).png
+    CardImage.new(name: "ThinkPad X220", cpu: "Intel Core i5", gpu: "Intel HD", version: "4.0.2", **overrides).png
   end
 
   test "renders a valid PNG that decodes to the full image" do
@@ -20,6 +20,6 @@ class CardImageTest < ActiveSupport::TestCase
 
   test "output is deterministic for the same input" do
     assert_equal png, png
-    assert_not_equal png, png(machines: 4)
+    assert_not_equal png, png(version: "4.1.0")
   end
 end

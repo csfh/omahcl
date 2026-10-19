@@ -13,7 +13,7 @@
       <div class="holo-glare" aria-hidden="true"></div>
 
       <div class="holo-content">
-        <p class="font-pixel text-[0.6rem] leading-relaxed text-accent">Omarchy Verified</p>
+        <p class="text-center font-pixel text-sm leading-relaxed text-accent">Omarchy Verified</p>
 
         <svg class="holo-seal" viewBox="0 0 <%= CardImage::SEAL_SIZE %> <%= CardImage::SEAL_SIZE %>" aria-hidden="true" shape-rendering="crispEdges">
           <path class="fill-teal-deep" d="<%= CardImage.cells_path(CardImage::OUTER) %>" />
@@ -30,10 +30,7 @@
           </dl>
         </div>
 
-        <p class="flex items-center justify-between text-[0.65rem] text-muted">
-          <span><%= pluralize(@card[:machines], "machine") %></span>
-          <span>omahcl.com</span>
-        </p>
+        <p class="text-center text-[0.65rem] text-muted">omahcl.com</p>
       </div>
     </article>
   </div>
