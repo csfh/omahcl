@@ -162,22 +162,6 @@ bool_dir() {
   fi
 }
 
-secure_boot_enabled() {
-  local path
-  path=$(root sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c)
-  if [[ ! -r $path ]]; then
-    printf 'false'
-    return
-  fi
-  local byte
-  byte=$(dd if="$path" bs=1 skip=4 count=1 2>/dev/null | od -An -tu1 | tr -d ' \n')
-  if [[ ${byte:-0} == 1 ]]; then
-    printf 'true'
-  else
-    printf 'false'
-  fi
-}
-
 # on, off, or unknown (the variable is missing or unreadable).
 secure_boot_state() {
   local path
