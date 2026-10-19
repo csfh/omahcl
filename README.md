@@ -83,12 +83,7 @@ curl -fsSL http://127.0.0.1:62951/collect | bash
 
 The script never sends anything without a yes. Before asking, it lists what it would send, says what it never sends and how IP addresses are handled, and links to `/privacy`. The answer defaults to no, and with no terminal to ask on the answer is no. Set `OMAHCL_SUBMIT=yes` or `no` to answer for a script.
 
-It has two modes:
-
-- **On Omarchy** (`ID=omarchy` in `/etc/os-release`), a yes sends an anonymous hardware report, which becomes public.
-- **Anywhere else** it checks whether the machine looks able to run Omarchy and prints a verdict: likely, unclear, or unlikely. It sends nothing.
-
-Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
+On a machine running Omarchy (`ID=omarchy` in `/etc/os-release`), a yes sends an anonymous hardware report, which becomes public. On any other system it says so, sends nothing and exits with status 2. macOS and WSL are not inspected; the script only reports real Omarchy machines.
 
 `instance_digest` is a hash of the machine-id, vendor, product and CPU model, built in memory. The machine-id is never sent. The script reads no serial numbers. The server stores that digest keyed again (`Report.digest_instance`), so a copy of the database can't be matched to a machine through its `/etc/machine-id`. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
 

@@ -39,7 +39,7 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.headers["Content-Disposition"], 'filename="collect.sh"'
-    assert_match(/Hardware check for Omarchy/, response.body)
+    assert_match(/Hardware report for Omarchy/, response.body)
     assert_includes response.body, "#!/usr/bin/env bash"
     assert_includes response.body, "http://www.example.com"
     refute_includes response.body, "__OMAHCL_URL__"

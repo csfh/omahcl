@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Hardware check for Omarchy. It sends nothing unless you say yes.
+# Hardware report for Omarchy. It sends nothing unless you say yes.
 #
-#   On Omarchy:      asks, then sends a public hardware report.
-#   Anywhere else:   checks locally whether this machine looks able to run Omarchy.
-#                    It sends nothing.
-#   Served as /delete: rebuilds this machine's hashes, then asks whether to delete
-#                    any report the site holds for them.
+#   On Omarchy:       asks, then sends a public hardware report. Anywhere else it
+#                     says so and sends nothing.
+#   Served as /delete: rebuilds this machine's hash, then asks whether to delete
+#                     the report the site holds for it.
 
 set -euo pipefail
 
@@ -287,101 +286,10 @@ delete_payload() {
   printf '{"instance_digest":"%s"}' "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")"
 }
 
-# Each rule cites where it comes from. Anything the Omarchy manual does not
-# settle is labelled "to verify" instead of being stated as fact.
-evaluate() {
-  GOOD=() BLOCKERS=() FIXES=() UNSURE=()
-  local lower_vendor=${F_vendor,,}
-
-  case $F_arch in
-    x86_64)
-      GOOD+=("x86_64 CPU. The manual names no architecture requirement, so this is not a guarantee.")
-      ;;
-    aarch64 | arm64)
-      if [[ $lower_vendor == apple* ]]; then
-        BLOCKERS+=("Apple silicon Mac. The manual says installing on an M-series Mac is not supported.")
-      else
-        UNSURE+=("ARM CPU ($F_arch). The manual does not say whether Omarchy installs on ARM (to verify).")
-      fi
-      ;;
-    *)
-      UNSURE+=("CPU architecture $F_arch. The manual does not say whether it is supported (to verify).")
-      ;;
-  esac
-
-  if [[ $lower_vendor == apple* && $F_arch == x86_64 ]]; then
-    UNSURE+=("Intel Mac. Supported since Omarchy 3, but the manual says sound and the Touch Bar do not work. It does not mention T2 Macs (to verify).")
-  fi
-
-  if [[ $F_uefi == true ]]; then
-    case $F_sb in
-      on) FIXES+=("Secure Boot is on. Turn it off in the BIOS before installing; the manual says the installer needs it off.") ;;
-      unknown) UNSURE+=("Could not read the Secure Boot state. The manual says it must be off to install.") ;;
-      off) GOOD+=("Secure Boot is off, as the installer needs.") ;;
-    esac
-  else
-    UNSURE+=("Booted in legacy BIOS mode. The manual does not say whether Omarchy supports it (to verify).")
-  fi
-
-  if [[ $F_tpm == true ]]; then
-    FIXES+=("A TPM is visible. The manual says to turn off Secure Boot and/or TPM in the BIOS before installing, so check that setting.")
-  fi
-
-  if [[ $F_mem -gt 0 && $F_mem -lt 1610612736 ]]; then
-    UNSURE+=("Under 2 GB of memory. The Omarchy site shows a 2 GB ThinkPad X220 running it; less is untested (to verify).")
-  fi
-
-  if printf '%s' "$F_gpus" | grep -qi nvidia; then
-    UNSURE+=("NVIDIA GPU. The manual lists no supported generations or drivers (to verify).")
-  fi
-
-  if [[ ${#BLOCKERS[@]} -gt 0 ]]; then
-    VERDICT=unlikely
-  elif [[ ${#UNSURE[@]} -gt 0 ]]; then
-    VERDICT=unclear
-  else
-    VERDICT=likely
-  fi
-}
-
-print_list() {
-  local heading=$1 marker=$2
-  shift 2
-  [[ $# -gt 0 ]] || return 0
-  echo
-  echo "$heading"
-  local item
-  for item in "$@"; do
-    echo "  $marker $item"
-  done
-}
-
 print_machine() {
   echo
   echo "${F_vendor:-Unknown vendor} ${F_product:-unknown model}"
   echo "$F_cpu_model, $(((F_mem + 536870912) / 1073741824)) GB memory, $F_arch"
-}
-
-print_verdict() {
-  print_machine
-  echo
-  case $VERDICT in
-    likely)
-      if [[ ${#FIXES[@]} -gt 0 ]]; then
-        echo "Verdict: likely, once you change the BIOS settings below."
-      else
-        echo "Verdict: likely. Nothing here stands in the way of installing Omarchy."
-      fi
-      ;;
-    unclear) echo "Verdict: unclear. Some things below are not covered by the Omarchy manual." ;;
-    unlikely) echo "Verdict: unlikely. See what blocks it below." ;;
-  esac
-  print_list "Blocks it:" "x" "${BLOCKERS[@]+"${BLOCKERS[@]}"}"
-  print_list "Change before installing:" "!" "${FIXES[@]+"${FIXES[@]}"}"
-  print_list "Not settled by the manual:" "?" "${UNSURE[@]+"${UNSURE[@]}"}"
-  print_list "Looks fine:" "+" "${GOOD[@]+"${GOOD[@]}"}"
-  echo
-  echo "Not checked: Wi-Fi, Bluetooth, audio, suspend, fingerprint reader. The manual has no hardware list."
 }
 
 # Shows what a send shares and the privacy policy, then asks. Every send needs an
@@ -428,7 +336,7 @@ confirm_delete() {
   echo
   echo "Nothing has been sent yet. If you answer yes, this sends:"
   echo "  - a one-way hash of this machine's machine-id, model and CPU"
-  echo "It sends nothing else. The server deletes any report that matches them right away."
+  echo "It sends nothing else. The server deletes the report that matches it right away."
   echo "Database backups keep a deleted report for up to a day after that."
   echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
   ask_yes "Delete it? [y/N] " "delete it"
@@ -520,14 +428,6 @@ run_omarchy() {
   fi
 }
 
-run_check() {
-  gather_facts
-  evaluate
-  print_verdict
-  echo
-  echo "Nothing was sent. This check ran on your machine only."
-}
-
 run_delete() {
   gather_facts
   if [[ -z $F_vendor || -z $F_product ]]; then
@@ -557,27 +457,6 @@ run_delete() {
   fi
 }
 
-# macOS has no /proc or /sys, so say what the manual says about Macs and stop.
-run_macos() {
-  local arch
-  arch=$(cpu_arch)
-  echo "This is macOS, so nothing here can read your hardware."
-  echo
-  case $arch in
-    arm64 | aarch64)
-      echo "Verdict: unlikely. This is an Apple silicon Mac, and the Omarchy manual says"
-      echo "installing on an M-series Mac is not supported."
-      ;;
-    *)
-      echo "This is an Intel Mac. Omarchy 3 added support for Intel Macs, but installing wipes"
-      echo "the drive, and the manual says sound and the Touch Bar do not work."
-      echo "It does not mention T2 Macs (to verify)."
-      ;;
-  esac
-  echo
-  echo "For a real check, boot a Linux live USB on the machine and run this again."
-}
-
 main() {
   if [[ $OMAHCL_URL == __* ]]; then
     echo "Set OMAHCL_URL, or download this script from Omarchy HCL so the URL is filled in." >&2
@@ -592,8 +471,8 @@ main() {
         echo "This is macOS, where this script cannot read your hardware, so it never sent a report to delete."
         return 0
       fi
-      run_macos
-      return 0
+      echo "This is macOS. This script only reports machines running Omarchy, so it sent nothing." >&2
+      exit 2
       ;;
     Linux) ;;
     *)
@@ -618,7 +497,9 @@ main() {
   elif [[ $(os_field ID) == omarchy ]]; then
     run_omarchy
   else
-    run_check
+    echo "This machine is not running Omarchy. This script only reports machines running" >&2
+    echo "Omarchy, so it sent nothing." >&2
+    exit 2
   fi
 }
 

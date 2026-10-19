@@ -77,10 +77,9 @@ class CollectorTest < ActiveSupport::TestCase
   end
 
   test "memory is rounded to the nearest gigabyte" do
-    leave_omarchy
     write("proc/meminfo", "MemTotal:        8000000 kB\n")
 
-    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
+    _status, output = run_collector("OMAHCL_SUBMIT" => "no")
 
     assert_includes output, "8 GB memory"
   end
@@ -94,83 +93,38 @@ class CollectorTest < ActiveSupport::TestCase
     assert_equal "88c68e85e1b0276e7cd71f109df70d796ceea8ee464a18b88c664e25e0eb932f", JSON.parse(omarchy)["instance_digest"]
   end
 
-  test "off omarchy a clean machine is likely and nothing is sent" do
-    leave_omarchy
-    fake_curl
-
-    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
-
-    assert_equal 0, status
-    assert_includes output, "Verdict: likely."
-    assert_includes output, "Nothing was sent."
-    refute_includes output, "Send it?"
-    assert_empty curl_calls
-  end
-
-  test "off omarchy secure boot on is a fix, not a blocker" do
-    leave_omarchy
+  test "on omarchy secure boot, a tpm and uefi show in the payload" do
     secure_boot(:on)
-
-    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
-
-    assert_equal 0, status
-    assert_includes output, "Verdict: likely, once you change the BIOS settings below."
-    assert_includes output, "Secure Boot is on"
-  end
-
-  test "off omarchy an unreadable secure boot state is unclear" do
-    leave_omarchy
-    FileUtils.rm(File.join(@root, SECURE_BOOT_VAR))
+    FileUtils.mkdir_p(File.join(@root, "sys/class/tpm"))
 
     _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
+    hardware = JSON.parse(output)["hardware"]
 
-    assert_includes output, "Verdict: unclear."
-    assert_includes output, "Could not read the Secure Boot state"
+    assert_equal true, hardware.dig("secure_boot", "enabled")
+    assert_equal true, hardware.dig("tpm", "present")
+    assert_equal true, hardware["uefi"]
   end
 
-  test "off omarchy an nvidia gpu is unclear and says to verify" do
-    leave_omarchy
+  test "on omarchy the gpus come from lspci" do
     fake_lspci(<<~LSPCI)
       00:02.0 "VGA compatible controller" "NVIDIA Corporation" "GA106 [GeForce RTX 3060]" -ra1
     LSPCI
 
     _status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_SKIP_CMDS" => nil)
 
-    assert_includes output, "Verdict: unclear."
-    assert_includes output, "NVIDIA GPU"
-    assert_includes output, "(to verify)"
+    assert_includes JSON.parse(output).dig("hardware", "gpus"), { "vendor" => "NVIDIA Corporation", "name" => "GA106 [GeForce RTX 3060]" }
   end
 
-  test "off omarchy an apple silicon machine is unlikely" do
+  test "off omarchy the script says so, sends nothing and exits non-zero, even with a yes" do
     leave_omarchy
-    write("sys/class/dmi/id/sys_vendor", "Apple Inc.")
-
-    status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
-
-    assert_equal 0, status
-    assert_includes output, "Verdict: unlikely."
-    assert_includes output, "not supported"
-  end
-
-  test "off omarchy a tpm is a change to make before installing" do
-    leave_omarchy
-    FileUtils.mkdir_p(File.join(@root, "sys/class/tpm"))
-
-    _status, output = run_collector("OMAHCL_DRY_RUN" => "1")
-
-    assert_includes output, "A TPM is visible"
-    assert_includes output, "Verdict: likely, once you change the BIOS settings below."
-  end
-
-  test "off omarchy a machine without dmi still gets a verdict and sends nothing" do
-    leave_omarchy
-    FileUtils.rm_rf(File.join(@root, "sys/class/dmi"))
     fake_curl
 
     status, output = run_collector("OMAHCL_SUBMIT" => "yes")
 
-    assert_equal 0, status
-    assert_includes output, "Verdict:"
+    assert_equal 2, status
+    assert_includes output, "not running Omarchy"
+    assert_includes output, "sent nothing"
+    refute_includes output, "Verdict"
     assert_empty curl_calls
   end
 
@@ -211,18 +165,14 @@ class CollectorTest < ActiveSupport::TestCase
     refute_match(/candidate/i, output)
   end
 
-  test "macos is explained and never inspected" do
-    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "arm64")
+  test "macos is not an omarchy machine and sends nothing" do
+    fake_curl
 
-    assert_equal 0, status
-    assert_includes output, "Apple silicon"
-    assert_includes output, "unlikely"
-    refute_includes output, "Could not reach"
+    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "arm64", "OMAHCL_SUBMIT" => "yes")
 
-    status, output = run_collector("OMAHCL_KERNEL" => "Darwin", "OMAHCL_ARCH" => "x86_64")
-
-    assert_equal 0, status
-    assert_includes output, "Intel Mac"
+    assert_equal 2, status
+    assert_includes output, "only reports machines running Omarchy"
+    assert_empty curl_calls
   end
 
   test "an unsupported kernel exits cleanly" do

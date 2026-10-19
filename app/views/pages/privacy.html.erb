@@ -18,7 +18,7 @@
   <p>The site itself sets no cookies while you browse. Only the admin sign-in page and signed-in admins get session cookies. Cloudflare sets its own security cookies, which this site does not control. They include <code>__cf_bm</code>, which lasts 30 minutes, and <code>cf_clearance</code>, which holds the result of Cloudflare's bot check and lasts a year.</p>
 
   <h2 class="mb-2 mt-8 heading-section">Machines not running Omarchy</h2>
-  <p>If you run the script on a machine that is not running Omarchy, it checks that machine on your computer and prints a verdict. It sends nothing, and the site never receives a report from such a machine. The site used to accept private "candidate" reports from these machines. It no longer does, and the ones it held have been deleted.</p>
+  <p>The script only reports machines running Omarchy. On any other system it says so and sends nothing, and the site never receives a report from such a machine. The site used to accept private "candidate" reports from these machines. It no longer does, and the ones it held have been deleted.</p>
 
   <h2 id="deleting" class="mb-2 mt-8 heading-section scroll-mt-6">Deleting your report</h2>
   <p>Run <code><%= delete_command %></code>. It rebuilds your machine's hash, shows what it would send, and sends it only if you answer yes. The server deletes the report that matches it right away, including one an admin has hidden, and sends back how many it deleted. The hashes are used for that and not stored. Database backups keep a deleted report for up to a day.</p>
