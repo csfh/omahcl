@@ -90,9 +90,17 @@ It has two modes:
 
 Every rule behind the verdict cites the Omarchy manual or says "(to verify)". The manual has no hardware list, so a lot comes out as unclear. macOS and WSL are explained and not inspected; boot a Linux live USB to check real hardware.
 
-Serials are hashed into `instance_digest` in memory and never sent. The server stores that digest keyed again (`Report.digest_instance`), so a copy of the database can't be matched to a machine through its `/etc/machine-id`. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
+`instance_digest` is a hash of the machine-id, vendor, product and CPU model, built in memory. The machine-id is never sent. The script reads no serial numbers. The server stores that digest keyed again (`Report.digest_instance`), so a copy of the database can't be matched to a machine through its `/etc/machine-id`. A short-lived challenge nonce stops replays. The server rejects identifier fields even if a client sends them.
 
-Environment variables: `OMAHCL_URL`, `OMAHCL_DRY_RUN` (print the payload, send nothing), `OMAHCL_SUBMIT` (`yes` or `no`), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
+### Deleting a report
+
+```sh
+curl -fsSL https://omahcl.com/delete | bash
+```
+
+`/delete` serves the same script with its action set to `delete` (`OMAHCL_ACTION`). It rebuilds this machine's two digests with the same `instance_digest` code as the collector, one for each domain, and after a yes `POST`s them with a challenge nonce to `/deletions`. The server HMACs each one and deletes the matching reports, hidden ones included. It cannot reach reports whose digest has since changed: a reinstall, a different model or CPU string, or a report from before DMI serials left the formula.
+
+Environment variables: `OMAHCL_URL`, `OMAHCL_ACTION`, `OMAHCL_DRY_RUN` (print the payload, send nothing), `OMAHCL_SUBMIT` (`yes` or `no`), and `OMAHCL_SYS_ROOT`, `OMAHCL_ARCH`, `OMAHCL_KERNEL` and `OMAHCL_SKIP_CMDS` (for tests).
 
 ## Tests
 

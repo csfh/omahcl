@@ -303,6 +303,118 @@ class CollectorTest < ActiveSupport::TestCase
     assert_includes output, "Could not read /proc and /sys"
   end
 
+  test "delete rebuilds exactly the digests the collector sends, on omarchy and off it" do
+    _status, collected = run_collector("OMAHCL_DRY_RUN" => "1")
+    leave_omarchy
+    _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
+    expected = [ JSON.parse(collected)["instance_digest"], JSON.parse(candidate.lines.last)["instance_digest"] ]
+
+    [ true, false ].each do |on_omarchy|
+      write("etc/os-release", "NAME=\"Omarchy\"\nID=omarchy\n") if on_omarchy
+      status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_DRY_RUN" => "1")
+
+      assert_equal 0, status
+      assert_equal({ "instance_digests" => expected }, JSON.parse(output), "on_omarchy=#{on_omarchy}")
+      leave_omarchy
+    end
+  end
+
+  test "delete sends nothing when the person declines" do
+    fake_curl
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "no")
+
+    assert_equal 0, status
+    assert_includes output, "Nothing was sent."
+    assert_includes output, "Privacy policy: http://example.test/privacy"
+    assert_includes output, "Database backups keep a deleted report for up to a day"
+    assert_empty curl_calls
+  end
+
+  test "delete sends nothing without a terminal to ask on" do
+    skip "setsid is not available" unless system("command -v setsid >/dev/null 2>&1")
+    fake_curl
+
+    status, output = run_collector({ "OMAHCL_ACTION" => "delete" }, true)
+
+    assert_equal 0, status
+    assert_includes output, "Run this in a terminal to choose whether to delete it"
+    assert_empty curl_calls
+  end
+
+  test "delete posts both digests with a nonce after a yes" do
+    fake_curl(deletions: '{"deleted":2}')
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 0, status
+    assert_includes output, "Deleted 2 report(s) for this machine."
+    post = curl_calls.find { |call| call.include?("/deletions") }
+    assert_includes post, "http://example.test/deletions"
+    body = JSON.parse(post[/-d (\{.*\}) http/, 1])
+    assert_equal [ "instance_digests", "nonce" ], body.keys
+    assert_equal "test-nonce", body["nonce"]
+    assert_equal 2, body["instance_digests"].size
+    refute_includes post, "0123456789abcdef"
+  end
+
+  test "delete says why nothing matched and still exits cleanly" do
+    fake_curl(deletions: '{"deleted":0}')
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 0, status
+    assert_includes output, "No report matched this machine"
+    assert_includes output, "reinstall"
+  end
+
+  test "delete exits non-zero when the server rejects the request" do
+    fake_curl(deletions: "", deletions_exit: 22)
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "yes")
+
+    refute_equal 0, status
+    assert_includes output, "rejected the deletion request"
+    refute_includes output, "Deleted"
+  end
+
+  test "delete exits non-zero when the site cannot be reached for a challenge" do
+    fake_curl(challenge_exit: 7)
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "yes")
+
+    refute_equal 0, status
+    assert_includes output, "Could not reach Omarchy HCL"
+  end
+
+  test "delete with no dmi has no report to find" do
+    FileUtils.rm_rf(File.join(@root, "sys/class/dmi"))
+    fake_curl
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 1, status
+    assert_includes output, "cannot be found"
+    assert_empty curl_calls
+  end
+
+  test "delete on macos sends nothing" do
+    fake_curl
+
+    status, output = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_KERNEL" => "Darwin", "OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 0, status
+    assert_includes output, "never sent a report to delete"
+    assert_empty curl_calls
+  end
+
+  test "an unsubstituted action collects" do
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1")
+
+    assert_equal 0, status
+    assert JSON.parse(output).key?("omarchy")
+  end
+
   test "wsl is detected" do
     leave_omarchy
     write("proc/version", "Linux version 5.15.0-microsoft-standard-WSL2\n")
@@ -316,6 +428,26 @@ class CollectorTest < ActiveSupport::TestCase
   private
     def leave_omarchy
       write("etc/os-release", "NAME=\"Arch Linux\"\nID=arch\n")
+    end
+
+    # A curl that records each call and answers like the site. A failing exit code
+    # stands for curl -f seeing an HTTP error.
+    def fake_curl(deletions: '{"deleted":1}', deletions_exit: 0, challenge_exit: 0)
+      File.write(File.join(@bin, "curl"), <<~SH)
+        #!/bin/sh
+        echo "$@" >> "#{curl_log}"
+        case "$*" in
+          */challenges*) printf '{"nonce":"test-nonce"}'; exit #{challenge_exit} ;;
+          */deletions*) printf '%s' '#{deletions}'; exit #{deletions_exit} ;;
+        esac
+      SH
+      File.chmod(0o755, File.join(@bin, "curl"))
+    end
+
+    def curl_log = File.join(@bin, "curl.log")
+
+    def curl_calls
+      File.exist?(curl_log) ? File.readlines(curl_log, chomp: true) : []
     end
 
     def secure_boot(state)

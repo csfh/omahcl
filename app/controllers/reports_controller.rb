@@ -22,10 +22,6 @@ class ReportsController < ApplicationController
   end
 
   private
-    def reject_oversized_body
-      head :content_too_large if request.content_length.to_i > 64.kilobytes
-    end
-
     def parse_json_body
       @parsed_body ||= JSON.parse(request.raw_post)
     end

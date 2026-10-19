@@ -64,6 +64,26 @@ class Report < ApplicationRecord
     report
   end
 
+  # Deletes every report whose client digest is listed, hidden ones included, so
+  # asking to be erased always works. The client holds both digests (omarchy and
+  # candidate); knowing one is the proof that the machine is theirs. Returns the
+  # number of reports deleted.
+  def self.erase(raw)
+    payload = raw.is_a?(Hash) ? raw.deep_stringify_keys : {}
+    unless payload.keys.sort == %w[instance_digests nonce]
+      raise ReportSanitizer::Rejected, "expected instance_digests and nonce"
+    end
+
+    digests = payload["instance_digests"]
+    valid = digests.is_a?(Array) && digests.size.between?(1, 2) &&
+      digests.all? { |digest| digest.is_a?(String) && digest.match?(ReportSanitizer::INSTANCE_DIGEST) }
+    raise ReportSanitizer::Rejected, "instance_digests must hold 1 or 2 64-character hex digests" unless valid
+    raise ReportSanitizer::Rejected, "nonce is required" if payload["nonce"].blank?
+
+    Challenge.consume!(payload["nonce"])
+    where(instance_digest: digests.map { |digest| digest_instance(digest) }).delete_all
+  end
+
   # One key per model and CPU, so a Framework Laptop 13 with another CPU has its own
   # card. Plain SHA-256, not keyed with secret_key_base: shared links and cached
   # previews must survive a key rotation. The version prefix lets the formula change.
