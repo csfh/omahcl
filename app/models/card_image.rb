@@ -3,7 +3,8 @@ require "zlib"
 # Renders the Omarchy Verified card as a 1200x630 PNG for link previews.
 # Pure Ruby (stdlib Zlib plus a 5x7 bitmap font) so it needs no gem or system
 # image library on Laravel Cloud. It draws a 400x210 pixel grid and scales it 3x,
-# which also gives the stepped, blocky look the site uses.
+# which also gives the stepped, blocky look the site uses. The card is drawn flat
+# on its own layer, then tilted onto the canvas.
 class CardImage
   SCALE = 3
   WIDTH = 400
@@ -16,68 +17,24 @@ class CardImage
   ACCENT = [ 0x86, 0xc5, 0xba ].freeze
   TEAL_DEEP = [ 0x35, 0x52, 0x4f ].freeze
   LINE = [ 0x2d, 0x40, 0x42 ].freeze
+  WHITE = [ 0xff, 0xff, 0xff ].freeze
 
   FOIL = [
-    [ 0x86, 0xc5, 0xba ], [ 0xd3, 0xe8, 0xe4 ], [ 0xc9, 0xa7, 0xff ],
-    [ 0xff, 0xb3, 0xd1 ], [ 0xff, 0xe9, 0xa6 ], [ 0x86, 0xc5, 0xba ]
+    [ 0x5f, 0xd1, 0xc0 ], [ 0xb8, 0xf0, 0xe6 ], [ 0x9b, 0x7b, 0xff ],
+    [ 0xff, 0x7a, 0xb8 ], [ 0xff, 0xd1, 0x66 ], [ 0x5f, 0xd1, 0xc0 ]
   ].freeze
 
-  CARD = { x: 24, y: 27, w: 112, h: 156 }.freeze
+  CARD_W = 124
+  CARD_H = 174
+  CARD_CENTER = [ 86, 105 ].freeze
+  TILT = -4 * Math::PI / 180
+  SHADOW = [ 5, 5 ].freeze
 
-  def initialize(name:, cpu:, gpu:, version:)
-    @name = name
-    @cpu = cpu
-    @gpu = gpu
-    @version = version
-    @pixels = Array.new(HEIGHT) { Array.new(WIDTH, INK) }
-  end
+  COLUMN_X = 176
+  COLUMN_W = 200
 
-  def png
-    background
-    card
-    seal
-    copy
-    encode
-  end
-
-  private
-
-  def fill(x, y, w, h, color)
-    (y...(y + h)).each do |row|
-      next unless row.between?(0, HEIGHT - 1)
-
-      (x...(x + w)).each { |col| @pixels[row][col] = color if col.between?(0, WIDTH - 1) }
-    end
-  end
-
-  def background
-    fill(0, 0, WIDTH, HEIGHT, INK)
-    fill(0, 0, WIDTH, 2, LINE)
-    fill(0, HEIGHT - 2, WIDTH, 2, LINE)
-  end
-
-  # Stepped diagonal foil bands, darkened so text stays readable, with a few
-  # sparkle pixels placed from the model name so each card differs.
-  def card
-    x0, y0, w, h = CARD.values_at(:x, :y, :w, :h)
-    fill(x0 + 4, y0 + 4, w, h, TEAL_DEEP)
-    fill(x0, y0, w, h, ACCENT)
-    (2...(h - 2)).each do |row|
-      (2...(w - 2)).each do |col|
-        band = ((col.fdiv(w) * 0.9 + row.fdiv(h) * 0.7) * 8).floor % FOIL.length
-        @pixels[y0 + row][x0 + col] = mix(FOIL[band], PANEL, 0.48)
-      end
-    end
-
-    seed = Zlib.crc32(@name)
-    14.times do |i|
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff
-      col = 3 + seed % (w - 6)
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff
-      row = 3 + seed % (h - 6)
-      @pixels[y0 + row][x0 + col] = i.even? ? PAPER : ACCENT
-    end
-  end
+  # 4x4 ordered-dither thresholds, so every gradient stays stepped pixel art.
+  BAYER = [ [ 0, 8, 2, 10 ], [ 12, 4, 14, 6 ], [ 3, 11, 1, 9 ], [ 15, 7, 13, 5 ] ].freeze
 
   # The seal is an octagon on a 12x12 grid. The rim is the outer shape and the fill is
   # every cell of it whose four neighbours are also in it, so the two always line up.
@@ -93,22 +50,183 @@ class CardImage
     cells.map { |x, y| "M#{x} #{y}h1v1h-1z" }.join
   end
 
+  def initialize(name:, cpu:, gpu:, version:)
+    @name = name
+    @cpu = cpu
+    @gpu = gpu
+    @version = version
+    @pixels = Array.new(HEIGHT) { Array.new(WIDTH, INK) }
+  end
+
+  def png
+    background
+    card
+    copy
+    encode
+  end
+
+  private
+
+  def fill(x, y, w, h, color, grid = @pixels)
+    (y...(y + h)).each do |row|
+      next unless row.between?(0, grid.length - 1)
+
+      (x...(x + w)).each { |col| grid[row][col] = color if col.between?(0, grid[row].length - 1) }
+    end
+  end
+
+  def threshold(x, y)
+    (BAYER[y % 4][x % 4] + 0.5) / 16
+  end
+
+  def distance(x, y, cx, cy)
+    Math.hypot(x - cx, y - cy)
+  end
+
+  def seeded(seed)
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff
+    [ seed, seed ]
+  end
+
+  # A dotted pixel grid, a soft dithered glow behind the card, and a few stars.
+  def background
+    cx, cy = CARD_CENTER
+
+    HEIGHT.times do |y|
+      WIDTH.times do |x|
+        glow = 1 - distance(x, y, cx, cy) / 150.0
+        next unless glow > 0
+
+        strength = glow**1.6 * 0.9
+        @pixels[y][x] = mix(INK, TEAL_DEEP, 0.75) if strength > threshold(x, y)
+      end
+    end
+
+    (6...HEIGHT).step(12) { |y| (6...WIDTH).step(12) { |x| @pixels[y][x] = mix(@pixels[y][x], LINE, 0.8) } }
+
+    seed = Zlib.crc32("stars-#{@name}")
+    46.times do
+      seed, = seeded(seed)
+      x = seed % WIDTH
+      seed, = seeded(seed)
+      y = seed % HEIGHT
+      @pixels[y][x] = mix(@pixels[y][x], PAPER, 0.35)
+    end
+
+    fill(0, 0, WIDTH, 2, LINE)
+    fill(0, HEIGHT - 2, WIDTH, 2, LINE)
+  end
+
+  # Tilts the flat card onto the canvas with a hard offset shadow behind it.
+  def card
+    layer = card_layer
+    cx, cy = CARD_CENTER
+    cos = Math.cos(TILT)
+    sin = Math.sin(TILT)
+
+    sample = lambda do |x, y|
+      dx = x - cx
+      dy = y - cy
+      lx = (dx * cos + dy * sin + CARD_W / 2.0).floor
+      ly = (-dx * sin + dy * cos + CARD_H / 2.0).floor
+      lx.between?(0, CARD_W - 1) && ly.between?(0, CARD_H - 1) ? layer[ly][lx] : nil
+    end
+
+    area = ((cy - 120)...(cy + 120)).to_a.product(((cx - 120)...(cx + 120)).to_a)
+      .select { |y, x| x.between?(0, WIDTH - 1) && y.between?(0, HEIGHT - 1) }
+
+    area.each { |y, x| @pixels[y][x] = TEAL_DEEP if sample.call(x - SHADOW[0], y - SHADOW[1]) }
+    area.each do |y, x|
+      color = sample.call(x, y)
+      @pixels[y][x] = color if color
+    end
+
+    seal
+  end
+
+  def card_layer
+    layer = Array.new(CARD_H) { Array.new(CARD_W) }
+    fill(0, 0, CARD_W, CARD_H, ACCENT, layer)
+    [ [ 0, 0 ], [ CARD_W - 2, 0 ], [ 0, CARD_H - 2 ], [ CARD_W - 2, CARD_H - 2 ] ].each { |x, y| fill(x, y, 2, 2, nil, layer) }
+
+    (2...(CARD_H - 2)).each do |y|
+      (2...(CARD_W - 2)).each { |x| layer[y][x] = foil(x, y) }
+    end
+
+    sparkles(layer)
+    seal_glow(layer)
+    layer
+  end
+
+  # Rainbow bands dithered between neighbouring colours, with a diagonal glare.
+  def foil(x, y)
+    u = x.fdiv(CARD_W)
+    v = y.fdiv(CARD_H)
+    position = ((u * 0.9 + v * 0.75) * 1.5 % 1.0) * FOIL.length
+    base = position.floor
+    color = position - base > threshold(x, y) ? FOIL[(base + 1) % FOIL.length] : FOIL[base % FOIL.length]
+    color = mix(color, PANEL, 0.26)
+
+    glare = [ 1 - ((u * 0.8 + v * 0.6) - 0.62).abs / 0.2, 0 ].max
+    if glare > 0.75 + threshold(x, y) * 0.25
+      mix(color, WHITE, 0.5)
+    elsif glare > threshold(x, y)
+      mix(color, WHITE, 0.25)
+    else
+      color
+    end
+  end
+
+  # Four-point stars: a few big ones, many small.
+  def sparkles(layer)
+    seed = Zlib.crc32(@name)
+    16.times do |i|
+      seed, = seeded(seed)
+      x = 8 + seed % (CARD_W - 16)
+      seed, = seeded(seed)
+      y = 8 + seed % (CARD_H - 16)
+      next if distance(x, y, CARD_W / 2, CARD_H / 2) < 40
+
+      arm = i < 4 ? 3 : 1
+      (-arm..arm).each do |d|
+        color = d.abs > 1 ? mix(WHITE, ACCENT, 0.5) : WHITE
+        fill(x + d, y, 1, 1, color, layer)
+        fill(x, y + d, 1, 1, color, layer)
+      end
+    end
+  end
+
+  SEAL_UNIT = 6
+
+  # The glow is part of the tilted card; the seal itself is drawn upright on top.
+  def seal_glow(layer)
+    radius = SEAL_SIZE * SEAL_UNIT / 2.0
+    CARD_H.times do |y|
+      CARD_W.times do |x|
+        next unless layer[y][x]
+
+        glow = 1 - (distance(x, y, CARD_W / 2, CARD_H / 2) - radius) / 22
+        layer[y][x] = mix(layer[y][x], WHITE, 0.4) if glow > 0 && glow > threshold(x, y)
+      end
+    end
+  end
+
   def seal
-    unit = 5
-    ox = CARD[:x] + (CARD[:w] - SEAL_SIZE * unit) / 2
-    oy = CARD[:y] + 36
+    size = SEAL_SIZE * SEAL_UNIT
+    ox = CARD_CENTER[0] - size / 2
+    oy = CARD_CENTER[1] - size / 2
     [ [ OUTER, TEAL_DEEP ], [ INNER, ACCENT ], [ CHECK, INK ] ].each do |cells, color|
-      cells.each { |x, y| fill(ox + x * unit, oy + y * unit, unit, unit, color) }
+      cells.each { |x, y| fill(ox + x * SEAL_UNIT, oy + y * SEAL_UNIT, SEAL_UNIT, SEAL_UNIT, color) }
     end
   end
 
   def copy
-    left = 164
-    text("OMARCHY VERIFIED", centered_x("OMARCHY VERIFIED", left, 212, 2), 30, ACCENT, scale: 2)
-    fill(left, 52, 212, 2, TEAL_DEEP)
+    left = COLUMN_X
+    text("OMARCHY VERIFIED", centered_x("OMARCHY VERIFIED", left, COLUMN_W, 2), 30, ACCENT, scale: 2)
+    fill(left, 52, COLUMN_W, 2, TEAL_DEEP)
 
     y = 68
-    wrap(@name, 18, 3).each do |line|
+    wrap(@name, 16, 3).each do |line|
       text(line, left, y, PAPER, scale: 2)
       y += 18
     end
@@ -116,11 +234,11 @@ class CardImage
     y = [ y + 10, 126 ].max
     [ [ "CPU", @cpu ], [ "GPU", @gpu ], [ "OMARCHY", @version ] ].each do |label, value|
       text(label, left, y, MUTED)
-      text(clip(value, 24), left + 60, y, PAPER)
+      text(clip(value, 22), left + 60, y, PAPER)
       y += 14
     end
 
-    text("OMAHCL.COM", centered_x("OMAHCL.COM", left, 212, 1), 176, ACCENT)
+    text("OMAHCL.COM", centered_x("OMAHCL.COM", left, COLUMN_W, 1), 176, ACCENT)
   end
 
   def mix(color, other, amount)
