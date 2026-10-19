@@ -167,8 +167,10 @@
         #ffe9a6 32%,
         #86c5ba 40%
       );
-    background-size: 220% 220%;
-    background-position: calc(var(--mx) + var(--sheen)) calc(var(--my) + var(--sheen));
+    /* Oversized so the position moves; mx * 0.7 + sheen (max 30%) stays within 0-100%,
+       which keeps the tile edge out of view. */
+    background-size: 300% 300%;
+    background-position: calc(var(--mx) * 0.7 + var(--sheen)) calc(var(--my) * 0.7 + var(--sheen));
     mix-blend-mode: color-dodge;
     opacity: calc(0.28 + var(--active) * 0.4);
     filter: saturate(1.4);
