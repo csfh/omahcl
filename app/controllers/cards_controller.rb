@@ -22,7 +22,7 @@ class CardsController < ApplicationController
         return unless stale?(etag: [ "card-png-2", @card ], public: true)
 
         expires_in 1.hour, public: true
-        send_data CardImage.new(**@card).png, type: "image/png", disposition: "inline"
+        send_data CardImage.new(**@card).png, type: "image/png", disposition: "inline", filename: "#{params[:key]}.png"
       end
     end
   end

@@ -14,7 +14,7 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: "Omarchy Verified"
     assert_select "dd", text: "Intel Core i5-2520M"
     assert_select "[style]", count: 0
-    assert_select "a[href=?][download]", card_path(@report.card_key, format: :png)
+    assert_select "a[href=?][download=?]", card_path(@report.card_key, format: :png), "#{@report.card_key}.png"
     assert_select "article", text: /machine/i, count: 0
     assert_no_match(/#{@report.public_id}|#{@report.instance_digest}/, response.body)
   end
@@ -27,6 +27,7 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "\x89PNG\r\n\x1a\n".b, response.body.b[0, 8]
     assert_equal [ 1200, 630 ], response.body.b[16, 8].unpack("NN")
     assert_match(/public/, response.headers["Cache-Control"])
+    assert_includes response.headers["Content-Disposition"], %(filename="#{@report.card_key}.png")
 
     get card_path(@report.card_key, format: :png), headers: { "If-None-Match" => response.headers["ETag"] }
     assert_response :not_modified

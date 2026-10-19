@@ -38,5 +38,5 @@
 
 <p class="mt-8 text-center">
   <%= link_to "Download as an image (PNG)", card_path(params[:key], format: :png),
-        class: ghost_button_class, download: "omarchy-verified-#{@sample.model_slug}.png" %>
+        class: ghost_button_class, download: "#{params[:key]}.png" %>
 </p>
