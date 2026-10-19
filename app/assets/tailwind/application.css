@@ -63,6 +63,13 @@
   }
 }
 
+/* Registered so the idle shimmer can animate it; the foil adds it to the pointer position. */
+@property --sheen {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
 @layer components {
   .prose-omahcl p {
     @apply mb-3 text-muted;
@@ -108,5 +115,125 @@
     background-repeat: no-repeat;
     background-size: auto 100%;
     background-position: right bottom;
+  }
+
+  /* Holographic card. Pure gradients: img-src is 'self', so no data: textures.
+     Defaults live here; holo_card_controller.js overrides the custom properties
+     through the CSSOM, which the CSP allows. */
+  .holo-stage {
+    perspective: 900px;
+  }
+
+  .holo-card {
+    --mx: 50%;
+    --my: 50%;
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+    --active: 0;
+    position: relative;
+    isolation: isolate;
+    width: min(20rem, 100%);
+    aspect-ratio: 5 / 7;
+    overflow: hidden;
+    border: 2px solid var(--color-accent);
+    background: linear-gradient(160deg, var(--color-panel), var(--color-ink));
+    box-shadow: 6px 6px 0 var(--color-teal-deep);
+    transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+    transition: transform 0.4s ease-out;
+    will-change: transform;
+  }
+
+  .holo-card:hover {
+    transition-duration: 0.08s;
+  }
+
+  .holo-foil,
+  .holo-sparkle,
+  .holo-glare {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .holo-foil {
+    z-index: 1;
+    background-image:
+      repeating-linear-gradient(
+        115deg,
+        #86c5ba 0%,
+        #d3e8e4 8%,
+        #c9a7ff 16%,
+        #ffb3d1 24%,
+        #ffe9a6 32%,
+        #86c5ba 40%
+      );
+    /* Oversized so the position moves; mx * 0.7 + sheen (max 30%) stays within 0-100%,
+       which keeps the tile edge out of view. */
+    background-size: 300% 300%;
+    background-position: calc(var(--mx) * 0.7 + var(--sheen)) calc(var(--my) * 0.7 + var(--sheen));
+    mix-blend-mode: color-dodge;
+    opacity: calc(0.28 + var(--active) * 0.4);
+    filter: saturate(1.4);
+    transition: opacity 0.3s;
+    animation: holo-sheen 6s ease-in-out infinite alternate;
+  }
+
+  .holo-sparkle {
+    z-index: 2;
+    background-image:
+      radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 2px),
+      radial-gradient(circle at 70% 20%, #fff 0 1px, transparent 2px),
+      radial-gradient(circle at 40% 75%, #fff 0 1px, transparent 2px),
+      radial-gradient(circle at 85% 65%, #fff 0 1px, transparent 2px),
+      repeating-linear-gradient(0deg, transparent 0 5px, rgb(255 255 255 / 0.08) 5px 6px),
+      repeating-linear-gradient(90deg, transparent 0 5px, rgb(255 255 255 / 0.08) 5px 6px);
+    background-size: 90px 90px, 120px 120px, 100px 100px, 140px 140px, auto, auto;
+    background-position: var(--mx) var(--my), 0 0, 0 0, 0 0, 0 0, 0 0;
+    mix-blend-mode: overlay;
+    opacity: calc(0.35 + var(--active) * 0.55);
+    transition: opacity 0.3s;
+  }
+
+  .holo-glare {
+    z-index: 3;
+    background: radial-gradient(
+      farthest-corner circle at var(--mx) var(--my),
+      rgb(255 255 255 / 0.55),
+      rgb(134 197 186 / 0.15) 35%,
+      transparent 65%
+    );
+    mix-blend-mode: soft-light;
+    opacity: var(--active);
+    transition: opacity 0.3s;
+  }
+
+  .holo-content {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.25rem;
+  }
+
+  .holo-seal {
+    width: 6rem;
+    margin-inline: auto;
+    filter: drop-shadow(0 0 10px rgb(134 197 186 / 0.6));
+  }
+
+  @keyframes holo-sheen {
+    to {
+      --sheen: 30%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .holo-card,
+    .holo-foil {
+      animation: none;
+      transition: none;
+    }
   }
 }

@@ -136,4 +136,26 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/3 machines reported running Omarchy/, response.body)
     assert_select "span", text: "Verified"
   end
+
+  test "model page lists one card link per CPU" do
+    ingest_report!(omarchy_payload(product: "Laptop 13", cpu: "AMD Ryzen 7 7840U", instance_digest: "a" * 64))
+    ingest_report!(omarchy_payload(product: "Laptop 13", cpu: "Intel Core Ultra 5", instance_digest: "b" * 64))
+
+    get hardware_model_path(Report.first.model_slug)
+
+    assert_response :success
+    assert_select "h2", "Omarchy Verified cards"
+    assert_select "a[href^='/cards/']", count: 2
+    assert_select "a[href^='/cards/'] img[src$='.png'][alt*='Ryzen']"
+    assert_select "meta[property='og:image'][content*='/cards/']"
+  end
+
+  test "model page with one CPU links to its card" do
+    report = ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+
+    get hardware_model_path("lenovo-thinkpad-x220")
+
+    assert_select "h2", "Omarchy Verified card"
+    assert_select "a[href=?]", card_path(report.card_key)
+  end
 end

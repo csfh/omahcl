@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   resources :hardware_models, path: "models", param: :slug, only: %i[index show] do
     get :suggestions, on: :collection
   end
+  get "cards/:key", to: "cards#show", as: :card, constraints: { key: /\h{16}/ }
   get "privacy", to: "pages#privacy", as: :privacy
   namespace :admin do
     root to: "dashboards#show"
