@@ -90,8 +90,11 @@ class CollectorTest < ActiveSupport::TestCase
     leave_omarchy
     _status, candidate = run_collector("OMAHCL_DRY_RUN" => "1")
 
-    expected_omarchy = Digest::SHA256.hexdigest("omarchy-market-instance-v1\0" + "0123456789abcdef0123456789abcdef\0SHOULD-NOT-BE-READ\0BOARD-SERIAL")
-    expected_candidate = Digest::SHA256.hexdigest("omarchy-market-candidate-v1\0" + "0123456789abcdef0123456789abcdef\0SHOULD-NOT-BE-READ\0BOARD-SERIAL")
+    # Serials are root-only on a real machine and never feed the digest, so this is
+    # the value every machine had before they were dropped from the formula. The
+    # serial fixtures in setup stay readable to prove they are ignored.
+    expected_omarchy = "88c68e85e1b0276e7cd71f109df70d796ceea8ee464a18b88c664e25e0eb932f"
+    expected_candidate = Digest::SHA256.hexdigest("omarchy-market-candidate-v1\0" + "0123456789abcdef0123456789abcdef\0LENOVO\0ThinkPad X220\0Intel Core i5-2520M")
     assert_equal expected_omarchy, JSON.parse(omarchy)["instance_digest"]
     assert_equal expected_candidate, JSON.parse(candidate.lines.last)["instance_digest"]
   end
@@ -262,9 +265,9 @@ class CollectorTest < ActiveSupport::TestCase
 
     { "omarchy" => omarchy, "candidate" => candidate }.each do |mode, output|
       assert_includes output, "Privacy policy: http://example.test/privacy", mode
-      assert_includes output, "plus the DMI serials when run with sudo", mode
+      assert_includes output, "a one-way hash of the machine-id, model and CPU", mode
       assert_includes output, "never sends serial numbers, MAC addresses, your hostname or username", mode
-      assert_includes output, "IP address", mode
+      assert_includes output, "stores no IP address with the report", mode
     end
     assert_includes omarchy, "The report is public."
     assert_includes candidate, "Candidate reports are never shown publicly."

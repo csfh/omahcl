@@ -20,7 +20,6 @@ class Admin::ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", /ThinkPad X220/
     assert_no_match(/submitted_ip/, response.body)
-    assert_no_match(report.submitted_ip_digest, response.body)
   end
 
   test "admin can hide and unhide a report" do

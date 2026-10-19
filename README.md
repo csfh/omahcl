@@ -104,4 +104,4 @@ bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
 
 ## Privacy
 
-See `/privacy`. Serials, MACs, hostnames, and usernames are not stored. Submitter IPs are hashed.
+See `/privacy`. Serials, MACs, hostnames, and usernames are not stored. No IP address is stored with a report.

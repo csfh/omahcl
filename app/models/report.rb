@@ -1,6 +1,5 @@
 class Report < ApplicationRecord
   ESTABLISHED_MACHINES = 3
-  ESTABLISHED_NETWORKS = 2
 
   enum :source, { omarchy: "omarchy", candidate: "candidate" }, prefix: true
 
@@ -34,7 +33,6 @@ class Report < ApplicationRecord
         "MIN(vendor) AS vendor",
         "MIN(product) AS product",
         "COUNT(DISTINCT instance_digest) AS machines_count",
-        "COUNT(DISTINCT submitted_ip_digest) AS networks_count",
         "MIN(memory_bytes) AS min_memory_bytes",
         "MAX(memory_bytes) AS max_memory_bytes"
       )
@@ -42,13 +40,13 @@ class Report < ApplicationRecord
       .order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, MIN(vendor) ASC, MIN(product) ASC"))
   end
 
-  # Machine ids come from the client, so one person can mint many. Requiring
-  # reports from more than one network keeps a single source from vouching alone.
-  def self.established?(machines, networks)
-    machines.to_i >= ESTABLISHED_MACHINES && networks.to_i >= ESTABLISHED_NETWORKS
+  # The client computes instance_digest, so one person can mint several. Three is
+  # a sanity bar, not proof; reports store nothing from the network to check more.
+  def self.established?(machines)
+    machines.to_i >= ESTABLISHED_MACHINES
   end
 
-  def self.ingest(raw, ip:)
+  def self.ingest(raw)
     payload = raw.deep_stringify_keys
     nonce = payload["nonce"]
     raise ReportSanitizer::Rejected, "nonce is required" if nonce.blank?
@@ -62,13 +60,8 @@ class Report < ApplicationRecord
     return report if report.persisted? && report.source_omarchy? && attrs[:source] == "candidate"
 
     report.assign_attributes(attrs)
-    report.submitted_ip_digest = digest_ip(ip)
     report.save!
     report
-  end
-
-  def self.digest_ip(ip)
-    ::Digest::SHA256.hexdigest("#{Rails.application.secret_key_base}:#{ip}")
   end
 
   # One key per model and CPU, so a Framework Laptop 13 with another CPU has its own

@@ -98,7 +98,6 @@ CREATE TABLE public.reports (
     model_key character varying NOT NULL,
     model_slug character varying NOT NULL,
     search_document character varying DEFAULT ''::character varying NOT NULL,
-    submitted_ip_digest character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     instance_digest character varying NOT NULL,
@@ -357,6 +356,7 @@ ALTER TABLE ONLY public.sessions
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261019140000'),
 ('20261019120000'),
 ('20261017120000'),
 ('20261016150000'),

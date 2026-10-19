@@ -1,7 +1,7 @@
 if Rails.env.development?
   def ensure_report(vendor:, product:, key:, cpu_model:, memory_bytes:, cpu_cores: 2, cpu_vendor: "Intel", cpu_arch: "x86_64",
                     chassis: "10", gpus: [ { "vendor" => "Intel", "name" => "HD Graphics 3000" } ], version: "4.0.2",
-                    channel: "stable", uefi: true, tpm: false, secure_boot: false, ip: nil, created_at: nil)
+                    channel: "stable", uefi: true, tpm: false, secure_boot: false, created_at: nil)
     digest = Report.digest_instance(Digest::SHA256.hexdigest("market-seed:#{key}"))
     report = Report.find_or_initialize_by(instance_digest: digest)
     report.assign_attributes(
@@ -19,7 +19,6 @@ if Rails.env.development?
       uefi: uefi,
       tpm_present: tpm,
       secure_boot_enabled: secure_boot,
-      submitted_ip_digest: ip && Report.digest_ip(ip),
       facts: {}
     )
     report.created_at = created_at if created_at && report.new_record?
@@ -74,7 +73,7 @@ if Rails.env.development?
         memory_bytes: (memory_gib.sample(random: random) * 1024**3 * 0.97).to_i, cpu_cores: cores, cpu_vendor: cpu_vendor,
         chassis: chassis, gpus: gpus, version: version,
         channel: random.rand < 0.12 ? "edge" : "stable", uefi: random.rand < 0.95, tpm: random.rand < 0.8,
-        secure_boot: random.rand < 0.25, ip: "198.51.100.#{random.rand(1..40)}",
+        secure_boot: random.rand < 0.25,
         created_at: today - random.rand(0..90).days - random.rand(0..23).hours
       )
     end

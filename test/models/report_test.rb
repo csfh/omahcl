@@ -7,7 +7,7 @@ class ReportTest < ActiveSupport::TestCase
     assert report.persisted?
     assert_equal "lenovo|thinkpad x220", report.model_key
     assert_equal "lenovo-thinkpad-x220", report.model_slug
-    assert_not_nil report.submitted_ip_digest
+    assert_not_includes Report.column_names, "submitted_ip_digest"
   end
 
   test "ingested reports are public in model grouping" do
@@ -48,10 +48,10 @@ class ReportTest < ActiveSupport::TestCase
   test "replayed nonce is rejected" do
     payload = omarchy_payload
     nonce, _challenge = Challenge.issue!
-    Report.ingest(payload.merge("nonce" => nonce), ip: "203.0.113.10")
+    Report.ingest(payload.merge("nonce" => nonce))
 
     assert_raises(ReportSanitizer::Rejected) do
-      Report.ingest(omarchy_payload(instance_digest: "c" * 64).merge("nonce" => nonce), ip: "203.0.113.10")
+      Report.ingest(omarchy_payload(instance_digest: "c" * 64).merge("nonce" => nonce))
     end
   end
 
@@ -61,35 +61,23 @@ class ReportTest < ActiveSupport::TestCase
     challenge.update!(expires_at: 1.minute.ago)
 
     error = assert_raises(ReportSanitizer::Rejected) do
-      Report.ingest(payload.merge("nonce" => nonce), ip: "203.0.113.10")
+      Report.ingest(payload.merge("nonce" => nonce))
     end
     assert_match(/challenge/, error.message)
   end
 
-  test "three machines from several networks mark a model established" do
+  test "three machines mark a model established, however many networks they use" do
     3.times do |index|
-      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("est-#{index}")), ip: "203.0.113.#{index + 10}")
+      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("est-#{index}")))
     end
 
     grouped = Report.grouped_models.first
     assert_equal 3, grouped.machines_count
-    assert_equal 3, grouped.networks_count
-    assert Report.established?(grouped.machines_count, grouped.networks_count)
-  end
-
-  test "many machines from one network are not established" do
-    3.times do |index|
-      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("one-net-#{index}")), ip: "203.0.113.50")
-    end
-
-    grouped = Report.grouped_models.first
-    assert_equal 3, grouped.machines_count
-    assert_equal 1, grouped.networks_count
-    assert_not Report.established?(grouped.machines_count, grouped.networks_count)
+    assert Report.established?(grouped.machines_count)
   end
 
   test "two machines are never established" do
-    assert_not Report.established?(2, 2)
+    assert_not Report.established?(2)
   end
 
   test "hidden reports are left out of grouping" do

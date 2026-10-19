@@ -137,15 +137,9 @@ instance_digest() {
   # These domain strings predate the current name. Never rename them: that would
   # give every machine a new instance_digest and split its history.
   local domain=${4:-omarchy-market-instance-v1}
-  local machine_id product_serial board_serial material
+  local machine_id
   machine_id=$(read_strip "$(root etc/machine-id)")
-  product_serial=$(read_strip "$(root sys/class/dmi/id/product_serial)")
-  board_serial=$(read_strip "$(root sys/class/dmi/id/board_serial)")
-  if [[ -n $product_serial || -n $board_serial ]]; then
-    printf '%s\0%s\0%s\0%s' "$domain" "$machine_id" "$product_serial" "$board_serial" | sha256_hex
-  else
-    printf '%s\0%s\0%s\0%s\0%s' "$domain" "$machine_id" "$vendor" "$product" "$cpu_model" | sha256_hex
-  fi
+  printf '%s\0%s\0%s\0%s\0%s' "$domain" "$machine_id" "$vendor" "$product" "$cpu_model" | sha256_hex
 }
 
 host_kernel() {
@@ -403,17 +397,17 @@ confirm_submit() {
   else
     echo "  - the verdict above and your distro's name"
   fi
-  echo "  - a one-way hash of the machine-id, plus the DMI serials when run with sudo,"
-  echo "    so running this again updates one entry instead of adding another"
+  echo "  - a one-way hash of the machine-id, model and CPU, so running this again"
+  echo "    updates one entry instead of adding another"
   echo "It never sends serial numbers, MAC addresses, your hostname or username."
   if [[ $mode == omarchy ]]; then
     echo "The report is public."
   else
     echo "Candidate reports are never shown publicly."
   fi
-  echo "The server keeps a keyed hash of your IP address to tell networks apart, and"
-  echo "keeps per-IP request counts for about an hour to limit abuse. Database"
-  echo "backups keep those counts for up to a day after that."
+  echo "The server stores no IP address with the report. It keeps per-IP request"
+  echo "counts for about an hour to limit abuse. Database backups keep those"
+  echo "counts for up to a day after that."
   echo "Privacy policy: ${OMAHCL_URL%/}/privacy"
   case ${OMAHCL_SUBMIT:-} in
     yes | y | 1) return 0 ;;

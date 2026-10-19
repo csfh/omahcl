@@ -126,9 +126,9 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "show says established only with machines on several networks" do
+  test "show says Verified with three machines" do
     3.times do |index|
-      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("show-#{index}")), ip: "203.0.113.#{index + 20}")
+      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("show-#{index}")))
     end
 
     get hardware_model_path("lenovo-thinkpad-x220")

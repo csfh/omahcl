@@ -4,7 +4,7 @@ class Report::StatsTest < ActiveSupport::TestCase
   GIB = 1024**3
 
   # Each call is a new machine unless the digest is passed.
-  def add(ip: "203.0.113.10", digest: nil, version: "4.0.2", channel: "stable", vendor: "LENOVO",
+  def add(digest: nil, version: "4.0.2", channel: "stable", vendor: "LENOVO",
           product: "ThinkPad X220", chassis: "Notebook", cpu_vendor: "Intel", arch: "x86_64", cores: 2,
           memory_gib: 8, gpus: [ { "vendor" => "Intel", "name" => "HD" } ], uefi: true, tpm: false, secure_boot: false)
     payload = omarchy_payload(product: product, **(digest ? { instance_digest: digest } : {}))
@@ -14,7 +14,7 @@ class Report::StatsTest < ActiveSupport::TestCase
       "uefi" => uefi, "tpm" => { "present" => tpm }, "secure_boot" => { "enabled" => secure_boot }
     )
     payload["hardware"]["cpu"] = { "model" => "CPU", "vendor" => cpu_vendor, "arch" => arch, "cores" => cores }
-    ingest_report!(payload, ip: ip)
+    ingest_report!(payload)
   end
 
   def stats = Report::Stats.new
@@ -60,16 +60,12 @@ class Report::StatsTest < ActiveSupport::TestCase
   end
 
   test "counts models and verified models with the established rule" do
-    add(ip: "203.0.113.1")
-    add(ip: "203.0.113.2")
-    add(ip: "203.0.113.3")
-    add(product: "X230", ip: "203.0.113.1")
-    add(product: "X230", ip: "203.0.113.1")
-    add(product: "X230", ip: "203.0.113.1")
+    3.times { add }
+    2.times { add(product: "X230") }
 
-    assert_equal 6, stats.machines
+    assert_equal 5, stats.machines
     assert_equal 2, stats.models
-    assert_equal 1, stats.verified_models, "X230 has 3 machines but only one network"
+    assert_equal 1, stats.verified_models, "X230 has only 2 machines"
   end
 
   test "vendors merge across letter case and the rest fold into Other" do

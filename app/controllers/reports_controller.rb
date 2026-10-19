@@ -7,7 +7,7 @@ class ReportsController < ApplicationController
 
   def create
     raw = parse_json_body
-    report = Report.ingest(raw, ip: request.remote_ip)
+    report = Report.ingest(raw)
 
     known = Report.visible.where(model_slug: report.model_slug).distinct.count(:instance_digest)
     body = { public_id: report.public_id, known_machines: known }
