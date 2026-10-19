@@ -10,7 +10,7 @@
 
   <h2 class="mb-2 mt-8 heading-section">IP addresses</h2>
   <p>The site's own logs record which pages were requested, when, and the hardware facts in each submitted report. They do not record IP addresses, search terms or machine hashes.</p>
-  <p>To limit abuse, the server counts report submissions and sign-in attempts per IP address over a few minutes. Those counts are deleted within about an hour. The site sleeps when nobody uses it, and counts left at that point are deleted within minutes of it waking up. Database backups keep the counts for up to a day after that.</p>
+  <p>To limit abuse, the server counts report submissions, deletion requests and sign-in attempts per IP address over a few minutes. Those counts are deleted within about an hour. The site sleeps when nobody uses it, and counts left at that point are deleted within minutes of it waking up. Database backups keep the counts for up to a day after that.</p>
   <p>A report stores nothing derived from your IP address.</p>
   <p>The site runs on Laravel Cloud, behind Cloudflare. Both see your IP address when you connect and can keep it in their own logs. Laravel Cloud's access logs record each request's IP address, country, user agent and path. This site does not control those logs.</p>
 
@@ -21,7 +21,7 @@
   <p>If you run the script on a machine that is not running Omarchy, it checks that machine on your computer and sends nothing unless you answer yes. A yes sends the same hardware facts, the verdict and the name of your distro as a candidate report. Candidates are never shown or counted on public pages. You are only told how many machines of that model have reported running Omarchy.</p>
 
   <h2 class="mb-2 mt-8 heading-section">Deleting your report</h2>
-  <p>Run <code>curl -fsSL https://omahcl.com/delete | bash</code>. It rebuilds your machine's two hashes (one for a public report, one for a candidate report), shows what it would send, and sends them only if you answer yes. The server deletes any report that matches them right away, including one an admin has hidden, and sends back how many it deleted. The hashes are used for that and not stored. Database backups keep a deleted report for up to a day.</p>
+  <p>Run <code><%= delete_command %></code>. It rebuilds your machine's two hashes (one for a public report, one for a candidate report), shows what it would send, and sends them only if you answer yes. The server deletes any report that matches them right away, including one an admin has hidden, and sends back how many it deleted. The hashes are used for that and not stored. Database backups keep a deleted report for up to a day.</p>
   <p>The hashes come from your machine-id, model and CPU. If you have reinstalled, changed the model or CPU string (a BIOS update can do this), or reported before the hash dropped DMI serials on 19 October 2026, the script will not find your old report. There is no way to delete a report without those hashes.</p>
 
   <h2 class="mb-2 mt-8 heading-section">Who can see reports</h2>
