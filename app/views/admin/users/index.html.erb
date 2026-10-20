@@ -3,11 +3,11 @@
 <h1 class="heading-page">Users</h1>
 
 <%= form_with url: admin_users_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
-  <div>
+  <div class="w-full sm:w-auto">
     <%= form.label :q, "Email", class: "text-sm text-muted" %>
     <%= form.search_field :q, value: @query, class: field_class %>
   </div>
-  <div>
+  <div class="w-full sm:w-auto">
     <%= form.label :admin, "Role", class: "text-sm text-muted" %>
     <%= form.select :admin, [["All", ""], ["Admins", "yes"], ["Not admin", "no"]], { selected: @admin_filter }, class: field_class %>
   </div>

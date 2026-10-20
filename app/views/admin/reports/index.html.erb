@@ -3,11 +3,11 @@
 <h1 class="heading-page">Reports</h1>
 
 <%= form_with url: admin_reports_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
-  <div>
+  <div class="w-full sm:w-auto">
     <%= form.label :q, "Machine", class: "text-sm text-muted" %>
     <%= form.search_field :q, value: @query, class: field_class %>
   </div>
-  <div>
+  <div class="w-full sm:w-auto">
     <%= form.label :hidden, "Visibility", class: "text-sm text-muted" %>
     <%= form.select :hidden, [["All", ""], ["Public", "no"], ["Hidden", "yes"]], { selected: @hidden_filter }, class: field_class %>
   </div>
@@ -17,9 +17,9 @@
 <ul class="mt-8 divide-y-2 divide-line border-y-2 border-line">
   <% @reports.each do |report| %>
     <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
-      <div>
-        <p><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
-        <p class="text-sm text-muted"><%= memory_label(report.memory_bytes) %> · <%= report.cpu_model %></p>
+      <div class="min-w-0">
+        <p class="wrap-anywhere"><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
+        <p class="wrap-anywhere text-sm text-muted"><%= memory_label(report.memory_bytes) %> · <%= report.cpu_model %></p>
       </div>
       <p class="text-sm text-muted"><%= report.hidden? ? "Hidden · " : "" %><%= report.updated_at.to_fs(:long) %></p>
     </li>

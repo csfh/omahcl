@@ -86,7 +86,7 @@
   }
 
   .heading-page {
-    @apply font-pixel text-base leading-relaxed text-accent;
+    @apply font-pixel text-base leading-relaxed text-accent wrap-anywhere;
   }
 
   .heading-section {
@@ -113,8 +113,14 @@
   .hero {
     background-image: url("pixel-scatter.svg");
     background-repeat: no-repeat;
-    background-size: auto 100%;
+    background-size: auto 35%;
     background-position: right bottom;
+  }
+
+  @media (min-width: 40rem) {
+    .hero {
+      background-size: auto 100%;
+    }
   }
 
   /* Holographic card. Pure gradients: img-src is 'self', so no data: textures.
@@ -143,8 +149,10 @@
     will-change: transform;
   }
 
-  .holo-card:hover {
-    transition-duration: 0.08s;
+  @media (hover: hover) {
+    .holo-card:hover {
+      transition-duration: 0.08s;
+    }
   }
 
   .holo-foil,

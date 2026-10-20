@@ -15,8 +15,8 @@
     <h2 class="heading-section">Machines people run</h2>
     <ul class="mt-4 divide-y-2 divide-line border-y-2 border-line">
       <% @models.each do |model| %>
-        <li class="flex items-center justify-between gap-4 py-3">
-          <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "text-paper no-underline hover:text-accent" %>
+        <li class="flex items-center justify-between gap-4 py-1">
+          <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "inline-flex min-h-11 min-w-0 items-center wrap-anywhere text-paper no-underline hover:text-accent active:text-accent" %>
           <%= machines_status(model.machines_count) %>
         </li>
       <% end %>

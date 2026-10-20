@@ -1,13 +1,13 @@
 <%# rows: Report::Stats::Row list. mode: :count (default), :percent or :fraction. The last two scale bars against row.of. %>
 <% mode = local_assigns.fetch(:mode, :count) %>
 <% max = mode == :count ? rows.map(&:count).max.to_i : rows.map(&:of).max.to_i %>
-<% value_width = mode == :fraction ? "grid-cols-[7.5rem_1fr_4.5rem]" : "grid-cols-[7.5rem_1fr_2.75rem]" %>
+<% value_width = mode == :fraction ? "grid-cols-[5.5rem_1fr_4rem] sm:grid-cols-[7.5rem_1fr_4.5rem]" : "grid-cols-[5.5rem_1fr_2.5rem] sm:grid-cols-[7.5rem_1fr_2.75rem]" %>
 <% if rows.any? %>
 <section class="panel flex min-w-0 flex-col gap-3" aria-labelledby="<%= id %>">
   <h3 id="<%= id %>" class="heading-section"><%= title %></h3>
   <ul class="flex flex-col gap-2 text-xs" role="list">
     <% rows.each do |row| %>
-      <li class="grid <%= value_width %> items-center gap-3">
+      <li class="grid <%= value_width %> items-center gap-2 sm:gap-3">
         <span class="truncate" title="<%= row.label %>"><%= row.label %></span>
         <%= block_cells(row.count, max, label: "#{row.label}: #{bar_value(row, mode)}") %>
         <span class="text-right tabular-nums text-accent"><%= bar_value(row, mode) %></span>
