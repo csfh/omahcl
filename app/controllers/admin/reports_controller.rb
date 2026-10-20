@@ -7,7 +7,7 @@ module Admin
       @hidden_filter = params[:hidden] if params[:hidden].in?(%w[yes no])
       @reports = Report.order(created_at: :desc).for_query(@query)
       @reports = @reports.hidden if @hidden_filter == "yes"
-      @reports = @reports.unhidden if @hidden_filter == "no"
+      @reports = @reports.visible if @hidden_filter == "no"
     end
 
     def show
