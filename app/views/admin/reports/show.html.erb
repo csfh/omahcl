@@ -1,6 +1,6 @@
 <% page_title @report.display_name %>
 
-<p class="text-sm text-muted"><%= link_to "All reports", admin_reports_path %></p>
+<p class="text-sm text-muted"><%= link_to "All reports", admin_reports_path, class: "inline-flex min-h-11 items-center" %></p>
 <h1 class="mt-2 heading-page"><%= @report.display_name %></h1>
 <p class="mt-2 text-muted">
   Last reported <%= @report.updated_at.to_fs(:long) %>
@@ -35,15 +35,15 @@
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">CPU</dt>
-    <dd class="mt-1"><%= [@report.cpu_model, @report.cpu_vendor, @report.cpu_arch, pluralize(@report.cpu_cores, "core")].compact.join(" · ") %></dd>
+    <dd class="mt-1 wrap-anywhere"><%= [@report.cpu_model, @report.cpu_vendor, @report.cpu_arch, pluralize(@report.cpu_cores, "core")].compact.join(" · ") %></dd>
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">GPUs</dt>
-    <dd class="mt-1"><%= @report.gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
+    <dd class="mt-1 wrap-anywhere"><%= @report.gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">Family / chassis</dt>
-    <dd class="mt-1"><%= [@report.family, @report.chassis].compact.join(" · ").presence || "Not reported" %></dd>
+    <dd class="mt-1 wrap-anywhere"><%= [@report.family, @report.chassis].compact.join(" · ").presence || "Not reported" %></dd>
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">Firmware</dt>

@@ -18,7 +18,7 @@
   <% @reports.each do |report| %>
     <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
       <div class="min-w-0">
-        <p class="wrap-anywhere"><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
+        <p class="wrap-anywhere"><%= link_to report.display_name, admin_report_path(report.public_id), class: "inline-flex min-h-11 items-center" %></p>
         <p class="wrap-anywhere text-sm text-muted"><%= memory_label(report.memory_bytes) %> · <%= report.cpu_model %></p>
       </div>
       <p class="text-sm text-muted"><%= report.hidden? ? "Hidden · " : "" %><%= report.updated_at.to_fs(:long) %></p>
