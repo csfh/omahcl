@@ -1,11 +1,21 @@
 <% page_title "Omarchy hardware" %>
 
-<section class="hero border-2 border-line p-6">
-  <p class="inline-block border-2 border-line bg-panel px-3 py-1 text-xs text-accent">Unofficial community database. Not affiliated with Omarchy.</p>
-  <h1 class="wordmark mt-5 uppercase">Omarchy HCL</h1>
-  <p class="mt-4 text-lg font-semibold">What hardware runs Omarchy?</p>
-  <p class="mt-2 max-w-prose text-sm text-muted">Every machine listed here was reported by someone running Omarchy on it.</p>
-  <%= render "hardware_models/lookup_form", query: @query, submit_label: "Look up" %>
+<section class="hero grid gap-8 border-2 border-line p-6 md:grid-cols-2 md:items-center">
+  <div class="min-w-0">
+    <p class="inline-block border-2 border-line bg-panel px-3 py-1 text-xs text-accent">Unofficial community database. Not affiliated with Omarchy.</p>
+    <h1 class="wordmark mt-5 uppercase">Omarchy HCL</h1>
+    <p class="mt-4 text-lg font-semibold">What hardware runs Omarchy?</p>
+    <p class="mt-2 max-w-prose text-sm text-muted">Every machine listed here was reported by someone running Omarchy on it.</p>
+    <%= render "hardware_models/lookup_form", query: @query, submit_label: "Look up" %>
+  </div>
+  <div class="min-w-0 border-2 border-line bg-panel p-4">
+    <h2 class="text-sm font-semibold text-paper">Report your machine</h2>
+    <p class="mt-2 text-sm text-muted">Run this in a terminal. It sends nothing unless you say yes.</p>
+    <div class="mt-4">
+      <%= render "application/collect_command", command: collect_command %>
+    </div>
+    <p class="mt-2 text-sm text-muted">Read the script first at <%= link_to "/collect", collect_path %>.</p>
+  </div>
 </section>
 
 <%= render "stats/dashboard", stats: @stats if @stats.machines.positive? %>
