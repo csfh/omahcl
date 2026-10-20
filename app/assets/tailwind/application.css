@@ -147,12 +147,17 @@
     transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
     transition: transform 0.4s ease-out;
     will-change: transform;
+    /* The card is a gesture surface: a finger on it tilts it, so the browser must not
+       scroll, select text or pop the long-press callout instead. */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
-  @media (hover: hover) {
-    .holo-card:hover {
-      transition-duration: 0.08s;
-    }
+  /* Follow the pointer closely while it is on the card; ease back when it leaves. */
+  .holo-card[data-tilting] {
+    transition-duration: 0.08s;
   }
 
   .holo-foil,
