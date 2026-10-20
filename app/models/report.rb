@@ -10,7 +10,6 @@ class Report < ApplicationRecord
 
   # What public pages count: reports that no admin hid.
   scope :visible, -> { where(hidden_at: nil) }
-  scope :unhidden, -> { where(hidden_at: nil) }
   scope :hidden, -> { where.not(hidden_at: nil) }
   scope :created_since, ->(time) { where(created_at: time..) }
   scope :updated_since, ->(time) { where(updated_at: time..) }
