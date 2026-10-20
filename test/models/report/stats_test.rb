@@ -35,7 +35,6 @@ class Report::StatsTest < ActiveSupport::TestCase
   test "an empty database gives zeros and no rows" do
     assert_equal 0, stats.machines
     assert_equal 0, stats.models
-    assert_equal 0, stats.verified_models
     assert_empty stats.by_vendor
     assert_empty stats.growth
   end
@@ -57,13 +56,12 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_equal({ "LENOVO" => 1 }, counts(stats.by_vendor))
   end
 
-  test "counts models and verified models with the established rule" do
+  test "counts machines and models" do
     3.times { add }
     2.times { add(product: "X230") }
 
     assert_equal 5, stats.machines
     assert_equal 2, stats.models
-    assert_equal 1, stats.verified_models, "X230 has only 2 machines"
   end
 
   test "vendors merge across letter case and the rest fold into Other" do

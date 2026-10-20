@@ -1,4 +1,3 @@
-<% established = Report.established?(machines) %>
 <span class="inline-flex items-center gap-3 text-sm text-muted">
   <span class="inline-flex items-center gap-1" title="<%= pluralize(machines, "machine") %>">
     <%= inline_icon(
@@ -8,15 +7,4 @@
     <span><%= machines %></span>
     <span class="sr-only"><%= pluralize(machines, "machine") %></span>
   </span>
-  <% if established %>
-    <span class="inline-flex items-center gap-1 text-accent" title="Verified">
-      <span class="size-2.5 shrink-0 bg-accent" aria-hidden="true"></span>
-      <span>Verified</span>
-    </span>
-  <% else %>
-    <span class="inline-flex items-center gap-1" title="Only a few machines so far">
-      <span class="size-2.5 shrink-0 border-2 border-muted" aria-hidden="true"></span>
-      <span class="sr-only">Only a few machines so far</span>
-    </span>
-  <% end %>
 </span>

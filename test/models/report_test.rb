@@ -66,20 +66,6 @@ class ReportTest < ActiveSupport::TestCase
     assert_match(/challenge/, error.message)
   end
 
-  test "three machines mark a model established, however many networks they use" do
-    3.times do |index|
-      ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("est-#{index}")))
-    end
-
-    grouped = Report.grouped_models.first
-    assert_equal 3, grouped.machines_count
-    assert Report.established?(grouped.machines_count)
-  end
-
-  test "two machines are never established" do
-    assert_not Report.established?(2)
-  end
-
   test "hidden reports are left out of grouping" do
     report = ingest_report!
     report.update!(hidden_at: Time.current)

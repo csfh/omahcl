@@ -50,7 +50,6 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Machines that run Omarchy"
     assert_select "a", text: /ThinkPad X220/
     assert_select "a", text: /ThinkPad X230/, count: 0
-    assert_select "span", /Only a few machines so far/
   end
 
   test "suggestions return matching models as typeahead html" do
@@ -81,7 +80,6 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", /ThinkPad X220/
     assert_match(/1 machine reported running Omarchy/, response.body)
-    assert_match(/Only a few machines so far/, response.body)
     assert_select "section[aria-labelledby=model-security] li", text: /UEFI.*1 of 1/m
     assert_select "section[aria-labelledby=model-security] p", text: "Out of all 1 machine of this model."
   end
@@ -126,7 +124,7 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "show says Verified with three machines" do
+  test "show counts three machines" do
     3.times do |index|
       ingest_report!(omarchy_payload(instance_digest: ::Digest::SHA256.hexdigest("show-#{index}")))
     end
@@ -134,7 +132,6 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     get hardware_model_path("lenovo-thinkpad-x220")
 
     assert_match(/3 machines reported running Omarchy/, response.body)
-    assert_select "span", text: "Verified"
   end
 
   test "model page lists one card link per CPU" do
