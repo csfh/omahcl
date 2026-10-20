@@ -39,12 +39,6 @@ class Report::Stats
     @models ||= scope.distinct.count(:model_key)
   end
 
-  def verified_models
-    @verified_models ||= scope.group(:model_key, :model_slug)
-      .having("COUNT(DISTINCT instance_digest) >= ?", Report::ESTABLISHED_MACHINES)
-      .count.size
-  end
-
   def by_vendor(limit: 6) = fold(tally(:vendor), limit)
   def by_chassis(limit: 6)
     other = chassis_kinds.find { |row| row.label == "Other" }&.count.to_i

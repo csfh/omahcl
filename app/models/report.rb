@@ -1,6 +1,4 @@
 class Report < ApplicationRecord
-  ESTABLISHED_MACHINES = 3
-
   before_validation :assign_public_id, on: :create
   before_validation :assign_model_identity
 
@@ -33,12 +31,6 @@ class Report < ApplicationRecord
       )
       .group(:model_key, :model_slug)
       .order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, MIN(vendor) ASC, MIN(product) ASC"))
-  end
-
-  # The client computes instance_digest, so one person can mint several. Three is
-  # a sanity bar, not proof; reports store nothing from the network to check more.
-  def self.established?(machines)
-    machines.to_i >= ESTABLISHED_MACHINES
   end
 
   def self.ingest(raw)

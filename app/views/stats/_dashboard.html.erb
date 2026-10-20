@@ -5,11 +5,10 @@
     <p class="text-xs text-muted">Each machine counts once, however often it reports.</p>
   </div>
 
-  <dl class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
     <% [
       [ "Machines", stats.machines ],
       [ "Models", stats.models ],
-      [ "Verified models", stats.verified_models ],
       [ "Versions", stats.version_count ]
     ].each do |label, value| %>
       <div class="panel panel-raised flex flex-col-reverse gap-2">
