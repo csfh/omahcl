@@ -10,16 +10,22 @@ export default class extends Controller {
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
     this.move = this.move.bind(this)
     this.reset = this.reset.bind(this)
+    // A mouse stays over the card after a click and keeps tilting; a finger is gone.
+    this.release = (event) => { if (event.pointerType !== "mouse") this.reset() }
+    this.element.addEventListener("pointerdown", this.move)
     this.element.addEventListener("pointermove", this.move)
     this.element.addEventListener("pointerleave", this.reset)
     this.element.addEventListener("pointercancel", this.reset)
+    this.element.addEventListener("pointerup", this.release)
   }
 
   disconnect() {
     cancelAnimationFrame(this.frame)
+    this.element.removeEventListener("pointerdown", this.move)
     this.element.removeEventListener("pointermove", this.move)
     this.element.removeEventListener("pointerleave", this.reset)
     this.element.removeEventListener("pointercancel", this.reset)
+    this.element.removeEventListener("pointerup", this.release)
   }
 
   move(event) {
@@ -47,5 +53,6 @@ export default class extends Controller {
     style.setProperty("--tilt-x", `${((0.5 - y) * 22).toFixed(2)}deg`)
     style.setProperty("--tilt-y", `${((x - 0.5) * 26).toFixed(2)}deg`)
     style.setProperty("--active", active ? "1" : "0")
+    this.cardTarget.toggleAttribute("data-tilting", active)
   }
 }
