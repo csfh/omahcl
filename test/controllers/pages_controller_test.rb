@@ -15,6 +15,14 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "#86c5ba"
   end
 
+  test "the head sizes the page to the phone and colors the browser bar" do
+    get root_path
+
+    assert_select "meta[name=viewport][content='width=device-width,initial-scale=1']"
+    assert_select "meta[name=theme-color][content='#131c1e']"
+    assert_no_match(/user-scalable|maximum-scale/, css_select("meta[name=viewport]").first["content"])
+  end
+
   test "home has no dashboard until a machine has reported" do
     get root_path
 
@@ -74,7 +82,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_select "#stats-growth"
-    assert_select "#{chart('stats-growth')} table.sr-only tbody tr", 3
+    assert_select "#{chart('stats-growth')} .sr-only table tbody tr", 3
   end
 
   test "privacy points to deleting a report near the top and explains how" do

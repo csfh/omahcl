@@ -1,12 +1,12 @@
 <% page_title "#{@sample.display_name} card" %>
 <%= render "cards/og", title: "#{@sample.display_name} is Omarchy Verified", url: card_url(params[:key]), key: params[:key], machines: @machines_count %>
 
-<p class="text-sm text-muted"><%= link_to @sample.display_name, hardware_model_path(@sample.model_slug) %> · <%= @card[:cpu] %></p>
+<p class="wrap-anywhere text-sm text-muted"><%= link_to @sample.display_name, hardware_model_path(@sample.model_slug), class: "inline-flex min-h-11 items-center" %> · <%= @card[:cpu] %></p>
 <h1 class="mt-2 heading-page">Omarchy Verified card</h1>
 <p class="mt-2 text-muted">Share it, or tilt it around. It shows only what the model page already shows.</p>
 
 <div class="mt-10 flex justify-center">
-  <div class="holo-stage" data-controller="holo-card">
+  <div class="holo-stage w-full max-w-xs" data-controller="holo-card">
     <article class="holo-card" data-holo-card-target="card" aria-label="Omarchy Verified: <%= @sample.display_name %>">
       <div class="holo-foil" aria-hidden="true"></div>
       <div class="holo-sparkle" aria-hidden="true"></div>
@@ -22,11 +22,11 @@
         </svg>
 
         <div>
-          <h2 class="font-pixel text-xs leading-relaxed text-paper"><%= @sample.display_name %></h2>
+          <h2 class="line-clamp-2 wrap-anywhere font-pixel text-xs leading-relaxed text-paper"><%= @sample.display_name %></h2>
           <dl class="mt-3 space-y-1 text-xs text-muted">
-            <div class="flex justify-between gap-3"><dt>CPU</dt><dd class="text-right text-paper"><%= @card[:cpu] %></dd></div>
-            <div class="flex justify-between gap-3"><dt>GPU</dt><dd class="text-right text-paper"><%= @card[:gpu] %></dd></div>
-            <div class="flex justify-between gap-3"><dt>Omarchy</dt><dd class="text-right text-paper"><%= @card[:version] %></dd></div>
+            <div class="flex justify-between gap-3"><dt>CPU</dt><dd class="min-w-0 line-clamp-2 wrap-anywhere text-right text-paper" title="<%= @card[:cpu] %>"><%= @card[:cpu] %></dd></div>
+            <div class="flex justify-between gap-3"><dt>GPU</dt><dd class="min-w-0 line-clamp-2 wrap-anywhere text-right text-paper" title="<%= @card[:gpu] %>"><%= @card[:gpu] %></dd></div>
+            <div class="flex justify-between gap-3"><dt>Omarchy</dt><dd class="min-w-0 wrap-anywhere text-right text-paper"><%= @card[:version] %></dd></div>
           </dl>
         </div>
 

@@ -7,7 +7,7 @@
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
   <div class="panel">
     <dt class="text-sm text-muted">Machines collected</dt>
-    <dd class="mt-1"><%= link_to pluralize(@collection_count, "collection"), admin_reports_path %></dd>
+    <dd class="mt-1"><%= link_to pluralize(@collection_count, "collection"), admin_reports_path, class: "inline-flex min-h-11 items-center" %></dd>
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">New this week</dt>
@@ -28,8 +28,8 @@
   <ul class="mt-4 divide-y-2 divide-line border-y-2 border-line">
     <% @recent_reports.each do |report| %>
       <li class="flex flex-wrap items-baseline justify-between gap-3 py-4">
-        <div>
-          <p><%= link_to report.display_name, admin_report_path(report.public_id) %></p>
+        <div class="min-w-0">
+          <p class="wrap-anywhere"><%= link_to report.display_name, admin_report_path(report.public_id), class: "inline-flex min-h-11 items-center" %></p>
           <p class="text-sm text-muted"><%= report.updated_at.to_fs(:long) %></p>
         </div>
       </li>
@@ -51,7 +51,7 @@
 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
   <div class="panel">
     <dt class="text-sm text-muted">People</dt>
-    <dd class="mt-1"><%= link_to pluralize(@user_count, "account"), admin_users_path %></dd>
+    <dd class="mt-1"><%= link_to pluralize(@user_count, "account"), admin_users_path, class: "inline-flex min-h-11 items-center" %></dd>
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">Admins</dt>

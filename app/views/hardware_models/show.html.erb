@@ -1,7 +1,7 @@
 <% page_title @sample.display_name %>
 <%= render "cards/og", title: "#{@sample.display_name} on Omarchy HCL", url: hardware_model_url(@sample.model_slug), key: @sample.card_key, machines: @machines_count %>
 
-<p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path %></p>
+<p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %></p>
 <h1 class="mt-2 heading-page"><%= @sample.display_name %></h1>
 <p class="mt-2 flex flex-wrap items-center gap-3 text-muted">
   <%= machines_status(@machines_count) %>
@@ -10,10 +10,10 @@
 <h2 class="mt-8 heading-section">Omarchy Verified <%= "card".pluralize(@cards.size) %></h2>
 <ul class="mt-4 grid gap-4 sm:grid-cols-2">
   <% @cards.each do |key, cpu| %>
-    <li>
+    <li class="min-w-0">
       <%= link_to card_path(key), class: "block border-2 border-line p-2 no-underline hover:border-accent hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" do %>
         <%= image_tag card_path(key, format: :png), alt: "Omarchy Verified card for #{@sample.display_name} with #{cpu}", width: 1200, height: 630, loading: "lazy", class: "w-full" %>
-        <span class="mt-2 block text-sm text-muted">Get the card for <%= cpu %></span>
+        <span class="mt-2 block wrap-anywhere text-sm text-muted">Get the card for <%= cpu %></span>
       <% end %>
     </li>
   <% end %>
@@ -22,11 +22,11 @@
 <dl class="mt-8 grid gap-4 sm:grid-cols-2">
   <div class="panel">
     <dt class="text-sm text-muted">CPU models</dt>
-    <dd class="mt-1"><%= @cpu_models.join(", ") %></dd>
+    <dd class="mt-1 wrap-anywhere"><%= @cpu_models.join(", ") %></dd>
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">GPUs</dt>
-    <dd class="mt-1"><%= @gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
+    <dd class="mt-1 wrap-anywhere"><%= @gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
   </div>
 </dl>
 
