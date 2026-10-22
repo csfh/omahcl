@@ -45,7 +45,7 @@ class Report::StatsTest < ActiveSupport::TestCase
 
     assert_equal 1, stats.machines
     assert_equal 1, stats.models
-    assert_equal({ "LENOVO" => 1 }, counts(stats.by_vendor))
+    assert_equal({ "Lenovo" => 1 }, counts(stats.by_vendor))
   end
 
   test "a machine that reports again counts once" do
@@ -53,7 +53,7 @@ class Report::StatsTest < ActiveSupport::TestCase
     3.times { add(digest: digest) }
 
     assert_equal 1, stats.machines
-    assert_equal({ "LENOVO" => 1 }, counts(stats.by_vendor))
+    assert_equal({ "Lenovo" => 1 }, counts(stats.by_vendor))
   end
 
   test "counts machines and models" do
@@ -183,6 +183,15 @@ class Report::StatsTest < ActiveSupport::TestCase
 
     assert_equal({ "Intel" => 1, "AMD" => 1, "Apple" => 1 }, counts(stats.cpu_vendors))
     assert_equal({ "x86_64" => 2, "arm64" => 1 }, counts(stats.architectures))
+  end
+
+  test "raw vendor_id strings are named and merged with the names the collector sends" do
+    add(cpu_vendor: "GenuineIntel")
+    add(cpu_vendor: "Intel")
+    add(cpu_vendor: "AuthenticAMD")
+    add(cpu_vendor: "Apple", arch: "aarch64")
+
+    assert_equal({ "Intel" => 2, "AMD" => 1, "Apple" => 1 }, counts(stats.cpu_vendors))
   end
 
   test "growth is cumulative by week and keeps weeks with no new machines" do

@@ -38,7 +38,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#stats-heading", "Machines on record"
     assert_select "dl dd", text: "3"
-    assert_select "#{chart('stats-vendor')} li", text: /LENOVO.*3/m
+    assert_select "#{chart('stats-vendor')} li", text: /Lenovo.*3/m
     assert_select "#{chart('stats-memory')} li", 6
     assert_select "#{chart('stats-security')} li", text: /UEFI.*100%/m
     assert_select "#{chart('stats-gpu')} li", text: /Intel.*3/m
@@ -63,7 +63,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_select "#{chart('stats-vendor')} li svg[aria-hidden=true] rect", 14
-    assert_select "#{chart('stats-vendor')} li svg title", text: "LENOVO: 1"
+    assert_select "#{chart('stats-vendor')} li svg title", text: "Lenovo: 1"
     assert_select "#main [style]", false
   end
 

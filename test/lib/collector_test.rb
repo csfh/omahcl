@@ -115,6 +115,92 @@ class CollectorTest < ActiveSupport::TestCase
     assert_includes JSON.parse(output).dig("hardware", "gpus"), { "vendor" => "NVIDIA Corporation", "name" => "GA106 [GeForce RTX 3060]" }
   end
 
+  test "an Apple Silicon Mac under Asahi reports from the device tree, with its M-series chip" do
+    asahi!("Apple MacBook Air (13-inch, M2, 2022)", "apple,j413", "apple,t8112")
+
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
+    hardware = JSON.parse(output)["hardware"]
+
+    assert_equal 0, status
+    assert_equal "Apple", hardware["vendor"]
+    assert_equal "MacBook Air (13-inch, M2, 2022)", hardware["product"]
+    assert_equal "10", hardware["chassis"]
+    assert_equal({ "model" => "Apple M2", "vendor" => "Apple", "arch" => "aarch64", "cores" => 8 }, hardware["cpu"])
+    assert_equal [ { "vendor" => "Apple", "name" => "Apple M2 GPU" } ], hardware["gpus"]
+    ReportSanitizer.clean!(JSON.parse(output))
+  end
+
+  test "every Apple SoC id in the device tree names its chip" do
+    {
+      "t8103" => "Apple M1", "t6000" => "Apple M1 Pro", "t6001" => "Apple M1 Max", "t6002" => "Apple M1 Ultra",
+      "t8112" => "Apple M2", "t6020" => "Apple M2 Pro", "t6021" => "Apple M2 Max", "t6022" => "Apple M2 Ultra",
+      "t8122" => "Apple M3", "t6030" => "Apple M3 Pro", "t6031" => "Apple M3 Max", "t6034" => "Apple M3 Max",
+      "t6032" => "Apple M3 Ultra", "t8132" => "Apple M4", "t8140" => "Apple A18 Pro"
+    }.each do |soc, chip|
+      asahi!("Apple Mac mini (#{chip.delete_prefix('Apple ')}, 2024)", "apple,j000", "apple,#{soc}")
+
+      _status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
+
+      assert_equal chip, JSON.parse(output).dig("hardware", "cpu", "model"), soc
+      assert_equal "35", JSON.parse(output).dig("hardware", "chassis")
+    end
+  end
+
+  test "an Apple Silicon digest hashes the machine without the chip name, and delete rebuilds it" do
+    asahi!("Apple MacBook Air (13-inch, M2, 2022)", "apple,j413", "apple,t8112")
+    expected = Digest::SHA256.hexdigest([ "omarchy-market-instance-v1", "0123456789abcdef0123456789abcdef", "Apple", "MacBook Air (13-inch, M2, 2022)", "Unknown CPU" ].join("\0"))
+
+    _status, collected = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
+    _status, deleted = run_collector("OMAHCL_ACTION" => "delete", "OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
+
+    assert_equal expected, JSON.parse(collected)["instance_digest"]
+    assert_equal({ "instance_digest" => expected }, JSON.parse(deleted))
+  end
+
+  test "an Arm machine with DMI gets core names from lscpu without changing its digest" do
+    write("proc/cpuinfo", "processor\t: 0\nCPU part\t: 0xd85\n")
+    legacy = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64").last
+    fake_lscpu(<<~LSCPU)
+      Architecture:                         aarch64
+      Vendor ID:                            ARM
+        Model name:                         Cortex-A725
+        Thread(s) per core:                 1
+        Model name:                         Cortex-X925
+        Model name:                         -
+        Model name:                         Cortex-A725
+    LSCPU
+    fake_lspci("")
+
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_SKIP_CMDS" => nil, "OMAHCL_ARCH" => "aarch64")
+
+    assert_equal "Unknown CPU", JSON.parse(legacy).dig("hardware", "cpu", "model")
+    assert_equal "Cortex-A725 + Cortex-X925", JSON.parse(output).dig("hardware", "cpu", "model")
+    assert_equal JSON.parse(legacy)["instance_digest"], JSON.parse(output)["instance_digest"]
+  end
+
+  test "partial DMI does not stop an Apple Silicon Mac from using its device tree" do
+    asahi!("Apple Mac mini (M1, 2020)", "apple,j274", "apple,t8103")
+    write("sys/class/dmi/id/sys_vendor", "Apple Inc.")
+
+    _status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
+    hardware = JSON.parse(output)["hardware"]
+
+    assert_equal "Apple", hardware["vendor"]
+    assert_equal "Mac mini (M1, 2020)", hardware["product"]
+    assert_equal "Apple M1", hardware.dig("cpu", "model")
+  end
+
+  test "without DMI or an Apple device tree the collector still has no machine to report" do
+    FileUtils.rm_rf(File.join(@root, "sys/class/dmi"))
+    write("proc/device-tree/model", "Raspberry Pi 5 Model B\0")
+    write("proc/device-tree/compatible", "raspberrypi,5-model-b\0brcm,bcm2712\0")
+
+    status, output = run_collector("OMAHCL_DRY_RUN" => "1", "OMAHCL_ARCH" => "aarch64")
+
+    assert_equal 1, status
+    assert_includes output, "Could not read machine vendor and product from DMI or the device tree"
+  end
+
   test "off omarchy the script says so, sends nothing and exits non-zero, even with a yes" do
     leave_omarchy
     fake_curl
@@ -343,6 +429,21 @@ class CollectorTest < ActiveSupport::TestCase
 
     def fake_lspci(output)
       path = File.join(@bin, "lspci")
+      File.write(path, "#!/bin/sh\ncat <<'EOF'\n#{output}EOF\n")
+      File.chmod(0o755, path)
+    end
+
+    # A Mac under Asahi Linux: no DMI, a device tree, and an /proc/cpuinfo without a
+    # `model name`.
+    def asahi!(model, *compatible)
+      FileUtils.rm_rf(File.join(@root, "sys/class/dmi"))
+      write("proc/device-tree/model", "#{model}\0")
+      write("proc/device-tree/compatible", compatible.join("\0") + "\0apple,arm-platform\0")
+      write("proc/cpuinfo", (0...8).map { |n| "processor\t: #{n}\nBogoMIPS\t: 48.00\nCPU part\t: 0x033\n\n" }.join)
+    end
+
+    def fake_lscpu(output)
+      path = File.join(@bin, "lscpu")
       File.write(path, "#!/bin/sh\ncat <<'EOF'\n#{output}EOF\n")
       File.chmod(0o755, path)
     end
