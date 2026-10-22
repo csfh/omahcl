@@ -97,8 +97,8 @@ class Report < ApplicationRecord
     end
 
     def assign_model_identity
-      self.vendor = vendor.to_s.strip
-      self.product = product.to_s.strip
+      self.vendor = Vendor.canonical(vendor)
+      self.product = product.to_s.strip.gsub(/\s+/, " ")
       self.model_key = [ vendor.downcase, product.downcase ].join("|")
       self.model_slug = [ vendor, product ].join(" ").parameterize
       self.card_key = self.class.card_key_for(model_key, cpu_model)

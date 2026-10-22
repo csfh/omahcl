@@ -111,6 +111,61 @@ cpu_cores() {
   printf '%s' "$count"
 }
 
+# Device tree strings, one per line. They are NUL-terminated, and `compatible`
+# holds several. Apple Silicon under Asahi Linux has a device tree and no DMI.
+dt_strings() {
+  local file
+  file=$(root "proc/device-tree/$1")
+  [[ -r $file ]] || return 0
+  tr '\0' '\n' <"$file" | head -c 1024
+}
+
+# The chip named by the SoC id in `compatible` ("apple,t8112"). The ids and names
+# are from the apple/*.dts files in the Linux tree.
+apple_chip() {
+  local soc
+  soc=$(dt_strings compatible | sed -n 's/^apple,\(t[0-9]\{4\}\)$/\1/p' | head -n 1)
+  case $soc in
+    t8103) printf 'Apple M1' ;;
+    t6000) printf 'Apple M1 Pro' ;;
+    t6001) printf 'Apple M1 Max' ;;
+    t6002) printf 'Apple M1 Ultra' ;;
+    t8112) printf 'Apple M2' ;;
+    t6020) printf 'Apple M2 Pro' ;;
+    t6021) printf 'Apple M2 Max' ;;
+    t6022) printf 'Apple M2 Ultra' ;;
+    t8122) printf 'Apple M3' ;;
+    t6030) printf 'Apple M3 Pro' ;;
+    t6031 | t6034) printf 'Apple M3 Max' ;;
+    t6032) printf 'Apple M3 Ultra' ;;
+    t8132) printf 'Apple M4' ;;
+    t8140) printf 'Apple A18 Pro' ;;
+    *) printf '' ;;
+  esac
+}
+
+# SMBIOS chassis type for a Mac, which has no DMI to say.
+apple_chassis() {
+  case $1 in
+    *MacBook*) printf '10' ;;
+    *iMac*) printf '13' ;;
+    *"Mac mini"*) printf '35' ;;
+    *"Mac Studio"*) printf '3' ;;
+    *"Mac Pro"*) printf '7' ;;
+    *) printf '' ;;
+  esac
+}
+
+# Core names from lscpu, for Arm machines whose /proc/cpuinfo has no `model name`.
+lscpu_models() {
+  if [[ -n ${OMAHCL_SKIP_CMDS:-} ]] || ! command -v lscpu >/dev/null 2>&1; then
+    return 0
+  fi
+  # util-linux indents each cluster's name under its Vendor ID, and prints "-" for
+  # a part it cannot name.
+  LC_ALL=C lscpu 2>/dev/null | sed -n 's/^[[:space:]]*Model name:[[:space:]]*//p' | awk '$0 != "-" && !seen[$0]++' | paste -sd'+' | sed 's/+/ + /g'
+}
+
 cpu_arch() {
   if [[ $SYS == / ]]; then
     uname -m
@@ -217,6 +272,17 @@ omarchy_channel() {
   printf '%s' "$channel"
 }
 
+# A Mac running Asahi Linux, whose firmware may give no DMI or only part of it: the
+# device tree model is "Apple MacBook Air (13-inch, M2, 2022)".
+gather_apple_silicon() {
+  local model
+  model=$(clean "$(dt_strings model | head -n 1)")
+  [[ $model == "Apple "* ]] || return 0
+  F_vendor=Apple
+  F_product=${model#Apple }
+  F_chassis=$(apple_chassis "$F_product")
+}
+
 # Fills the F_* globals from /proc, /sys and /etc. Never reads serial numbers.
 gather_facts() {
   F_vendor=$(dmi sys_vendor)
@@ -225,6 +291,9 @@ gather_facts() {
   F_chassis=$(dmi chassis_type)
   F_cpu_model=$(cpu_field "model name")
   F_cpu_vendor=$(cpu_field vendor_id)
+  # The instance digest hashes this and never the Arm names below, so a machine
+  # keeps its digest when its CPU gets a proper name.
+  F_digest_cpu=${F_cpu_model:-Unknown CPU}
   F_arch=$(clean "$(cpu_arch)" 40)
   F_cores=$(cpu_cores)
   F_mem=$(memory_bytes)
@@ -232,6 +301,21 @@ gather_facts() {
   F_tpm=$(bool_dir "$(root sys/class/tpm)")
   F_sb=$(secure_boot_state)
   F_gpus=$(gpus_json)
+  F_chip=$(apple_chip)
+  if [[ -n $F_chip ]]; then
+    gather_apple_silicon
+  fi
+  if [[ -z $F_cpu_model ]]; then
+    if [[ -n $F_chip ]]; then
+      F_cpu_model=$F_chip
+      [[ -n $F_cpu_vendor ]] || F_cpu_vendor=Apple
+    else
+      F_cpu_model=$(clean "$(lscpu_models)")
+    fi
+  fi
+  if [[ -n $F_chip && $F_gpus == '[]' ]]; then
+    F_gpus=$(printf '[{"vendor":"Apple","name":"%s GPU"}]' "$(json_escape "$F_chip")")
+  fi
   [[ -n $F_cpu_model ]] || F_cpu_model="Unknown CPU"
   [[ -n $F_arch ]] || F_arch=unknown
 }
@@ -261,13 +345,13 @@ omarchy_payload() {
   [[ -n $version ]] || version=$(clean "$(os_field BUILD_ID)" 80)
   [[ -n $version ]] || version=unknown
   channel=$(omarchy_channel)
-  digest=$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")
+  digest=$(instance_digest "$F_vendor" "$F_product" "$F_digest_cpu")
   printf '{"omarchy":{"version":"%s","channel":"%s"},"hardware":%s,"instance_digest":"%s"}' \
     "$(json_escape "$version")" "$(json_escape "$channel")" "$(hardware_json)" "$digest"
 }
 
 delete_payload() {
-  printf '{"instance_digest":"%s"}' "$(instance_digest "$F_vendor" "$F_product" "$F_cpu_model")"
+  printf '{"instance_digest":"%s"}' "$(instance_digest "$F_vendor" "$F_product" "$F_digest_cpu")"
 }
 
 print_machine() {
@@ -388,7 +472,7 @@ post_payload() {
 run_omarchy() {
   gather_facts
   if [[ -z $F_vendor || -z $F_product ]]; then
-    echo "Could not read machine vendor and product from DMI." >&2
+    echo "Could not read machine vendor and product from DMI or the device tree." >&2
     exit 1
   fi
   local payload
@@ -415,7 +499,7 @@ run_omarchy() {
 run_delete() {
   gather_facts
   if [[ -z $F_vendor || -z $F_product ]]; then
-    echo "Could not read machine vendor and product from DMI, so this machine's report cannot be found." >&2
+    echo "Could not read machine vendor and product from DMI or the device tree, so this machine's report cannot be found." >&2
     exit 1
   fi
   local payload

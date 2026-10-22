@@ -22,6 +22,15 @@ class Report::Stats
     "Server" => [ 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29 ]
   }.flat_map { |label, types| types.map { |type| [ type, label ] } }.to_h.freeze
 
+  # /proc/cpuinfo gives the CPU's vendor_id string. The collector sends it as is, and
+  # Apple Silicon sends "Apple", so name the ones people know. Anything else is kept.
+  CPU_VENDORS = {
+    "genuineintel" => "Intel",
+    "authenticamd" => "AMD",
+    "hygongenuine" => "Hygon",
+    "centaurhauls" => "Zhaoxin"
+  }.freeze
+
   MEMORY_EDGES = [ 4, 8, 16, 32, 64 ].map { |gib| gib * GIB }.freeze
   MEMORY_LABELS = [ "4 GB or less", "8 GB", "16 GB", "32 GB", "64 GB", "More than 64 GB" ].freeze
   CORE_EDGES = [ 2, 4, 8, 16 ].freeze
@@ -51,7 +60,12 @@ class Report::Stats
   def vendor_count = tally(:vendor).size
   def chassis_count = chassis_kinds.size
 
-  def cpu_vendors = tally(:cpu_vendor)
+  def cpu_vendors
+    tally(:cpu_vendor)
+      .each_with_object(Hash.new(0)) { |row, makers| makers[CPU_VENDORS.fetch(row.label.downcase, row.label)] += row.count }
+      .map { |label, count| Row.new(label: label, count: count) }
+      .sort_by { |row| [ -row.count, row.label.downcase ] }
+  end
   def architectures = tally(:cpu_arch)
   def channels = tally(:omarchy_channel)
 
