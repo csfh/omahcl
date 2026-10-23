@@ -70,15 +70,21 @@ module Report::Display
     end
     mac = MAC_MODELS[product] if vendor.casecmp?("Apple")
     return mac_model(vendor, mac, short) if mac
-    product = clean_product(product)
+    product = clean_product(vendor, product, family)
     return product if vendor.empty? || product.match?(/\A#{Regexp.escape(vendor)}(?:\W|\z)/i)
     [ vendor, product ].reject(&:empty?).join(" ")
   end
 
+  # The ASUS lines whose name a bare model code ("X510UQR") takes from the family field.
+  # Other families are too uneven to trust (see LENOVO_CODE).
+  ASUS_LINES = { "vivobook" => "Vivobook", "zenbook" => "Zenbook", "expertbook" => "ExpertBook", "proart" => "ProArt" }.freeze
+
   # ASUS firmware writes "Vivobook_ASUSLaptop M3504YA_M3504YA": the model code twice and
   # the maker glued to the line.
-  def self.clean_product(product)
+  def self.clean_product(vendor, product, family)
     name = product.sub(/_ASUSLaptop\b/i, "").sub(/(?<!\S)(\S+)_\1\z/, '\1').gsub(/\s+/, " ").strip
+    line = ASUS_LINES[family.to_s.strip.downcase] if vendor.casecmp?("ASUS")
+    name = "#{line} #{name}" if line && !name.include?(" ") && name.match?(/\d/)
     name.presence || product
   end
 
