@@ -5,7 +5,9 @@ class HardwareModelsController < ApplicationController
 
   def index
     @query = params[:q].to_s
-    @models = Report.grouped_models(@query)
+    @vendor = params[:vendor].to_s.strip.presence
+    @models = Report.grouped_models(@query, vendor: @vendor)
+    load_vendor_rank if @vendor
   end
 
   def suggestions
@@ -19,6 +21,19 @@ class HardwareModelsController < ApplicationController
   end
 
   private
+
+  # Where a vendor stands among all vendors by distinct machines, for its leaderboard.
+  def load_vendor_rank
+    vendors = Report::Stats.new.vendors
+    row = vendors.find { |candidate| candidate.label.casecmp?(@vendor) }
+    return unless row
+
+    # Competition ranking: vendors with the same count share a rank.
+    @vendor_row = row
+    @vendor_rank = vendors.count { |other| other.count > row.count } + 1
+    @vendor_tied = vendors.count { |other| other.count == row.count } > 1
+    @vendors_count = vendors.size
+  end
 
   def load_model
     @reports = Report.visible.where(model_slug: params[:slug]).order(created_at: :desc)

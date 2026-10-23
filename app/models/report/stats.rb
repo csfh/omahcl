@@ -57,6 +57,8 @@ class Report::Stats
     other.positive? ? shown + [ Row.new(label: "Other", count: other) ] : shown
   end
 
+  # Every vendor, most machines first, for ranking one against the rest.
+  def vendors = tally(:vendor)
   def vendor_count = tally(:vendor).size
   def chassis_count = chassis_kinds.size
 

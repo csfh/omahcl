@@ -19,8 +19,10 @@
   </dl>
 
   <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <%# "Other" is a total, not a vendor, so it has no leaderboard. %>
     <%= render "stats/block_bars", id: "stats-vendor", title: "By vendor", rows: stats.by_vendor,
-          note: ("Top 6 of #{stats.vendor_count} vendors." if stats.vendor_count > 6) %>
+          link: ->(row) { hardware_models_path(vendor: row.label) unless row.label == "Other" },
+          note: [ ("Top 6 of #{stats.vendor_count} vendors." if stats.vendor_count > 6), "Pick one for its most reported machines." ].compact.join(" ") %>
     <%= render "stats/block_bars", id: "stats-chassis", title: "Form factor", rows: stats.by_chassis,
           note: "From the machine's chassis type: laptop, desktop and so on." %>
     <%= render "stats/block_bars", id: "stats-memory", title: "Memory", rows: stats.memory,

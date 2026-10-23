@@ -57,6 +57,75 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-clipboard-target=source]", count: 0
   end
 
+  test "search matches every word in any order, and the name pages show" do
+    ingest_report!(omarchy_payload(product: "X510UQR").merge("hardware" => omarchy_payload["hardware"].merge("vendor" => "ASUSTeK COMPUTER INC.", "product" => "X510UQR", "family" => "VivoBook")))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))
+
+    [ "Vivobook X510", "asus x510", "x510 vivobook asus", "ASUS Vivobook X510UQR" ].each do |query|
+      get hardware_models_path, params: { q: query }
+      assert_select "a", { text: "ASUS Vivobook X510UQR" }, query
+      assert_select "a", { text: /X230/, count: 0 }, query
+    end
+
+    get hardware_models_path, params: { q: "x510 thinkpad" }
+    assert_select "a", { text: /X510|X230/, count: 0 }
+    assert_select "p", text: "Nothing matches yet. Try another name."
+  end
+
+  test "typeahead finds a machine by its displayed name" do
+    report = ingest_report!(omarchy_payload(product: "Vivobook_ASUSLaptop M3504YA_M3504YA", instance_digest: "1" * 64).deep_merge("hardware" => { "vendor" => "ASUSTeK COMPUTER INC." }))
+    assert_includes report.search_document, "ASUS Vivobook M3504YA"
+
+    get suggestions_hardware_models_path, params: { q: "vivobook m3504ya" }
+
+    assert_select "a", text: /ASUS Vivobook M3504YA/
+  end
+
+  test "a vendor's page ranks its models by machines and says where the vendor stands" do
+    3.times { |i| ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "a#{i}" + "0" * 62)) }
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "b" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "c" * 64).merge("hardware" => omarchy_payload["hardware"].merge("vendor" => "Dell Inc.", "product" => "XPS 13", "family" => "XPS")))
+
+    get hardware_models_path, params: { vendor: "lenovo" }
+
+    assert_response :success
+    assert_select "h1", "Lenovo on Omarchy"
+    assert_select "p", text: /The most reported vendor\. 4 machines reported/
+    assert_select "ol li:nth-child(1) a", text: /X230/
+    assert_select "ol li:nth-child(2) a", text: /X220/
+    assert_select "ol li:nth-child(1) .tabular-nums", text: /1/
+    assert_select "a", text: /XPS/, count: 0
+
+    get hardware_models_path, params: { vendor: "Dell" }
+    assert_select "p", text: /Number 2 of 2 vendors/
+  end
+
+  test "models with the same count share a rank and tied vendors say so" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "1" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "3" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad T420", instance_digest: "4" * 64))
+    ingest_report!(omarchy_payload(product: "XPS 13", instance_digest: "5" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+    ingest_report!(omarchy_payload(product: "XPS 14", instance_digest: "6" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+    ingest_report!(omarchy_payload(product: "XPS 15", instance_digest: "7" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+    ingest_report!(omarchy_payload(product: "XPS 16", instance_digest: "8" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+
+    get hardware_models_path, params: { vendor: "Lenovo" }
+
+    assert_select "ol li .tabular-nums", text: /\A\s*(Number )?1\s*\z/, count: 1
+    assert_select "ol li .tabular-nums", text: /\A\s*(Number )?2\s*\z/, count: 2
+    assert_select "ol li .tabular-nums", text: /3/, count: 0
+    assert_select "p", text: /Tied for most reported vendor\. 4 machines/
+  end
+
+  test "the vendor chart links each vendor to its page, but not the Other row" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "1" * 64))
+
+    get root_path
+
+    assert_select "#stats-vendor ~ ul a[href=?]", hardware_models_path(vendor: "Lenovo"), text: "Lenovo"
+  end
+
   test "index filters models by query" do
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "1" * 64))
     ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))
@@ -139,7 +208,10 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
       assert_select "a", text: /ThinkPad X220/, count: 0
     end
 
-    get hardware_models_path(q: "mac pro")
+    get hardware_models_path(q: "pro macbook")
+    assert_select "a", text: /MacBook Pro/, count: 1
+
+    get hardware_models_path(q: "mac air")
     assert_select "a", text: /MacBook Pro/, count: 0
   end
 

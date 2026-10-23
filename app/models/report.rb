@@ -11,20 +11,28 @@ class Report < ApplicationRecord
   scope :hidden, -> { where.not(hidden_at: nil) }
   scope :created_since, ->(time) { where(created_at: time..) }
   scope :updated_since, ->(time) { where(updated_at: time..) }
-  # Also finds a Mac by the marketing name pages show for its identifier, which
-  # search_document does not hold.
+
+  MAX_SEARCH_TERMS = 8
+
+  # Every word must appear somewhere in the search document, in any order, so
+  # "asus x510" and "carbon thinkpad" find their machines. A Mac is also found by the
+  # marketing name for its identifier, read from the table now, so a row whose
+  # search_document predates a change to config/mac_models.yml still matches.
   scope :for_query, ->(query) {
-    if query.present?
-      term = query.strip
-      macs = Display.mac_identifiers_matching(term)
-      where("search_document ILIKE :like OR (vendor = 'Apple' AND product IN (:macs))", like: "%#{sanitize_sql_like(term)}%", macs: macs.presence || [ "" ])
+    terms = query.to_s.split.first(MAX_SEARCH_TERMS)
+    if terms.any?
+      named = terms.inject(all) { |found, term| found.where("search_document ILIKE ?", "%#{sanitize_sql_like(term)}%") }
+      named.or(where(vendor: "Apple", product: Display.mac_identifiers_matching(terms.join(" "))))
     else
       all
     end
   }
 
-  def self.grouped_models(query = nil)
-    visible.for_query(query)
+  # vendor is a vendor's name as the charts spell it, whatever its case.
+  def self.grouped_models(query = nil, vendor: nil)
+    models = visible.for_query(query)
+    models = models.where("LOWER(vendor) = ?", vendor.to_s.downcase) if vendor.present?
+    models
       .select(
         :model_key, :model_slug,
         "MIN(vendor) AS vendor",
@@ -53,6 +61,16 @@ class Report < ApplicationRecord
   def self.featured_card
     key = visible.group(:card_key).order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, card_key ASC")).pick(:card_key)
     visible.where(card_key: key).order(updated_at: :desc).first if key
+  end
+
+  # What a search matches: the stored names and the name pages show, so a machine is
+  # found by "Vivobook X510" as well as by what its firmware calls it. Display rules
+  # change this text, so a change to them needs a migration that rebuilds it, like
+  # 20261023120000_add_display_names_to_search_documents.rb.
+  def self.search_document_for(vendor, product, family)
+    stored = [ vendor, product, family ].compact.join(" ")
+    shown = Display.model(vendor, product, family)
+    stored.downcase.include?(shown.downcase) ? stored : "#{stored} #{shown}"
   end
 
   def self.ingest(raw)
@@ -129,6 +147,6 @@ class Report < ApplicationRecord
       self.model_key = [ vendor.downcase, product.downcase ].join("|")
       self.model_slug = [ vendor, product ].join(" ").parameterize
       self.card_key = self.class.card_key_for(model_key, cpu_model)
-      self.search_document = [ vendor, product, family ].compact.join(" ")
+      self.search_document = self.class.search_document_for(vendor, product, family)
     end
 end
