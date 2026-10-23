@@ -246,7 +246,7 @@ class CardImage
   end
 
   def normalize(string)
-    I18n.transliterate(string.to_s).upcase.gsub(/[^A-Z0-9 .,\-\/+():'&_#]/, "?")
+    I18n.transliterate(string.to_s.tr("–—", "--")).upcase.gsub(/[^A-Z0-9 .,\-\/+():'&_#]/, "?")
   end
 
   def clip(value, limit)

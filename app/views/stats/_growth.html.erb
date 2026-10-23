@@ -3,7 +3,7 @@
     <h3 id="stats-growth" class="heading-section">Machines over time</h3>
     <%= growth_columns(points) %>
     <p class="flex justify-between gap-4 text-xs tabular-nums text-muted">
-      <span>Week of <%= week_label(points.first.week) %></span>
+      <span>Week of <%= week_label(growth_first_week(points)) %></span>
       <span>Week of <%= week_label(points.last.week) %>: <%= number_with_delimiter(points.last.total) %></span>
     </p>
     <p class="text-xs text-muted">Running total of machines, one column per week.</p>

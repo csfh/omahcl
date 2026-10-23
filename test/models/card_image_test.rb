@@ -18,6 +18,13 @@ class CardImageTest < ActiveSupport::TestCase
     assert png(name: "Ünïcode Machine 日本語 " * 8, cpu: "x" * 200, gpu: "").present?
   end
 
+  test "an en dash in a year span draws as a hyphen, not a question mark" do
+    # The sparkles are seeded from the raw name, so compare the text the font draws.
+    card = CardImage.new(name: "x", cpu: "x", gpu: "x", version: "x")
+
+    assert_equal "2018-2019 - 2020", card.send(:normalize, "2018–2019 — 2020")
+  end
+
   test "output is deterministic for the same input" do
     assert_equal png, png
     assert_not_equal png, png(version: "4.1.0")

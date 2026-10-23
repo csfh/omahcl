@@ -57,7 +57,7 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Lenovo ThinkPad X1 Carbon Gen 9 (20XXS2XU00)", Report::Display.model("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9")
     assert_equal "Lenovo ThinkPad X220 (429143G)", Report::Display.model("Lenovo", "429143G", "ThinkPad  X220")
     assert_equal "Lenovo Legion 5 15AHP10 (83M0)", Report::Display.model("Lenovo", "83M0", "Legion 5 15AHP10")
-    assert_equal "Lenovo ThinkPad X1 Carbon Gen 9", Report::Display.model("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9", code: false)
+    assert_equal "Lenovo ThinkPad X1 Carbon Gen 9", Report::Display.model("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9", short: true)
   end
 
   test "a Lenovo code stays when the family adds nothing, and other vendors keep their product" do
@@ -67,6 +67,34 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Lenovo IdeaPad Z580", Report::Display.model("Lenovo", "IdeaPad Z580", "IDEAPAD Z580")
     assert_equal "ASUS X510UQR", Report::Display.model("ASUS", "X510UQR", "VivoBook")
     assert_equal "Samsung 550XDA", Report::Display.model("Samsung", "550XDA", "Notebook Plus2 Pro 2")
+  end
+
+  test "an Intel Mac identifier reads as its marketing name, keeping the identifier" do
+    assert_equal "Apple MacBook Pro (Retina, 13-inch, Early 2015) · MacBookPro12,1", Report::Display.model("Apple", "MacBookPro12,1")
+    assert_equal "MacBook Pro (13-inch, Early 2015)", Report::Display.model("Apple", "MacBookPro12,1", short: true)
+    assert_equal "MacBook Pro (13-inch, 2018–2019)", Report::Display.model("Apple", "MacBookPro15,2", short: true)
+    assert_equal "Apple iMac (21.5-inch, Mid 2011) · iMac12,1", Report::Display.model("Apple", "iMac12,1")
+    assert_equal "Apple Mac Pro (2010–2012) · MacPro5,1", Report::Display.model("Apple", "MacPro5,1")
+  end
+
+  test "an identifier sold in several sizes or years shows what they share" do
+    assert_equal "Apple iMac (2009) · iMac9,1", Report::Display.model("Apple", "iMac9,1")
+    assert_equal "Apple MacBook Pro (Retina, 15-inch, 2012–2013) · MacBookPro10,1", Report::Display.model("Apple", "MacBookPro10,1")
+  end
+
+  test "a Mac without a table entry, an Asahi model and other vendors are shown as sent" do
+    assert_equal "Apple MacBook7,1", Report::Display.model("Apple", "MacBook7,1")
+    assert_equal "Apple MacBook Air (13-inch, M2, 2022)", Report::Display.model("Apple", "MacBook Air (13-inch, M2, 2022)")
+    assert_equal "Dell MacBookPro12,1", Report::Display.model("Dell", "MacBookPro12,1")
+  end
+
+  test "every Mac name in the table starts with a Mac line and has no server or rack variant" do
+    assert_operator Report::Display::MAC_MODELS.size, :>, 100
+    Report::Display::MAC_MODELS.each do |id, name|
+      assert_match(/\A[A-Za-z]+\d+,\d+\z/, id)
+      assert_match(/\A(?:MacBook(?: Pro| Air)?|iMac(?: Pro)?|Mac mini|Mac Pro|Mac Studio)\b/, name, id)
+      refute_match(/Server|Rack/, name, id)
+    end
   end
 
   test "memory is the installed size that holds what the machine reports" do

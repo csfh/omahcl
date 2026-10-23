@@ -16,10 +16,24 @@ module StatsHelper
     block_svg(BAR_CELLS * STEP - (STEP - CELL), CELL, cells, label: label, class: "block h-3 w-full")
   end
 
-  # Cumulative machines per week, one column of stacked squares per week.
+  # Columns the growth chart always spans, so a young site draws narrow columns at
+  # the right edge instead of two huge slabs.
+  GROWTH_MIN_COLUMNS = 12
+
+  def growth_blank_columns(points) = [ GROWTH_MIN_COLUMNS - points.size, 0 ].max
+
+  # The week of the chart's first column, which is before the first machine when padded.
+  def growth_first_week(points)
+    points.first.week - growth_blank_columns(points).weeks
+  end
+
+  # Cumulative machines per week, one column of stacked squares per week, after any
+  # empty weeks that pad the chart on the left.
   def growth_columns(points)
     max = points.map(&:total).max.to_f
-    cells = points.each_with_index.flat_map do |point, column|
+    blanks = growth_blank_columns(points)
+    cells = points.each_with_index.flat_map do |point, index|
+      column = index + blanks
       height = [ (point.total / max * GROWTH_ROWS).ceil, 1 ].max
       Array.new(height) do |row|
         tag.rect(
@@ -29,7 +43,7 @@ module StatsHelper
       end
     end
 
-    block_svg(points.size * 2 * STEP - 2, GROWTH_ROWS * STEP - 2, cells, label: nil, class: "block h-40 w-full", aspect: "none")
+    block_svg((points.size + blanks) * 2 * STEP - 2, GROWTH_ROWS * STEP - 2, cells, label: nil, class: "block h-40 w-full", aspect: "none")
   end
 
   def bar_value(row, mode)

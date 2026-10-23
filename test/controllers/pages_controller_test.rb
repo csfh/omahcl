@@ -85,6 +85,14 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#{chart('stats-growth')} .sr-only table tbody tr", 3
   end
 
+  test "the layout keeps the phone header on two rows and the footer legible" do
+    get root_path
+
+    assert_select "header nav.w-full.justify-between"
+    assert_select "footer p.w-full", text: /Unofficial community database/
+    assert_select "footer a", count: 2
+  end
+
   test "privacy points to deleting a report near the top and explains how" do
     get privacy_path
 
