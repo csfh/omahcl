@@ -1,4 +1,5 @@
-<%# rows: Report::Stats::Row list. mode: :count (default), :percent or :fraction. The last two scale bars against row.of. %>
+<%# rows: Report::Stats::Row list. mode: :count (default), :percent or :fraction. The last two scale bars against row.of.
+    link: optional callable that gives a row's address, or nil for a row that goes nowhere. %>
 <% mode = local_assigns.fetch(:mode, :count) %>
 <% max = mode == :count ? rows.map(&:count).max.to_i : rows.map(&:of).max.to_i %>
 <% value_width = mode == :fraction ? "grid-cols-[5.5rem_1fr_4rem] sm:grid-cols-[7.5rem_1fr_4.5rem]" : "grid-cols-[5.5rem_1fr_2.5rem] sm:grid-cols-[7.5rem_1fr_2.75rem]" %>
@@ -8,7 +9,8 @@
   <ul class="flex flex-col gap-2 text-xs" role="list">
     <% rows.each do |row| %>
       <li class="grid <%= value_width %> items-center gap-2 sm:gap-3">
-        <span class="truncate" title="<%= row.label %>"><%= row.label %></span>
+        <% href = local_assigns[:link]&.call(row) %>
+        <span class="truncate" title="<%= row.label %>"><%= href ? link_to(row.label, href, class: "block py-1 -my-1") : row.label %></span>
         <%= block_cells(row.count, max, label: "#{row.label}: #{bar_value(row, mode)}") %>
         <span class="text-right tabular-nums text-accent"><%= bar_value(row, mode) %></span>
       </li>
