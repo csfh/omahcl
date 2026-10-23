@@ -30,6 +30,10 @@ module Report::Vendor
     "system76" => "System76"
   }.freeze
 
+  # The outline of a vendor's logo, from config/vendor_logos.yml (built by
+  # script/vendor_logos.rb), by the vendor's slug. Nil for a vendor without one.
+  LOGOS = YAML.load_file(Rails.root.join("config/vendor_logos.yml")).freeze
+
   def self.canonical(raw)
     text = raw.to_s.strip.gsub(/\s+/, " ")
     name = text.sub(SUFFIX, "")
@@ -53,9 +57,15 @@ module Report::Vendor
   end
 
   # A vendor's address on /vendors. The chart, the sitemap and the page itself all
-  # take it from here. Blank for a name with no letters or digits, which has no page.
+  # take it from here, and it always fits the route: lowercase letters and digits
+  # joined by single hyphens (parameterize keeps underscores). Blank for a name with
+  # no ASCII letters or digits, which has no page.
   def self.slug(name)
-    name.to_s.parameterize
+    name.to_s.parameterize.tr("_", "-").squeeze("-").delete_prefix("-").delete_suffix("-")
+  end
+
+  def self.logo(name)
+    LOGOS[slug(name)]
   end
 
   def self.brand_key(name)

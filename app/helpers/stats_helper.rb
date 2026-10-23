@@ -7,6 +7,15 @@ module StatsHelper
   # One row of 8px squares. SVG geometry only, so the CSP's ban on inline style
   # attributes does not matter. The numbers beside it carry the data, so the
   # drawing is hidden from screen readers.
+  # A vendor's logo in the text color, or nothing for a vendor without one. Decorative:
+  # the vendor's name always sits beside it.
+  def vendor_logo(label, **options)
+    outline = Report::Vendor.logo(label)
+    return unless outline
+
+    tag.svg(tag.path(d: outline), viewBox: "0 0 24 24", fill: "currentColor", focusable: "false", aria: { hidden: true }, **options)
+  end
+
   def block_cells(count, max, label:)
     filled = max.to_i.zero? ? 0 : [ (count.to_f / max * BAR_CELLS).round, count.positive? ? 1 : 0 ].max
     cells = Array.new(BAR_CELLS) do |index|

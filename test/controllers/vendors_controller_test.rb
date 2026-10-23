@@ -10,6 +10,7 @@ class VendorsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Lenovo on Omarchy"
+    assert_select "h1 svg path[d]"
     assert_select "link[rel=canonical][href=?]", "http://www.example.com/vendors/lenovo"
     assert_select "p", text: /The most reported vendor\. 4 machines reported/
     assert_select "ol li:nth-child(1) a", text: /X230/
@@ -56,6 +57,33 @@ class VendorsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success, row.label
       assert_select "h1", "#{row.label} on Omarchy"
     end
+  end
+
+  test "a vendor name the route cannot hold does not break the home page, sitemap or model pages" do
+    [ "Acme_Corp", "Acme  Corp!", "华硕", "!!!", "_Under_" ].each_with_index do |vendor, i|
+      2.times { |n| ingest_report!(omarchy_payload(product: "Box #{i}", instance_digest: "#{i}#{n}" + "0" * 62).deep_merge("hardware" => { "vendor" => vendor })) }
+    end
+
+    { "Acme_Corp" => "acme-corp", "_Under_" => "under", "华硕" => "", "!!!" => "", "Dell  Inc." => "dell" }.each do |name, slug|
+      assert_equal slug, Report::Vendor.slug(Report::Vendor.canonical(name)), name
+    end
+
+    get root_path
+    assert_response :success
+    assert_select "ol[aria-label='Most reported vendors'] li", 3
+    get sitemap_path(format: :xml)
+    assert_response :success
+    urls = Nokogiri::XML(response.body).remove_namespaces!.xpath("//url/loc").map(&:text)
+    assert_includes urls, vendor_url("acme-corp")
+    assert_includes urls, vendor_url("under")
+    assert urls.none? { |url| url.end_with?("/vendors/") }
+
+    Report.find_each do |report|
+      get hardware_model_path(report.model_slug)
+      assert_response :success, report.vendor
+    end
+    get vendor_path("acme-corp")
+    assert_response :success
   end
 
   test "the vendor chart links each vendor row to its page, but not the Other row" do
