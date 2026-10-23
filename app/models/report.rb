@@ -92,8 +92,13 @@ class Report < ApplicationRecord
     hidden_at.present?
   end
 
-  def display_name
-    Display.model(vendor, product, family)
+  # short is for titles and cards; code: false leaves a Lenovo type or Mac identifier out.
+  def display_name(**options)
+    Display.model(vendor, product, family, **options)
+  end
+
+  def model_code
+    Display.model_code(vendor, product, family)
   end
 
   private

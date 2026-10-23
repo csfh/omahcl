@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   end
   get "cards/:key", to: "cards#show", as: :card, constraints: { key: /\h{16}/ }
   get "privacy", to: "pages#privacy", as: :privacy
+  get "sitemap.xml", to: "sitemaps#show", defaults: { format: :xml }, as: :sitemap
   namespace :admin do
     root to: "dashboards#show"
     resources :users, only: %i[index show destroy] do

@@ -3,6 +3,13 @@ module ApplicationHelper
     content_for(:title, "#{title} · Omarchy HCL")
   end
 
+  # The address search engines should use for the current page: the routes' host (in
+  # production omahcl.com, even when the page was reached on the Laravel Cloud domain),
+  # the path, no query.
+  def canonical_url
+    root_url.chomp("/") + request.path
+  end
+
   def collect_command
     "curl -fsSL #{root_url.chomp('/')}/collect | bash"
   end

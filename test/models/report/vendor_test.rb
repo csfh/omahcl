@@ -33,6 +33,21 @@ class Report::VendorTest < ActiveSupport::TestCase
     assert_equal "Inc.", Report::Vendor.canonical("Inc.")
   end
 
+  test "an old model address becomes a search for the model's current name" do
+    {
+      "dell-inc-xps-14-da14260" => "Dell xps 14 da14260",
+      "dell-inc-dell-pro-14-pc14255" => "Dell dell pro 14 pc14255",
+      "micro-star-international-co-ltd-ms-7d25" => "MSI ms 7d25",
+      "asustek-computer-inc-x510uqr" => "ASUS x510uqr",
+      "samsung-electronics-co-ltd-550xda" => "Samsung 550xda",
+      "lenovo-20xxs2xu00" => "Lenovo 20xxs2xu00",
+      "framework-laptop-13" => "Framework laptop 13",
+      "something-unknown-9" => "something unknown 9"
+    }.each { |slug, query| assert_equal query, Report::Vendor.query_from_slug(slug), slug }
+    assert_nil Report::Vendor.query_from_slug(nil)
+    assert_nil Report::Vendor.query_from_slug("")
+  end
+
   test "ingest stores the canonical vendor, so spellings share one model" do
     first = ingest_report!(omarchy_payload(product: "XPS 13").deep_merge("hardware" => { "vendor" => "Dell Inc." }))
     second = ingest_report!(omarchy_payload(product: "XPS  13").deep_merge("hardware" => { "vendor" => "Dell  Inc." }))
