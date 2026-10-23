@@ -1,0 +1,15 @@
+<% page_title "Page not found" %>
+<% content_for :head do %>
+  <meta name="robots" content="noindex">
+<% end %>
+
+<h1 class="heading-page">Page not found</h1>
+<p class="mt-2 max-w-2xl text-muted">That page does not exist. It may have moved: a machine's page changes address when its vendor or model name is cleaned up. Search for it here.</p>
+
+<%= render "hardware_models/lookup_form", query: @query, submit_label: "Search" %>
+
+<p class="mt-8 flex flex-wrap gap-x-6 text-sm">
+  <%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %>
+  <%= link_to "Home", root_path, class: "inline-flex min-h-11 items-center" %>
+  <%= link_to "Report your machine", root_path(anchor: "report"), class: "inline-flex min-h-11 items-center" %>
+</p>

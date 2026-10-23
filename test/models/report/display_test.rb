@@ -88,6 +88,16 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Dell MacBookPro12,1", Report::Display.model("Dell", "MacBookPro12,1")
   end
 
+  test "the code can be left out of a name and shown apart" do
+    assert_equal "Apple MacBook Pro (Retina, 13-inch, Early 2015)", Report::Display.model("Apple", "MacBookPro12,1", code: false)
+    assert_equal "Lenovo ThinkPad X1 Carbon Gen 9", Report::Display.model("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9", code: false)
+    assert_equal [ "Model identifier", "MacBookPro12,1" ], Report::Display.model_code("Apple", "MacBookPro12,1")
+    assert_equal [ "Machine type", "20XXS2XU00" ], Report::Display.model_code("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9")
+    assert_nil Report::Display.model_code("Dell", "XPS 13")
+    assert_nil Report::Display.model_code("Apple", "MacBook7,1")
+    assert_nil Report::Display.model_code("Lenovo", "80HR", "IDEAPAD")
+  end
+
   test "every Mac name in the table starts with a Mac line and has no server or rack variant" do
     assert_operator Report::Display::MAC_MODELS.size, :>, 100
     Report::Display::MAC_MODELS.each do |id, name|

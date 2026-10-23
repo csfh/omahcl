@@ -1,6 +1,8 @@
 <%# Link-preview tags. The image is the same Omarchy Verified card, drawn server-side. %>
 <% description = "#{machines_ran_omarchy(machines)} See which Omarchy hardware works." %>
 <% image = card_url(key, format: :png) %>
+<% provide :social, "card" %>
+<% content_for :description, description %>
 <% content_for :head do %>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omarchy HCL">

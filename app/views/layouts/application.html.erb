@@ -9,6 +9,19 @@
     <%# A CSRF token writes the session cookie, and anonymous visitors must not get one. Forms carry their own token. %>
     <%= csrf_meta_tags if authenticated? %>
     <%= csp_meta_tag %>
+    <meta name="description" content="<%= content_for(:description).presence || "An unofficial public database of the hardware that runs Omarchy, from the machines whose owners reported it." %>">
+    <% unless @canonical == false %>
+      <link rel="canonical" href="<%= canonical_url %>">
+    <% end %>
+    <%# Pages without their own card get plain link-preview tags. %>
+    <% unless content_for?(:social) || @canonical == false %>
+      <meta property="og:type" content="website">
+      <meta property="og:site_name" content="Omarchy HCL">
+      <meta property="og:title" content="<%= content_for(:title).presence || "Omarchy HCL" %>">
+      <meta property="og:description" content="<%= content_for(:description).presence || "An unofficial public database of the hardware that runs Omarchy." %>">
+      <meta property="og:url" content="<%= canonical_url %>">
+      <meta name="twitter:card" content="summary">
+    <% end %>
     <%= yield :head %>
     <%# Digested asset URLs: files in public/ are cached for a year, so a new icon would never reach returning visitors. %>
     <%= favicon_link_tag "icon.png", type: "image/png" %>
@@ -22,7 +35,7 @@
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3">
         <p class="flex items-center gap-3 whitespace-nowrap text-sm">
           <svg class="size-6 shrink-0 text-accent" viewBox="0 0 10 10" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M2 0h6v2H2zM0 2h2v6H0zM8 2h2v6H8zM2 8h6v2H2z"/><path class="text-teal-mid" d="M4 4h2v2H4z" fill="currentColor"/></svg>
-          <%= link_to "Omarchy HCL", root_path, class: "font-pixel text-xs text-paper no-underline hover:text-accent" %>
+          <%= link_to "Omarchy HCL", root_path, class: "inline-flex min-h-11 items-center font-pixel text-xs text-paper no-underline hover:text-accent" %>
           <span class="hidden text-muted sm:inline">unofficial</span>
         </p>
         <nav class="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm sm:w-auto sm:justify-end">

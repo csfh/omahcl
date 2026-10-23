@@ -1,4 +1,5 @@
 <% page_title "Privacy" %>
+<% content_for :description, "What Omarchy HCL stores about a report, who can see it, and how to delete yours." %>
 
 <article class="prose-omahcl max-w-2xl">
   <h1 class="mb-4 heading-page">Privacy</h1>
@@ -21,7 +22,9 @@
   <p>The script only reports machines running Omarchy. On any other system it says so and sends nothing, and the site never receives a report from such a machine. The site used to accept private "candidate" reports from these machines. It no longer does, and the ones it held have been deleted.</p>
 
   <h2 id="deleting" class="mb-2 mt-8 heading-section scroll-mt-6">Deleting your report</h2>
-  <p>Run <code><%= delete_command %></code>. It rebuilds your machine's hash, shows what it would send, and sends it only if you answer yes. The server deletes the report that matches it right away, including one an admin has hidden, and sends back how many it deleted. The hash is used for that and not stored. Database backups keep a deleted report for up to a day.</p>
+  <p>Run this in a terminal:</p>
+  <div class="my-3"><%= render "application/collect_command", command: delete_command %></div>
+  <p>It rebuilds your machine's hash, shows what it would send, and sends it only if you answer yes. The server deletes the report that matches it right away, including one an admin has hidden, and sends back how many it deleted. The hash is used for that and not stored. Database backups keep a deleted report for up to a day.</p>
   <p>The hash comes from your machine-id, model and CPU. If you have reinstalled, changed the model or CPU string (a BIOS update can do this), or reported before the hash dropped DMI serials on 19 October 2026, the script will not find your old report. There is no way to delete a report without those hashes.</p>
 
   <h2 class="mb-2 mt-8 heading-section">Who can see reports</h2>

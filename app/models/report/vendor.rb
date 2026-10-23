@@ -37,6 +37,21 @@ module Report::Vendor
     BRANDS.fetch(brand_key(name)) { name }
   end
 
+  # A /models address from before a vendor was renamed ("dell-inc-xps-14-da14260") as a
+  # search that finds the model's current page ("Dell xps 14 da14260"). Best effort: it
+  # rewrites a known vendor prefix and drops corporate suffixes after it.
+  def self.query_from_slug(slug)
+    words = slug.to_s.tr("-", " ").squish
+    return if words.empty?
+
+    key = BRANDS.keys.sort_by { |name| -name.size }.find { |name| words == name || words.start_with?("#{name} ") }
+    return words unless key
+
+    rest = words.delete_prefix(key).strip
+    rest = rest.sub(/\A(?:(?:inc|incorporated|corp|corporation|co|company|ltd|limited|llc|gmbh|ag)\b\s*)+/i, "")
+    [ BRANDS[key], rest ].reject(&:empty?).join(" ")
+  end
+
   def self.brand_key(name)
     name.downcase.gsub(/[^a-z0-9]+/, " ").strip
   end

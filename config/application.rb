@@ -23,6 +23,16 @@ module HCL
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks collectors])
 
+    # Unknown routes and missing models and cards get the branded 404. Every other error
+    # keeps its static page: those must work when the database or the layout cannot.
+    config.exceptions_app = ->(env) do
+      if env["PATH_INFO"] == "/404"
+        ErrorsController.action(:not_found).call(env)
+      else
+        ActionDispatch::PublicExceptions.new(Rails.public_path).call(env)
+      end
+    end
+
     # Nothing uses Action Cable, and its /cable endpoint logs each client's IP.
     config.action_cable.mount_path = nil
 

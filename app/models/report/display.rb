@@ -60,15 +60,15 @@ module Report::Display
   # The code is kept after the name, since two codes can share a name. short is for the
   # card, which has room for about 48 characters: no code, and a Mac name without
   # "Apple", "Retina" or its ports.
-  def self.model(vendor, product, family = nil, short: false)
+  def self.model(vendor, product, family = nil, short: false, code: !short)
     vendor = vendor.to_s
     product = product.to_s
     name = lenovo_family(vendor, product, family)
     if name
-      return [ vendor, name, (short ? nil : "(#{product})") ].compact.join(" ")
+      return [ vendor, name, (code ? "(#{product})" : nil) ].compact.join(" ")
     end
     mac = MAC_MODELS[product] if vendor.casecmp?("Apple")
-    return mac_model(vendor, mac, product, short) if mac
+    return mac_model(vendor, mac, product, short, code) if mac
     return product if vendor.empty? || product.match?(/\A#{Regexp.escape(vendor)}(?:\W|\z)/i)
     [ vendor, product ].reject(&:empty?).join(" ")
   end
@@ -79,9 +79,16 @@ module Report::Display
     MAC_MODELS.select { |_, name| "apple #{name}".downcase.include?(needle) }.keys
   end
 
-  def self.mac_model(vendor, name, identifier, short)
-    return [ vendor, name, "· #{identifier}" ].join(" ") unless short
-    name.sub("Retina, ", "").sub(/, (?:Two|Four) Thunderbolt 3 ports/, "")
+  def self.mac_model(vendor, name, identifier, short, code)
+    return name.sub("Retina, ", "").sub(/, (?:Two|Four) Thunderbolt 3 ports/, "") if short
+    [ vendor, name, (code ? "· #{identifier}" : nil) ].compact.join(" ")
+  end
+
+  # What a model name replaced, as [label, value], so a page can show it apart from the
+  # heading: a Lenovo machine type or a Mac model identifier. Nil when nothing was replaced.
+  def self.model_code(vendor, product, family = nil)
+    return [ "Machine type", product.to_s ] if lenovo_family(vendor.to_s, product.to_s, family)
+    [ "Model identifier", product.to_s ] if vendor.to_s.casecmp?("Apple") && MAC_MODELS.key?(product.to_s)
   end
 
   def self.lenovo_family(vendor, product, family)

@@ -104,7 +104,9 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", hardware_model_path("lenovo-20xxs2xu00"), text: "Lenovo ThinkPad X1 Carbon Gen 9 (20XXS2XU00)"
 
     get hardware_model_path("lenovo-20xxs2xu00")
-    assert_select "h1", text: "Lenovo ThinkPad X1 Carbon Gen 9 (20XXS2XU00)"
+    assert_select "h1", text: "Lenovo ThinkPad X1 Carbon Gen 9"
+    assert_select "h1 + p", text: "Machine type 20XXS2XU00"
+    assert_select "title", text: "Lenovo ThinkPad X1 Carbon Gen 9 · Omarchy HCL"
 
     get hardware_models_path(q: "carbon gen 9")
     assert_select "a", text: /ThinkPad X1 Carbon Gen 9/
