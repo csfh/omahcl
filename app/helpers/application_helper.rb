@@ -15,6 +15,13 @@ module ApplicationHelper
     number_to_human_size(bytes.to_i)
   end
 
+  # The installed size a machine is sold with, as one figure or a range.
+  def memory_range(min_bytes, max_bytes)
+    low = Report::Display.memory(min_bytes)
+    high = Report::Display.memory(max_bytes)
+    low == high ? low : "#{low}–#{high}"
+  end
+
   # spacing: false for fields laid out in a flex row, where the stacked-form
   # top margin would push the field below its sibling button.
   def field_class(spacing: true)

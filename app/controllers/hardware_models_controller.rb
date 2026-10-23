@@ -26,8 +26,9 @@ class HardwareModelsController < ApplicationController
 
     @sample = @reports.first
     @machines_count = @reports.unscope(:order).distinct.count(:instance_digest)
-    @cpu_models = @reports.unscope(:order).distinct.pluck(:cpu_model)
-    @gpus = @reports.flat_map { |report| report.gpus }.uniq
+    @cpu_models = @reports.unscope(:order).distinct.pluck(:cpu_model).map { |cpu| Report::Display.cpu(cpu) }.uniq
+    @gpus = Report::Display.gpus(@reports.flat_map { |report| report.gpus }.uniq)
     @cards = @reports.unscope(:order).group(:card_key).order(Arel.sql("MAX(cpu_model)")).pluck(:card_key, Arel.sql("MAX(cpu_model)"))
+      .map { |key, cpu| [ key, Report::Display.cpu(cpu) ] }
   end
 end

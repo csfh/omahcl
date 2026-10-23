@@ -9,10 +9,10 @@
   <ul class="mt-8 divide-y-2 divide-line border-y-2 border-line">
     <% @models.each do |model| %>
       <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-1">
-        <%= link_to "#{model.vendor} #{model.product}", hardware_model_path(model.model_slug), class: "inline-flex min-h-11 min-w-0 items-center wrap-anywhere text-paper no-underline hover:text-accent active:text-accent" %>
+        <%= link_to model.display_name, hardware_model_path(model.model_slug), class: "inline-flex min-h-11 min-w-0 items-center wrap-anywhere text-paper no-underline hover:text-accent active:text-accent" %>
         <span class="inline-flex items-center gap-3 text-sm text-muted">
           <%= machines_status(model.machines_count) %>
-          <span><%= memory_label(model.min_memory_bytes) %>–<%= memory_label(model.max_memory_bytes) %></span>
+          <span><%= memory_range(model.min_memory_bytes, model.max_memory_bytes) %></span>
         </span>
       </li>
     <% end %>

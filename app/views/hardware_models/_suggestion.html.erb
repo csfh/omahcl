@@ -1,6 +1,6 @@
 <li role="option" aria-selected="false" class="text-sm">
   <%= link_to hardware_model_path(model.model_slug), class: "flex min-h-11 items-center justify-between gap-3 px-3 py-2 text-paper no-underline hover:text-accent active:text-accent" do %>
-    <span class="min-w-0 wrap-anywhere"><%= model.vendor %> <%= model.product %></span>
+    <span class="min-w-0 wrap-anywhere"><%= model.display_name %></span>
     <%= machines_status(model.machines_count) %>
   <% end %>
 </li>

@@ -3,10 +3,7 @@
 
 <p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %></p>
 <h1 class="mt-2 heading-page"><%= @sample.display_name %></h1>
-<p class="mt-2 flex flex-wrap items-center gap-3 text-muted">
-  <%= machines_status(@machines_count) %>
-  <span><%= machines_ran_omarchy(@machines_count) %></span>
-</p>
+<p class="mt-2 text-muted"><%= machines_ran_omarchy(@machines_count) %></p>
 <h2 class="mt-8 heading-section">Omarchy Verified <%= "card".pluralize(@cards.size) %></h2>
 <ul class="mt-4 grid gap-4 sm:grid-cols-2">
   <% @cards.each do |key, cpu| %>
@@ -26,12 +23,12 @@
   </div>
   <div class="panel">
     <dt class="text-sm text-muted">GPUs</dt>
-    <dd class="mt-1 wrap-anywhere"><%= @gpus.map { |gpu| [gpu["vendor"], gpu["name"]].compact.join(" ") }.uniq.join(", ").presence || "None reported" %></dd>
+    <dd class="mt-1 wrap-anywhere"><%= @gpus.join(", ").presence || "None reported" %></dd>
   </div>
 </dl>
 
 <div class="mt-4 grid gap-4 sm:grid-cols-2">
-  <%= render "stats/block_bars", id: "model-memory", title: "Memory", rows: @stats.memory.reject { |row| row.count.zero? } %>
+  <%= render "stats/block_bars", id: "model-memory", title: "Memory", rows: @stats.memory_sizes %>
   <%= render "stats/block_bars", id: "model-version", title: "Version", rows: @stats.recent_versions %>
   <%= render "stats/block_bars", id: "model-architecture", title: "Architecture", rows: @stats.architectures %>
   <%= render "stats/block_bars", id: "model-security", title: "Boot and security", rows: @stats.security, mode: :fraction,

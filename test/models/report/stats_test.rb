@@ -194,6 +194,24 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_equal({ "Intel" => 2, "AMD" => 1, "Apple" => 1 }, counts(stats.cpu_vendors))
   end
 
+  test "gpu makers are named and one machine counts once under a maker spelled two ways" do
+    add(gpus: [ { "vendor" => "Intel Corporation", "name" => "A" }, { "vendor" => "Intel", "name" => "B" } ])
+    add(gpus: [ { "vendor" => "Advanced Micro Devices, Inc. [AMD/ATI]", "name" => "C" } ])
+    add(gpus: [ { "vendor" => "NVIDIA Corporation", "name" => "D" }, { "vendor" => "Advanced Micro Devices, Inc. [AMD/ATI]", "name" => "E" } ])
+    add(gpus: [ { "vendor" => "Apple", "name" => "Apple M2 GPU" } ])
+
+    assert_equal({ "AMD" => 2, "Intel" => 1, "NVIDIA" => 1, "Apple" => 1 }, counts(stats.gpu_vendors))
+  end
+
+  test "memory sizes are the installed sizes, smallest first, merged by name" do
+    add(memory_gib: 30.9)
+    add(memory_gib: 31.4)
+    add(memory_gib: 19.3)
+    add(memory_gib: 122)
+
+    assert_equal [ [ "24 GB", 1 ], [ "32 GB", 2 ], [ "128 GB", 1 ] ], stats.memory_sizes.map { |row| [ row.label, row.count ] }
+  end
+
   test "growth is cumulative by week and keeps weeks with no new machines" do
     travel_to Time.utc(2026, 9, 1, 12) do   # a Tuesday
       add
