@@ -25,6 +25,7 @@ class CardsController < ApplicationController
         expires_in 1.hour, public: true
         # The picture has room for about 22 characters a line, so it gets the short names.
         short = @card.merge(
+          name: Report::Display.model(@sample.vendor, @sample.product, @sample.family, code: false),
           cpu: Report::Display.cpu(@sample.cpu_model, short: true),
           gpu: Report::Display.gpus(gpus, short: true).first || "None reported"
         )

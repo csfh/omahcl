@@ -47,12 +47,30 @@ module Report::Display
     list.map { |gpu| gpu(gpu["vendor"], gpu["name"], short: short) }.reject(&:blank?).uniq
   end
 
+  # Lenovo's product is a machine-type code ("20XXS2XU00") and its family is the name
+  # people know ("ThinkPad X1 Carbon Gen 9"). Other vendors' families are too uneven
+  # to trust ("103C_5336AN HP EliteBook", "GE", "Dell Laptops").
+  LENOVO_CODE = /\A[0-9][0-9A-Z]{3,9}\z/
+
   # "HP HP EliteBook 840 G4" is "HP EliteBook 840 G4": the product often says the vendor.
-  def self.model(vendor, product)
+  # A Lenovo code is replaced by its family, and kept in brackets unless code is false,
+  # since two codes can share one family. The card has no room for the code.
+  def self.model(vendor, product, family = nil, code: true)
     vendor = vendor.to_s
     product = product.to_s
+    name = lenovo_family(vendor, product, family)
+    if name
+      return [ vendor, name, (code ? "(#{product})" : nil) ].compact.join(" ")
+    end
     return product if vendor.empty? || product.match?(/\A#{Regexp.escape(vendor)}(?:\W|\z)/i)
     [ vendor, product ].reject(&:empty?).join(" ")
+  end
+
+  def self.lenovo_family(vendor, product, family)
+    name = family.to_s.gsub(/\s+/, " ").strip
+    return unless vendor.casecmp?("Lenovo") && product.match?(LENOVO_CODE)
+    # A lone word ("IDEAPAD") says nothing more than the code does.
+    name if name.include?(" ") && name.match?(/\d/) && !name.match?(LENOVO_CODE) && !name.delete(" ").casecmp?(product)
   end
 
   def self.memory(bytes)
