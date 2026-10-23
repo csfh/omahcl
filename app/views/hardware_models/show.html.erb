@@ -1,7 +1,12 @@
 <% page_title @sample.display_name(short: true) %>
 <%= render "cards/og", title: "#{@sample.display_name(short: true)} on Omarchy HCL", url: site_url(hardware_model_path(@sample.model_slug)), key: @sample.card_key, machines: @machines_count %>
 
-<p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %></p>
+<p class="flex flex-wrap gap-x-6 text-sm text-muted">
+  <%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %>
+  <% if Report::Vendor.slug(@sample.vendor).present? %>
+    <%= link_to "More from #{@sample.vendor}", vendor_path(Report::Vendor.slug(@sample.vendor)), class: "inline-flex min-h-11 items-center" %>
+  <% end %>
+</p>
 <h1 class="mt-2 heading-page"><%= @sample.display_name(code: false) %></h1>
 <% if (label, value = @sample.model_code) && value %>
   <p class="mt-1 text-sm text-muted"><%= label %> <code class="text-paper"><%= value %></code></p>

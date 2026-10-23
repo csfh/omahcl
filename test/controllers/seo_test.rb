@@ -4,7 +4,7 @@ class SeoTest < ActionDispatch::IntegrationTest
   test "every public page has a description, a canonical address and link-preview tags" do
     ingest_report!
 
-    [ root_path, hardware_models_path, privacy_path ].each do |path|
+    [ root_path, hardware_models_path, privacy_path, vendor_path("lenovo") ].each do |path|
       get path
 
       assert_select "meta[name=description][content]", count: 1
@@ -82,6 +82,7 @@ class SeoTest < ActionDispatch::IntegrationTest
     assert_includes urls, "http://www.example.com/"
     assert_includes urls, "http://www.example.com/models"
     assert_includes urls, hardware_model_url(shown.model_slug)
+    assert_includes urls, vendor_url("lenovo")
     assert_equal 1, urls.count { |url| url.include?("/models/") }
     assert_not_includes response.body, "x230"
   end

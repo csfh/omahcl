@@ -81,49 +81,80 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: /ASUS Vivobook M3504YA/
   end
 
-  test "a vendor's page ranks its models by machines and says where the vendor stands" do
-    3.times { |i| ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "a#{i}" + "0" * 62)) }
-    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "b" * 64))
-    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "c" * 64).merge("hardware" => omarchy_payload["hardware"].merge("vendor" => "Dell Inc.", "product" => "XPS 13", "family" => "XPS")))
-
-    get hardware_models_path, params: { vendor: "lenovo" }
-
-    assert_response :success
-    assert_select "h1", "Lenovo on Omarchy"
-    assert_select "p", text: /The most reported vendor\. 4 machines reported/
-    assert_select "ol li:nth-child(1) a", text: /X230/
-    assert_select "ol li:nth-child(2) a", text: /X220/
-    assert_select "ol li:nth-child(1) .tabular-nums", text: /1/
-    assert_select "a", text: /XPS/, count: 0
-
+  test "the old vendor leaderboard address goes to the vendor page" do
     get hardware_models_path, params: { vendor: "Dell" }
-    assert_select "p", text: /Number 2 of 2 vendors/
+
+    assert_redirected_to vendor_path("dell")
+    assert_response :moved_permanently
   end
 
-  test "models with the same count share a rank and tied vendors say so" do
-    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "1" * 64))
-    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))
-    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "3" * 64))
-    ingest_report!(omarchy_payload(product: "ThinkPad T420", instance_digest: "4" * 64))
-    ingest_report!(omarchy_payload(product: "XPS 13", instance_digest: "5" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
-    ingest_report!(omarchy_payload(product: "XPS 14", instance_digest: "6" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
-    ingest_report!(omarchy_payload(product: "XPS 15", instance_digest: "7" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
-    ingest_report!(omarchy_payload(product: "XPS 16", instance_digest: "8" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+  test "search finds a machine by its CPU or GPU, and the model still counts all its machines" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", cpu: "Intel(R) Core(TM) i5-3320M CPU @ 2.60GHz", instance_digest: "1" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", cpu: "AMD Ryzen 7 7840U w/ Radeon 780M Graphics", instance_digest: "2" * 64).deep_merge("hardware" => { "gpus" => [ { "vendor" => "Advanced Micro Devices, Inc. [AMD/ATI]", "name" => "Phoenix [Radeon 780M]" } ] }))
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", cpu: "Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz", instance_digest: "3" * 64))
 
-    get hardware_models_path, params: { vendor: "Lenovo" }
+    get hardware_models_path, params: { q: "ryzen 7840u" }
+    assert_select "a", text: /ThinkPad X230/, count: 1
+    assert_select "a", text: /ThinkPad X220/, count: 0
+    assert_select "li", text: /ThinkPad X230.*2\s*machines/m
 
-    assert_select "ol li .tabular-nums", text: /\A\s*(Number )?1\s*\z/, count: 1
-    assert_select "ol li .tabular-nums", text: /\A\s*(Number )?2\s*\z/, count: 2
-    assert_select "ol li .tabular-nums", text: /3/, count: 0
-    assert_select "p", text: /Tied for most reported vendor\. 4 machines/
+    get hardware_models_path, params: { q: "lenovo radeon 780m" }
+    assert_select "a", text: /ThinkPad X230/, count: 1
+
+    get hardware_models_path, params: { q: "i5-2520M" }
+    assert_select "a", text: /ThinkPad X220/, count: 1
+    assert_select "a", text: /ThinkPad X230/, count: 0
   end
 
-  test "the vendor chart links each vendor to its page, but not the Other row" do
+  test "words must match one machine, not different machines of a model" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", cpu: "Intel(R) Core(TM) i5-3320M CPU @ 2.60GHz", instance_digest: "1" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", cpu: "AMD Ryzen 7 7840U", instance_digest: "2" * 64))
+
+    get hardware_models_path, params: { q: "i5-3320M ryzen" }
+
+    assert_select "a", text: /ThinkPad X230/, count: 0
+  end
+
+  test "a typo in a brand or line name finds close matches, labelled, with the report prompt below" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "1" * 64))
+    ingest_report!(omarchy_payload(product: "Latitude 7420", instance_digest: "2" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+    ingest_report!(omarchy_payload(product: "Laptop 13", instance_digest: "3" * 64).deep_merge("hardware" => { "vendor" => "Framework" }))
+    ingest_report!(omarchy_payload(product: "Vivobook S 14", instance_digest: "4" * 64).deep_merge("hardware" => { "vendor" => "ASUSTeK COMPUTER INC." }))
+
+    { "thnkpad" => /ThinkPad X230/, "latitdue" => /Latitude 7420/, "framwork" => /Framework Laptop 13/, "vivobok" => /Vivobook S 14/, "latitdue 7420" => /Latitude 7420/ }.each do |typo, found|
+      get hardware_models_path, params: { q: typo }
+      assert_select "p", { text: "No exact match. Close matches:" }, typo
+      assert_select "a", { text: found }, typo
+      assert_select "[data-clipboard-target=source]", { count: 1 }, typo
+    end
+  end
+
+  test "a close match is only for a word of letters, and never turns one model code into another" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "1" * 64))
+    ingest_report!(omarchy_payload(product: "XPS 14 DA14260", instance_digest: "2" * 64).deep_merge("hardware" => { "vendor" => "Dell Inc." }))
+
+    [ "x220", "x2300", "xps 13", "da16260", "thinkbook", "ideapad" ].each do |query|
+      get hardware_models_path, params: { q: query }
+      assert_select "a", { text: /ThinkPad|XPS/, count: 0 }, query
+      assert_select "p", { text: "No exact match. Close matches:", count: 0 }, query
+    end
+  end
+
+  test "an exact match is never mixed with close ones" do
     ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "1" * 64))
 
-    get root_path
+    get hardware_models_path, params: { q: "thinkpad" }
 
-    assert_select "#stats-vendor ~ ul a[href=?]", hardware_models_path(vendor: "Lenovo"), text: "Lenovo"
+    assert_select "a", text: /ThinkPad X230/
+    assert_select "p", text: "No exact match. Close matches:", count: 0
+  end
+
+  test "typeahead offers close matches for a typo" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X230"))
+
+    get suggestions_hardware_models_path, params: { q: "thnkpad" }
+
+    assert_select "a", text: /ThinkPad X230/
   end
 
   test "index filters models by query" do

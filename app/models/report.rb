@@ -13,25 +13,46 @@ class Report < ApplicationRecord
   scope :updated_since, ->(time) { where(updated_at: time..) }
 
   MAX_SEARCH_TERMS = 8
+  # Close matches, tried only when nothing matches exactly, and only for a word of five
+  # letters or more. A word with a digit is a model code, where one wrong character is
+  # another machine ("x510uqs" scores 0.75 against "x510uqr"). Of the letters-only words
+  # measured on real data, typos score 0.545 to 0.75 ("thnkpad", "latitdue", "framwork",
+  # "vivobok") and different product words 0.5 or less ("thinkbook" and "thinkpad",
+  # "ideapad" and "ideacentre"). Tests pin both sides.
+  FUZZY_WORD = /\A[[:alpha:]]{5,}\z/
+  FUZZY_THRESHOLD = 0.52
 
   # Every word must appear somewhere in the search document, in any order, so
   # "asus x510" and "carbon thinkpad" find their machines. A Mac is also found by the
   # marketing name for its identifier, read from the table now, so a row whose
   # search_document predates a change to config/mac_models.yml still matches.
-  scope :for_query, ->(query) {
+  # fuzzy lets a long word be a few letters off, by trigram word similarity.
+  scope :for_query, ->(query, fuzzy: false) {
     terms = query.to_s.split.first(MAX_SEARCH_TERMS)
     if terms.any?
-      named = terms.inject(all) { |found, term| found.where("search_document ILIKE ?", "%#{sanitize_sql_like(term)}%") }
-      named.or(where(vendor: "Apple", product: Display.mac_identifiers_matching(terms.join(" "))))
+      named = terms.inject(all) do |found, term|
+        like = "%#{sanitize_sql_like(term)}%"
+        if fuzzy && term.match?(FUZZY_WORD)
+          found.where("search_document ILIKE :like OR word_similarity(:term, search_document) >= :threshold", like: like, term: term, threshold: FUZZY_THRESHOLD)
+        else
+          found.where("search_document ILIKE ?", like)
+        end
+      end
+      fuzzy ? named : named.or(where(vendor: "Apple", product: Display.mac_identifiers_matching(terms.join(" "))))
     else
       all
     end
   }
 
+  # A model is found when one of its machines matches, and then counts all of its
+  # machines: a search for a CPU must not shrink the model's count or memory range.
   # vendor is a vendor's name as the charts spell it, whatever its case.
-  def self.grouped_models(query = nil, vendor: nil)
-    models = visible.for_query(query)
+  def self.grouped_models(query = nil, vendor: nil, fuzzy: false)
+    models = visible
     models = models.where("LOWER(vendor) = ?", vendor.to_s.downcase) if vendor.present?
+    models = models.where(model_key: visible.for_query(query, fuzzy: fuzzy).select(:model_key)) if query.to_s.split.any?
+    order = "COUNT(DISTINCT instance_digest) DESC, MIN(vendor) ASC, MIN(product) ASC"
+    order = [ sanitize_sql_array([ "MAX(word_similarity(?, search_document)) DESC", query.to_s ]), order ].join(", ") if fuzzy && query.to_s.split.any?
     models
       .select(
         :model_key, :model_slug,
@@ -43,7 +64,7 @@ class Report < ApplicationRecord
         "MAX(memory_bytes) AS max_memory_bytes"
       )
       .group(:model_key, :model_slug)
-      .order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, MIN(vendor) ASC, MIN(product) ASC"))
+      .order(Arel.sql(order))
   end
 
   # The newest reports, one row per model, for the home page's "just reported" list.
@@ -63,14 +84,18 @@ class Report < ApplicationRecord
     visible.where(card_key: key).order(updated_at: :desc).first if key
   end
 
-  # What a search matches: the stored names and the name pages show, so a machine is
-  # found by "Vivobook X510" as well as by what its firmware calls it. Display rules
-  # change this text, so a change to them needs a migration that rebuilds it, like
-  # 20261023120000_add_display_names_to_search_documents.rb.
-  def self.search_document_for(vendor, product, family)
+  # What a search matches: the stored names, the name pages show, and the CPU and GPU
+  # names pages show, so a machine is found by "Vivobook X510" or "Ryzen" as well as by
+  # what its firmware calls it. Display rules change this text, so a change to them
+  # needs a migration that rebuilds it, like
+  # 20261023130000_add_cpu_and_gpu_to_search_documents.rb.
+  def self.search_document_for(vendor, product, family, cpu_model: nil, gpus: nil)
     stored = [ vendor, product, family ].compact.join(" ")
     shown = Display.model(vendor, product, family)
-    stored.downcase.include?(shown.downcase) ? stored : "#{stored} #{shown}"
+    name = stored.downcase.include?(shown.downcase) ? stored : "#{stored} #{shown}"
+    # gpus is JSON a collector wrote, so anything that is not a list of objects is skipped.
+    listed = gpus.is_a?(Array) ? gpus.grep(Hash) : []
+    [ name, Display.cpu(cpu_model), *Display.gpus(listed) ].reject(&:blank?).join(" ")
   end
 
   def self.ingest(raw)
@@ -147,6 +172,6 @@ class Report < ApplicationRecord
       self.model_key = [ vendor.downcase, product.downcase ].join("|")
       self.model_slug = [ vendor, product ].join(" ").parameterize
       self.card_key = self.class.card_key_for(model_key, cpu_model)
-      self.search_document = self.class.search_document_for(vendor, product, family)
+      self.search_document = self.class.search_document_for(vendor, product, family, cpu_model: cpu_model, gpus: gpus)
     end
 end
