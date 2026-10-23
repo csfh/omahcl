@@ -57,9 +57,10 @@ module Report::Display
 
   # "HP HP EliteBook 840 G4" is "HP EliteBook 840 G4": the product often says the vendor.
   # A Lenovo code is replaced by its family, and a Mac identifier by its marketing name.
-  # The code is kept after the name, since two codes can share a name. short is for the
-  # card, which has room for about 48 characters: no code, and a Mac name without
-  # "Apple", "Retina" or its ports.
+  # A Lenovo code is kept in brackets after its family, since several machine types share
+  # one; a Mac identifier is not kept (see model_code). short is for the card, which has
+  # room for about 48 characters: no Lenovo code, and a Mac name without "Apple",
+  # "Retina" or its ports.
   def self.model(vendor, product, family = nil, short: false, code: !short)
     vendor = vendor.to_s
     product = product.to_s
@@ -68,7 +69,7 @@ module Report::Display
       return [ vendor, name, (code ? "(#{product})" : nil) ].compact.join(" ")
     end
     mac = MAC_MODELS[product] if vendor.casecmp?("Apple")
-    return mac_model(vendor, mac, product, short, code) if mac
+    return mac_model(vendor, mac, short) if mac
     return product if vendor.empty? || product.match?(/\A#{Regexp.escape(vendor)}(?:\W|\z)/i)
     [ vendor, product ].reject(&:empty?).join(" ")
   end
@@ -79,9 +80,10 @@ module Report::Display
     MAC_MODELS.select { |_, name| "apple #{name}".downcase.include?(needle) }.keys
   end
 
-  def self.mac_model(vendor, name, identifier, short, code)
+  # A Mac's name never carries its identifier: the model page shows that on its own line.
+  def self.mac_model(vendor, name, short)
     return name.sub("Retina, ", "").sub(/, (?:Two|Four) Thunderbolt 3 ports/, "") if short
-    [ vendor, name, (code ? "· #{identifier}" : nil) ].compact.join(" ")
+    "#{vendor} #{name}"
   end
 
   # What a model name replaced, as [label, value], so a page can show it apart from the

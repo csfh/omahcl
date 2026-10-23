@@ -69,17 +69,18 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Samsung 550XDA", Report::Display.model("Samsung", "550XDA", "Notebook Plus2 Pro 2")
   end
 
-  test "an Intel Mac identifier reads as its marketing name, keeping the identifier" do
-    assert_equal "Apple MacBook Pro (Retina, 13-inch, Early 2015) · MacBookPro12,1", Report::Display.model("Apple", "MacBookPro12,1")
+  test "an Intel Mac identifier reads as its marketing name, without the identifier" do
+    assert_equal "Apple MacBook Pro (Retina, 13-inch, Early 2015)", Report::Display.model("Apple", "MacBookPro12,1")
+    refute_includes Report::Display.model("Apple", "MacBookPro12,1"), "MacBookPro12"
     assert_equal "MacBook Pro (13-inch, Early 2015)", Report::Display.model("Apple", "MacBookPro12,1", short: true)
     assert_equal "MacBook Pro (13-inch, 2018–2019)", Report::Display.model("Apple", "MacBookPro15,2", short: true)
-    assert_equal "Apple iMac (21.5-inch, Mid 2011) · iMac12,1", Report::Display.model("Apple", "iMac12,1")
-    assert_equal "Apple Mac Pro (2010–2012) · MacPro5,1", Report::Display.model("Apple", "MacPro5,1")
+    assert_equal "Apple iMac (21.5-inch, Mid 2011)", Report::Display.model("Apple", "iMac12,1")
+    assert_equal "Apple Mac Pro (2010–2012)", Report::Display.model("Apple", "MacPro5,1")
   end
 
   test "an identifier sold in several sizes or years shows what they share" do
-    assert_equal "Apple iMac (2009) · iMac9,1", Report::Display.model("Apple", "iMac9,1")
-    assert_equal "Apple MacBook Pro (Retina, 15-inch, 2012–2013) · MacBookPro10,1", Report::Display.model("Apple", "MacBookPro10,1")
+    assert_equal "Apple iMac (2009)", Report::Display.model("Apple", "iMac9,1")
+    assert_equal "Apple MacBook Pro (Retina, 15-inch, 2012–2013)", Report::Display.model("Apple", "MacBookPro10,1")
   end
 
   test "a Mac without a table entry, an Asahi model and other vendors are shown as sent" do
