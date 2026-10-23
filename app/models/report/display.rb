@@ -70,8 +70,16 @@ module Report::Display
     end
     mac = MAC_MODELS[product] if vendor.casecmp?("Apple")
     return mac_model(vendor, mac, short) if mac
+    product = clean_product(product)
     return product if vendor.empty? || product.match?(/\A#{Regexp.escape(vendor)}(?:\W|\z)/i)
     [ vendor, product ].reject(&:empty?).join(" ")
+  end
+
+  # ASUS firmware writes "Vivobook_ASUSLaptop M3504YA_M3504YA": the model code twice and
+  # the maker glued to the line.
+  def self.clean_product(product)
+    name = product.sub(/_ASUSLaptop\b/i, "").sub(/(?<!\S)(\S+)_\1\z/, '\1').gsub(/\s+/, " ").strip
+    name.presence || product
   end
 
   # The identifiers whose displayed name contains the term, ignoring case.
