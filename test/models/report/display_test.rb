@@ -69,6 +69,12 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Samsung 550XDA", Report::Display.model("Samsung", "550XDA", "Notebook Plus2 Pro 2")
   end
 
+  test "ASUS firmware strings lose the doubled code and the glued maker" do
+    assert_equal "ASUS Vivobook S 14 S5406SA", Report::Display.model("ASUS", "ASUS Vivobook S 14 S5406SA_S5406SA", "ASUS Vivobook S 14")
+    assert_equal "ASUS Vivobook M3504YA", Report::Display.model("ASUS", "Vivobook_ASUSLaptop M3504YA_M3504YA", "Vivobook")
+    assert_equal "ASUS Vivobook M3504YA", Report::Display.model("ASUS", "Vivobook_ASUSLaptop M3504YA_M3504YA", "Vivobook", short: true)
+  end
+
   test "an Intel Mac identifier reads as its marketing name, without the identifier" do
     assert_equal "Apple MacBook Pro (Retina, 13-inch, Early 2015)", Report::Display.model("Apple", "MacBookPro12,1")
     refute_includes Report::Display.model("Apple", "MacBookPro12,1"), "MacBookPro12"
