@@ -11,9 +11,13 @@ class Report < ApplicationRecord
   scope :hidden, -> { where.not(hidden_at: nil) }
   scope :created_since, ->(time) { where(created_at: time..) }
   scope :updated_since, ->(time) { where(updated_at: time..) }
+  # Also finds a Mac by the marketing name pages show for its identifier, which
+  # search_document does not hold.
   scope :for_query, ->(query) {
     if query.present?
-      where("search_document ILIKE ?", "%#{sanitize_sql_like(query.strip)}%")
+      term = query.strip
+      macs = Display.mac_identifiers_matching(term)
+      where("search_document ILIKE :like OR (vendor = 'Apple' AND product IN (:macs))", like: "%#{sanitize_sql_like(term)}%", macs: macs.presence || [ "" ])
     else
       all
     end

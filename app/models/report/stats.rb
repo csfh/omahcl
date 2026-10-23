@@ -69,12 +69,32 @@ class Report::Stats
   def architectures = tally(:cpu_arch)
   def channels = tally(:omarchy_channel)
 
+  # Every edge build has its own revision ("4.0.0.r7210.g087f73d"), so they count as
+  # one row, "Edge builds", instead of one row each.
+  EDGE_LABEL = "Edge builds".freeze
+  EDGE_BUILD_SQL = <<~'SQL'.squish.freeze
+    CASE WHEN omarchy_version ~ '^[0-9]+(\.[0-9]+)*\.r[0-9]+\.g[0-9a-f]+$' THEN 'Edge builds' ELSE omarchy_version END
+  SQL
+
   def versions
-    tally(:omarchy_version).sort_by { |row| [ version_key(row.label), row.label ] }.reverse
+    @versions ||= begin
+      label = Arel.sql("LOWER(#{EDGE_BUILD_SQL})")
+      scope.where.not(omarchy_version: [ nil, "" ]).group(label)
+        .pluck(Arel.sql("MIN(#{EDGE_BUILD_SQL})"), distinct_machines)
+        .then { |pairs| rows_from(pairs) }
+        .sort_by { |row| [ version_key(row.label), row.label ] }.reverse
+    end
   end
 
-  def recent_versions(limit: 6) = fold(versions, limit, other: "Older")
-  def version_count = tally(:omarchy_version).size
+  # The newest releases, then the edge builds, then everything older.
+  def recent_versions(limit: 6)
+    edge, releases = versions.partition { |row| row.label == EDGE_LABEL }
+    shown = releases.first(limit)
+    older = releases.drop(shown.size).sum(&:count)
+    shown + edge + (older.positive? ? [ Row.new(label: "Older", count: older) ] : [])
+  end
+
+  def version_count = versions.size
 
   def memory = bucketed(:memory_bytes, MEMORY_EDGES, MEMORY_LABELS)
 

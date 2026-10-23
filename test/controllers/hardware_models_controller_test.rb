@@ -110,6 +110,20 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: /ThinkPad X1 Carbon Gen 9/
   end
 
+  test "search finds a Mac by the marketing name shown for its identifier" do
+    ingest_report!(omarchy_payload(product: "MacBookPro10,1", instance_digest: "9" * 64).deep_merge("hardware" => { "vendor" => "Apple Inc.", "family" => "Mac" }))
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "8" * 64))
+
+    [ "macbook pro", "retina", "15-inch", "2012", "MacBookPro10" ].each do |term|
+      get hardware_models_path(q: term)
+      assert_select "a", text: /MacBook Pro \(Retina, 15-inch, 2012–2013\)/, count: 1
+      assert_select "a", text: /ThinkPad X220/, count: 0
+    end
+
+    get hardware_models_path(q: "mac pro")
+    assert_select "a", text: /MacBook Pro/, count: 0
+  end
+
   test "show counts distinct machines for a slug" do
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "3" * 64))
 

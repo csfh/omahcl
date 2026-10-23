@@ -3,6 +3,9 @@
 module Report::Display
   GIB = 1024**3
 
+  # Intel-era Macs report a model identifier ("MacBookPro12,1"). See the file for its source.
+  MAC_MODELS = YAML.load_file(Rails.root.join("config/mac_models.yml")).freeze
+
   # Sizes a machine is sold with. A machine reports less than it has installed, so
   # its memory is shown as the first size that holds it.
   MEMORY_SIZES = [ 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024 ].freeze
@@ -53,17 +56,32 @@ module Report::Display
   LENOVO_CODE = /\A[0-9][0-9A-Z]{3,9}\z/
 
   # "HP HP EliteBook 840 G4" is "HP EliteBook 840 G4": the product often says the vendor.
-  # A Lenovo code is replaced by its family, and kept in brackets unless code is false,
-  # since two codes can share one family. The card has no room for the code.
-  def self.model(vendor, product, family = nil, code: true)
+  # A Lenovo code is replaced by its family, and a Mac identifier by its marketing name.
+  # The code is kept after the name, since two codes can share a name. short is for the
+  # card, which has room for about 48 characters: no code, and a Mac name without
+  # "Apple", "Retina" or its ports.
+  def self.model(vendor, product, family = nil, short: false)
     vendor = vendor.to_s
     product = product.to_s
     name = lenovo_family(vendor, product, family)
     if name
-      return [ vendor, name, (code ? "(#{product})" : nil) ].compact.join(" ")
+      return [ vendor, name, (short ? nil : "(#{product})") ].compact.join(" ")
     end
+    mac = MAC_MODELS[product] if vendor.casecmp?("Apple")
+    return mac_model(vendor, mac, product, short) if mac
     return product if vendor.empty? || product.match?(/\A#{Regexp.escape(vendor)}(?:\W|\z)/i)
     [ vendor, product ].reject(&:empty?).join(" ")
+  end
+
+  # The identifiers whose displayed name contains the term, ignoring case.
+  def self.mac_identifiers_matching(term)
+    needle = term.to_s.downcase
+    MAC_MODELS.select { |_, name| "apple #{name}".downcase.include?(needle) }.keys
+  end
+
+  def self.mac_model(vendor, name, identifier, short)
+    return [ vendor, name, "· #{identifier}" ].join(" ") unless short
+    name.sub("Retina, ", "").sub(/, (?:Two|Four) Thunderbolt 3 ports/, "")
   end
 
   def self.lenovo_family(vendor, product, family)

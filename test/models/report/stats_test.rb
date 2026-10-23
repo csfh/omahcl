@@ -151,6 +151,27 @@ class Report::StatsTest < ActiveSupport::TestCase
     assert_equal 3, stats.version_count
   end
 
+  test "every edge build counts as one row, whatever its revision" do
+    add(version: "4.0.0.r7210.g087f73d")
+    add(version: "4.0.0.r7083.g81fd2d2")
+    add(version: "4.0.0.r2158.gd174d4a")
+    add(version: "4.0.6")
+    add(version: "4.0.5")
+
+    assert_equal({ "4.0.6" => 1, "4.0.5" => 1, "Edge builds" => 3 }, counts(stats.versions))
+    assert_equal 3, stats.version_count
+  end
+
+  test "recent versions keep the edge row, then fold only releases into Older" do
+    %w[4.0.6 4.0.5 4.0.4 4.0.3].each { |version| add(version: version) }
+    2.times { |n| add(version: "4.0.0.r70#{n}0.g0a7beb7") }
+
+    rows = stats.recent_versions(limit: 3)
+
+    assert_equal [ "4.0.6", "4.0.5", "4.0.4", "Edge builds", "Older" ], rows.map(&:label)
+    assert_equal [ 1, 1, 1, 2, 1 ], rows.map(&:count)
+  end
+
   test "recent versions fold older ones together" do
     %w[4.0.5 4.0.4 4.0.3 4.0.2 4.0.1].each { |version| add(version: version) }
     add(version: "4.0.1")
