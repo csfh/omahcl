@@ -33,6 +33,30 @@ class SeoTest < ActionDispatch::IntegrationTest
     assert_select "link[rel=canonical]", count: 1
   end
 
+  test "on another host every address still names the site's own host" do
+    report = ingest_report!
+    routes = Rails.application.routes.default_url_options
+    config = Rails.application.config
+    previous = [ routes[:host], config.force_ssl ]
+    routes[:host] = "omahcl.com"
+    config.force_ssl = true
+
+    host! "vanity.laravel.cloud"
+    get hardware_models_path(q: "x")
+    assert_select "link[rel=canonical][href=?]", "https://omahcl.com/models"
+    assert_select "meta[property='og:url'][content=?]", "https://omahcl.com/models"
+
+    get hardware_model_path(report.model_slug)
+    assert_select "meta[property='og:url'][content=?]", "https://omahcl.com/models/#{report.model_slug}"
+    assert_select "meta[property='og:image'][content=?]", "https://omahcl.com/cards/#{report.card_key}.png"
+
+    get sitemap_path(format: :xml)
+    locs = Nokogiri::XML(response.body).remove_namespaces!.xpath("//url/loc").map(&:text)
+    assert locs.all? { |loc| loc.start_with?("https://omahcl.com/") }, locs.inspect
+  ensure
+    routes[:host], config.force_ssl = previous
+  end
+
   test "the brand link is a full-size tap target" do
     get root_path
 

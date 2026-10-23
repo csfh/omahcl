@@ -1,5 +1,5 @@
 <% page_title @sample.display_name(short: true) %>
-<%= render "cards/og", title: "#{@sample.display_name(short: true)} on Omarchy HCL", url: hardware_model_url(@sample.model_slug), key: @sample.card_key, machines: @machines_count %>
+<%= render "cards/og", title: "#{@sample.display_name(short: true)} on Omarchy HCL", url: site_url(hardware_model_path(@sample.model_slug)), key: @sample.card_key, machines: @machines_count %>
 
 <p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %></p>
 <h1 class="mt-2 heading-page"><%= @sample.display_name(code: false) %></h1>
