@@ -77,15 +77,35 @@ class Report::Stats
   def version_count = tally(:omarchy_version).size
 
   def memory = bucketed(:memory_bytes, MEMORY_EDGES, MEMORY_LABELS)
+
+  # One row per installed size, named as Report::Display names it, smallest first.
+  # A model page uses this so its chart agrees with the memory range in the list.
+  def memory_sizes
+    scope.where(memory_bytes: 1..).group(:memory_bytes).pluck(:memory_bytes, distinct_machines)
+      .each_with_object(Hash.new(0)) { |(bytes, count), sizes| sizes[Report::Display.memory(bytes)] += count }
+      .sort_by { |label, _| label.to_i }
+      .map { |label, count| Row.new(label: label, count: count) }
+  end
   def cores = bucketed(:cpu_cores, CORE_EDGES, CORE_LABELS)
 
   # A machine with two GPUs lands in two vendors, and in one if both match.
+  # PCI vendor names are long, so the three big makers get their short names in SQL,
+  # which keeps the machine count right when one machine spells a maker two ways.
+  GPU_MAKER = <<~'SQL'.squish.freeze
+    CASE
+      WHEN gpu ->> 'vendor' ~* 'intel' THEN 'Intel'
+      WHEN gpu ->> 'vendor' ~* 'nvidia' THEN 'NVIDIA'
+      WHEN gpu ->> 'vendor' ~* 'advanced micro|\mAMD\M|\mATI\M' THEN 'AMD'
+      ELSE gpu ->> 'vendor'
+    END
+  SQL
+
   def gpu_vendors
     @gpu_vendors ||= scope
       .joins("CROSS JOIN LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(reports.gpus) = 'array' THEN reports.gpus ELSE '[]'::jsonb END) AS gpu")
       .where("COALESCE(gpu ->> 'vendor', '') <> ''")
-      .group(Arel.sql("LOWER(gpu ->> 'vendor')"))
-      .pluck(Arel.sql("MIN(gpu ->> 'vendor')"), distinct_machines)
+      .group(Arel.sql("LOWER(#{GPU_MAKER})"))
+      .pluck(Arel.sql("MIN(#{GPU_MAKER})"), distinct_machines)
       .then { |pairs| rows_from(pairs) }
   end
 

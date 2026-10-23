@@ -72,6 +72,31 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_select "li[role=option]", count: 0
   end
 
+  test "the model page and list show clean names, one machine count and an installed memory size" do
+    ingest_report!(omarchy_payload(product: "XPS 14 DA14260", cpu: "Intel(R) Core(TM) Ultra X7 358H", instance_digest: "d" * 64)
+      .deep_merge("hardware" => {
+        "vendor" => "Dell Inc.", "memory_bytes" => (30.9 * 1024**3).to_i,
+        "gpus" => [ { "vendor" => "Intel Corporation", "name" => "Panther Lake [Arc B390]" } ]
+      }))
+    ingest_report!(omarchy_payload(product: "HP EliteBook 840 G4", instance_digest: "e" * 64).deep_merge("hardware" => { "vendor" => "HP" }))
+
+    get hardware_model_path("dell-xps-14-da14260")
+    assert_select "h1", text: "Dell XPS 14 DA14260"
+    assert_select "dd", text: "Intel Core Ultra X7 358H"
+    assert_select "dd", text: "Intel Arc B390"
+    assert_select "p", text: "1 machine reported running Omarchy."
+    assert_select "h1 + p svg", count: 0
+
+    assert_select "section[aria-labelledby=model-memory] li", text: /32 GB.*1/m
+    assert_select "section[aria-labelledby=model-memory] li", text: /30\.9|More than/, count: 0
+
+    get hardware_models_path
+    assert_select "a", text: "HP EliteBook 840 G4"
+    assert_select "a", text: "HP HP EliteBook 840 G4", count: 0
+    assert_select "li", text: /Dell XPS 14 DA14260.*32 GB/m
+    assert_no_match(/30\.9 GB/, response.body)
+  end
+
   test "show counts distinct machines for a slug" do
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "3" * 64))
 

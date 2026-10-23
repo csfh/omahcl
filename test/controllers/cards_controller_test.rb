@@ -52,6 +52,24 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "dd", text: "Intel Core i7-2640M"
   end
 
+  test "card names the cpu and gpu the way people say them, and the png gets the short names" do
+    report = ingest_report!(omarchy_payload(product: "XPS 14 DA14260", cpu: "Intel(R) Core(TM) Ultra X7 358H", instance_digest: "d" * 64)
+      .deep_merge("hardware" => {
+        "vendor" => "Dell Inc.", "memory_bytes" => (30.9 * 1024**3).to_i,
+        "gpus" => [ { "vendor" => "Intel Corporation", "name" => "Panther Lake [Arc B390]" } ]
+      }))
+
+    get card_path(report.card_key)
+
+    assert_select "dd", text: "Intel Core Ultra X7 358H"
+    assert_select "dd", text: "Intel Arc B390"
+    assert_select "dd", text: /Corporation/, count: 0
+
+    get card_path(report.card_key, format: :png)
+    assert_response :success
+    assert_equal "image/png", response.media_type
+  end
+
   test "card is not found for malformed, unknown and hidden keys" do
     get "/cards/not-a-key"
     assert_response :not_found

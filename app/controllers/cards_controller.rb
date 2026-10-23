@@ -9,20 +9,26 @@ class CardsController < ApplicationController
 
     @sample = reports.first
     @machines_count = reports.unscope(:order).distinct.count(:instance_digest)
+    gpus = reports.flat_map { |report| report.gpus }.uniq
     @card = {
       name: @sample.display_name,
-      cpu: @sample.cpu_model,
-      gpu: reports.flat_map { |report| report.gpus }.uniq.map { |gpu| [ gpu["vendor"], gpu["name"] ].compact.join(" ") }.first.presence || "None reported",
+      cpu: Report::Display.cpu(@sample.cpu_model),
+      gpu: Report::Display.gpus(gpus).first || "None reported",
       version: @sample.omarchy_version.presence || "Unknown"
     }
 
     respond_to do |format|
       format.html
       format.png do
-        return unless stale?(etag: [ "card-png-2", @card ], public: true)
+        return unless stale?(etag: [ "card-png-3", @card ], public: true)
 
         expires_in 1.hour, public: true
-        send_data CardImage.new(**@card).png, type: "image/png", disposition: "inline", filename: "#{params[:key]}.png"
+        # The picture has room for about 22 characters a line, so it gets the short names.
+        short = @card.merge(
+          cpu: Report::Display.cpu(@sample.cpu_model, short: true),
+          gpu: Report::Display.gpus(gpus, short: true).first || "None reported"
+        )
+        send_data CardImage.new(**short).png, type: "image/png", disposition: "inline", filename: "#{params[:key]}.png"
       end
     end
   end

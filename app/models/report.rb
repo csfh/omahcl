@@ -88,7 +88,7 @@ class Report < ApplicationRecord
   end
 
   def display_name
-    [ vendor, product ].compact.join(" ")
+    Display.model(vendor, product)
   end
 
   private
