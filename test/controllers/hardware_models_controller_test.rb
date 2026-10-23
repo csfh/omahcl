@@ -40,6 +40,23 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "an empty search offers the command and says the first report creates the page and card" do
+    get hardware_models_path, params: { q: "no such laptop" }
+
+    assert_response :success
+    assert_select "p", text: "Nothing matches yet. Try another name."
+    assert_select "[data-clipboard-target=source]", text: /curl -fsSL .+\/collect \| bash/
+    assert_select "p", text: /first report creates its page and its card/
+  end
+
+  test "a search with matches does not ask for a report" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+
+    get hardware_models_path, params: { q: "X220" }
+
+    assert_select "[data-clipboard-target=source]", count: 0
+  end
+
   test "index filters models by query" do
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "1" * 64))
     ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))

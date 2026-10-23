@@ -10,6 +10,13 @@ class ReportsController < ApplicationController
     known = Report.visible.where(model_slug: report.model_slug).distinct.count(:instance_digest)
     body = { public_id: report.public_id, known_machines: known }
     body[:model_url] = hardware_model_url(report.model_slug) if known.positive?
+    unless report.hidden?
+      # The terminal prints the card link and says whether this is the model's first
+      # report. The count itself stays out of the card and the collector's output.
+      body[:model_name] = report.display_name(short: true)
+      body[:card_url] = card_url(report.card_key)
+      body[:first_of_model] = report.previously_new_record? && known == 1
+    end
     render json: body, status: (report.previously_new_record? ? :created : :ok)
   rescue JSON::ParserError
     render json: { error: "invalid JSON" }, status: :bad_request

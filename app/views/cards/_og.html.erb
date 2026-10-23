@@ -1,5 +1,5 @@
 <%# Link-preview tags. The image is the same Omarchy Verified card, drawn server-side. %>
-<% description = "#{machines_ran_omarchy(machines)} See which Omarchy hardware works." %>
+<% description = [ (machines_ran_omarchy(machines) if machines), "See which Omarchy hardware works." ].compact.join(" ") %>
 <% image = site_url(card_path(key, format: :png)) %>
 <% provide :social, "card" %>
 <% content_for :description, description %>

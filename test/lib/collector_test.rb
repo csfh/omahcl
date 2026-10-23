@@ -251,6 +251,48 @@ class CollectorTest < ActiveSupport::TestCase
     refute_match(/candidate/i, output)
   end
 
+  test "the notice says before the field list that a yes publishes the model page and the card" do
+    _status, output = run_collector("OMAHCL_SUBMIT" => "no")
+
+    publishes = output.index("A yes publishes your machine's model page and its Omarchy Verified card.")
+    assert publishes
+    assert_operator publishes, :<, output.index("If you answer yes, this sends:")
+  end
+
+  test "the first report of a model says so and prints the card link" do
+    fake_curl(reports: '{"public_id":"x","known_machines":1,"model_name":"ThinkPad X220","card_url":"https://omahcl.com/cards/0123456789abcdef","first_of_model":true}')
+
+    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 0, status
+    assert_includes output, "Submitted a hardware report."
+    assert_includes output, "You are the first report of the ThinkPad X220.\nhttps://omahcl.com/cards/0123456789abcdef"
+    refute_includes output, "Compatibility page"
+    refute_includes output, "known_machines"
+  end
+
+  test "a model already on the list prints the card for this CPU, with no count" do
+    fake_curl(reports: '{"public_id":"x","known_machines":7,"model_name":"ThinkPad X220","card_url":"https://omahcl.com/cards/0123456789abcdef","first_of_model":false}')
+
+    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 0, status
+    assert_includes output, "This model is on the list. Card for this CPU:\nhttps://omahcl.com/cards/0123456789abcdef"
+    refute_includes output, "first report"
+    refute_match(/\b7\b/, output.lines.grep(/list|Card/).join)
+  end
+
+  test "a hidden report has no card, so the collector prints no link" do
+    fake_curl(reports: '{"public_id":"x","known_machines":0}')
+
+    status, output = run_collector("OMAHCL_SUBMIT" => "yes")
+
+    assert_equal 0, status
+    assert_includes output, "Submitted a hardware report."
+    refute_includes output, "/cards/"
+    refute_includes output, "This model is on the list"
+  end
+
   test "macos is not an omarchy machine and sends nothing" do
     fake_curl
 
@@ -403,12 +445,13 @@ class CollectorTest < ActiveSupport::TestCase
 
     # A curl that records each call and answers like the site. A failing exit code
     # stands for curl -f seeing an HTTP error.
-    def fake_curl(deletions: '{"deleted":1}', deletions_exit: 0, challenge_exit: 0)
+    def fake_curl(deletions: '{"deleted":1}', deletions_exit: 0, challenge_exit: 0, reports: '{"public_id":"x"}')
       File.write(File.join(@bin, "curl"), <<~SH)
         #!/bin/sh
         echo "$@" >> "#{curl_log}"
         case "$*" in
           */challenges*) printf '{"nonce":"test-nonce"}'; exit #{challenge_exit} ;;
+          */reports*) printf '%s' '#{reports}' ;;
           */deletions*) printf '%s' '#{deletions}'; exit #{deletions_exit} ;;
         esac
       SH

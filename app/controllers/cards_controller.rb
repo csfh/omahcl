@@ -4,11 +4,12 @@ class CardsController < ApplicationController
   allow_unauthenticated_access
 
   def show
-    reports = Report.visible.where(card_key: params[:key]).order(created_at: :desc)
+    # The machine that reported last sets the version, so running the collector again
+    # after an Omarchy update refreshes it.
+    reports = Report.visible.where(card_key: params[:key]).order(updated_at: :desc)
     raise ActiveRecord::RecordNotFound if reports.empty?
 
     @sample = reports.first
-    @machines_count = reports.unscope(:order).distinct.count(:instance_digest)
     gpus = reports.flat_map { |report| report.gpus }.uniq
     @card = {
       name: @sample.display_name,

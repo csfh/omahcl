@@ -1,0 +1,8 @@
+<%# Shown wherever a lookup fails: the person who found nothing is the one who can fix it. %>
+<div class="mt-8 max-w-2xl">
+  <p class="text-muted">Report your machine from Omarchy. The first report creates its page and its card.</p>
+  <div class="mt-4">
+    <%= render "application/collect_command", command: collect_command %>
+  </div>
+  <p class="mt-2 text-sm text-muted">It sends nothing unless you say yes. Read the script first at <%= link_to "/collect", collect_path %>.</p>
+</div>

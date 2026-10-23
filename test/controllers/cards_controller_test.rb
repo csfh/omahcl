@@ -37,8 +37,23 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     get card_path(@report.card_key)
 
     assert_select "meta[property='og:image'][content=?]", card_url(@report.card_key, format: :png)
+    assert_select "meta[property='og:title'][content=?]", "Lenovo ThinkPad X220 is Omarchy Verified"
+    assert_select "meta[property='og:description'][content=?]", "See which Omarchy hardware works."
     assert_select "meta[property='og:image:width'][content='1200']"
     assert_select "meta[name='twitter:card'][content='summary_large_image']"
+  end
+
+  test "the card shows the version of the machine that reported last" do
+    other = ingest_report!(omarchy_payload(instance_digest: "d" * 64))
+    other.update_columns(omarchy_version: "3.9.0", created_at: 2.days.from_now, updated_at: 1.hour.ago)
+    @report.update_columns(omarchy_version: "4.0.2", updated_at: 1.day.ago)
+    get card_path(@report.card_key)
+    assert_select "dd", text: "3.9.0"
+
+    @report.update_columns(omarchy_version: "4.1.0", updated_at: Time.current)
+    get card_path(@report.card_key)
+    assert_select "dd", text: "4.1.0"
+    assert_select "dd", text: "3.9.0", count: 0
   end
 
   test "two machines of the same model and CPU share one card, another CPU gets its own" do

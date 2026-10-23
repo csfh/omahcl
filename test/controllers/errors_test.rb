@@ -14,6 +14,8 @@ class ErrorsTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", root_path, text: "Home"
     assert_select "meta[name=robots][content=noindex]"
     assert_select "link[rel=canonical]", count: 0
+    assert_select "[data-clipboard-target=source]", text: /curl -fsSL .+\/collect \| bash/
+    assert_select "p", text: /first report creates its page and its card/
   end
 
   test "a missing model and a missing card get it too" do

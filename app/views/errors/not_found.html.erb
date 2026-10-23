@@ -8,8 +8,9 @@
 
 <%= render "hardware_models/lookup_form", query: @query, submit_label: "Search" %>
 
+<%= render "application/first_report" %>
+
 <p class="mt-8 flex flex-wrap gap-x-6 text-sm">
   <%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %>
   <%= link_to "Home", root_path, class: "inline-flex min-h-11 items-center" %>
-  <%= link_to "Report your machine", root_path(anchor: "report"), class: "inline-flex min-h-11 items-center" %>
 </p>

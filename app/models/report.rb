@@ -38,6 +38,23 @@ class Report < ApplicationRecord
       .order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, MIN(vendor) ASC, MIN(product) ASC"))
   end
 
+  # The newest reports, one row per model, for the home page's "just reported" list.
+  # created_at, not updated_at: a machine reporting again is not news.
+  def self.recent_models(limit = 5)
+    visible
+      .select(:model_key, :model_slug, "MIN(vendor) AS vendor", "MIN(product) AS product", "MIN(family) AS family", "MAX(created_at) AS reported_at")
+      .group(:model_key, :model_slug)
+      .order(Arel.sql("MAX(created_at) DESC, MIN(vendor) ASC, MIN(product) ASC"))
+      .limit(limit)
+  end
+
+  # One real card for the home page: the most-reported configuration, ties broken by
+  # key so the pick does not change between visits. Returns a report that holds it.
+  def self.featured_card
+    key = visible.group(:card_key).order(Arel.sql("COUNT(DISTINCT instance_digest) DESC, card_key ASC")).pick(:card_key)
+    visible.where(card_key: key).order(updated_at: :desc).first if key
+  end
+
   def self.ingest(raw)
     payload = raw.deep_stringify_keys
     nonce = payload["nonce"]
