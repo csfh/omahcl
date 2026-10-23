@@ -3,12 +3,18 @@ module ApplicationHelper
     content_for(:title, "#{title} · Omarchy HCL")
   end
 
-  # The address search engines should use for the current page: the routes' host (in
-  # production omahcl.com, even when the page was reached on the Laravel Cloud domain),
-  # the path, no query.
-  def canonical_url
-    root_url.chomp("/") + request.path
+  # An absolute address on the site's own host, for canonical links, link previews and
+  # the sitemap. In production that is the routes' host, omahcl.com, even when the page
+  # was reached on the Laravel Cloud domain: url helpers take the request's host, which
+  # would split search ranking between the two. Elsewhere it is the request's host.
+  def site_url(path = "")
+    host = Rails.application.routes.default_url_options[:host]
+    return "#{request.base_url}#{path}" if host.blank?
+
+    "#{Rails.application.config.force_ssl ? "https" : "http"}://#{host}#{path}"
   end
+
+  def canonical_url = site_url(request.path)
 
   def collect_command
     "curl -fsSL #{root_url.chomp('/')}/collect | bash"
