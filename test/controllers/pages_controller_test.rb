@@ -85,6 +85,59 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#{chart('stats-growth')} .sr-only table tbody tr", 3
   end
 
+  test "the report panel leads with a real card and keeps the caution under it" do
+    report = ingest_report!(omarchy_payload(product: "ThinkPad X220"))
+
+    get root_path
+
+    assert_select ".hero p", text: "Report your machine and get a card like this."
+    assert_select ".hero a[href=?] img[src=?][width='1200'][height='630']", card_path(report.card_key), card_path(report.card_key, format: :png)
+    assert_select ".hero p", text: "Run this in a terminal. It sends nothing unless you say yes."
+    assert_select ".hero p", text: /Run it again after an Omarchy update to refresh the version on your card/
+    assert_select "#report p", text: /Run it again after an Omarchy update/
+    assert_select "header nav a[href=?]", root_path(anchor: "report"), text: "Get your card"
+  end
+
+  test "the report panel has no card to show before the first report" do
+    get root_path
+
+    assert_select ".hero img", count: 0
+    assert_select ".hero p", text: "Report your machine and get an Omarchy Verified card."
+  end
+
+  test "the card shown is the most reported configuration" do
+    ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "1" * 64))
+    busy = ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "3" * 64))
+
+    get root_path
+
+    assert_select ".hero img[src=?]", card_path(busy.card_key, format: :png)
+  end
+
+  test "just reported lists the newest models once each, with how long ago" do
+    old = ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "1" * 64))
+    old.update_columns(created_at: 3.days.ago)
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "2" * 64))
+    ingest_report!(omarchy_payload(product: "ThinkPad X230", instance_digest: "3" * 64))
+
+    get root_path
+
+    assert_select "#just-reported"
+    assert_select "section[aria-labelledby=just-reported] li", 2
+    assert_select "section[aria-labelledby=just-reported] li:first-child", text: /ThinkPad X230.*less than a minute ago/m
+    assert_select "section[aria-labelledby=just-reported] li:last-child", text: /ThinkPad X220.*3 days ago/m
+  end
+
+  test "just reported leaves out hidden machines and is absent when empty" do
+    get root_path
+    assert_select "#just-reported", count: 0
+
+    ingest_report!(omarchy_payload(product: "ThinkPad X220")).update!(hidden_at: Time.current)
+    get root_path
+    assert_select "#just-reported", count: 0
+  end
+
   test "the layout keeps the phone header on two rows and the footer legible" do
     get root_path
 

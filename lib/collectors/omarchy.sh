@@ -364,6 +364,7 @@ print_machine() {
 # explicit yes, from the prompt or OMAHCL_SUBMIT; no terminal means no.
 confirm_submit() {
   echo
+  echo "A yes publishes your machine's model page and its Omarchy Verified card."
   echo "Nothing has been sent yet. If you answer yes, this sends:"
   echo "  - vendor, model, product family, chassis type, CPU, memory size and GPU names"
   echo "  - whether the machine uses UEFI, has a TPM and has Secure Boot on"
@@ -442,6 +443,10 @@ json_string_field() {
   printf '%s' "$1" | sed -n "s/.*\"$2\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
 }
 
+json_true_field() {
+  printf '%s' "$1" | grep -Eq "\"$2\"[[:space:]]*:[[:space:]]*true"
+}
+
 json_number_field() {
   printf '%s' "$1" | sed -n "s/.*\"$2\"[[:space:]]*:[[:space:]]*\\([0-9][0-9]*\\).*/\\1/p" | head -n 1
 }
@@ -489,10 +494,24 @@ run_omarchy() {
   post_payload "$payload"
   echo
   echo "Submitted a hardware report."
-  local model_url
-  model_url=$(json_string_field "$RESULT" model_url)
-  if [[ -n $model_url ]]; then
-    echo "Compatibility page: $model_url"
+  print_card_link
+}
+
+# Closes the loop with the link people paste. Whether the model is new is said here
+# and nowhere on the card. A hidden report has no card, so it gets no link.
+print_card_link() {
+  local card_url model_name
+  card_url=$(json_string_field "$RESULT" card_url)
+  if [[ -z $card_url ]]; then
+    return 0
+  fi
+  model_name=$(json_string_field "$RESULT" model_name | sed 's/\\u0026/\&/g; s/\\u003c/</g; s/\\u003e/>/g')
+  if json_true_field "$RESULT" first_of_model; then
+    echo "You are the first report of the ${model_name:-model}."
+    echo "$card_url"
+  else
+    echo "This model is on the list. Card for this CPU:"
+    echo "$card_url"
   fi
 }
 

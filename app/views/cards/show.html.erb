@@ -1,5 +1,5 @@
 <% page_title "#{@sample.display_name(short: true)} card" %>
-<%= render "cards/og", title: "#{@sample.display_name(short: true)} is Omarchy Verified", url: site_url(card_path(params[:key])), key: params[:key], machines: @machines_count %>
+<%= render "cards/og", title: "#{@sample.display_name(short: true)} is Omarchy Verified", url: site_url(card_path(params[:key])), key: params[:key], machines: nil %>
 
 <p class="wrap-anywhere text-sm text-muted"><%= link_to @sample.display_name, hardware_model_path(@sample.model_slug), class: "inline-flex min-h-11 items-center" %> · <%= @card[:cpu] %></p>
 <h1 class="mt-2 heading-page">Omarchy Verified card</h1>

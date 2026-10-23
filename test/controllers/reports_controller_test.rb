@@ -57,6 +57,56 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
     assert_includes body["model_url"], "/models/lenovo-thinkpad-x220"
   end
 
+  test "a report gets its card link, with the model's short name and whether it is the first" do
+    post_report omarchy_payload(instance_digest: "1" * 64)
+
+    body = JSON.parse(response.body)
+    assert_equal "Lenovo ThinkPad X220", body["model_name"]
+    assert_equal "http://www.example.com#{card_path(Report.find_by!(public_id: body["public_id"]).card_key)}", body["card_url"]
+    assert_equal true, body["first_of_model"]
+
+    post_report omarchy_payload(instance_digest: "2" * 64)
+
+    assert_equal false, JSON.parse(response.body)["first_of_model"]
+  end
+
+  test "the card and model links name the site's own host, whichever host the script came from" do
+    routes = Rails.application.routes.default_url_options
+    config = Rails.application.config
+    previous = [ routes[:host], config.force_ssl ]
+    routes[:host] = "omahcl.com"
+    config.force_ssl = true
+
+    host! "vanity.laravel.cloud"
+    post_report omarchy_payload(instance_digest: "1" * 64)
+
+    body = JSON.parse(response.body)
+    assert body["card_url"].start_with?("https://omahcl.com/cards/"), body["card_url"]
+    assert body["model_url"].start_with?("https://omahcl.com/models/"), body["model_url"]
+  ensure
+    routes[:host], config.force_ssl = previous
+  end
+
+  test "a machine that reports again is not a first report" do
+    post_report omarchy_payload(instance_digest: "1" * 64)
+    post_report omarchy_payload(instance_digest: "1" * 64)
+
+    assert_response :ok
+    assert_equal false, JSON.parse(response.body)["first_of_model"]
+  end
+
+  test "a hidden machine that reports again gets no card link" do
+    report = ingest_report!(omarchy_payload(instance_digest: "1" * 64))
+    report.update!(hidden_at: Time.current)
+
+    post_report omarchy_payload(instance_digest: "1" * 64)
+
+    body = JSON.parse(response.body)
+    assert_nil body["card_url"]
+    assert_nil body["model_name"]
+    assert_nil body["first_of_model"]
+  end
+
   test "a payload that names a candidate source is rejected" do
     post_report omarchy_payload.merge("source" => "candidate", "verdict" => "likely")
 
