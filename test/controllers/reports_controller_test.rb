@@ -62,12 +62,29 @@ class ReportsControllerTest < ActionDispatch::IntegrationTest
 
     body = JSON.parse(response.body)
     assert_equal "Lenovo ThinkPad X220", body["model_name"]
-    assert_equal card_url(Report.find_by!(public_id: body["public_id"]).card_key), body["card_url"]
+    assert_equal "http://www.example.com#{card_path(Report.find_by!(public_id: body["public_id"]).card_key)}", body["card_url"]
     assert_equal true, body["first_of_model"]
 
     post_report omarchy_payload(instance_digest: "2" * 64)
 
     assert_equal false, JSON.parse(response.body)["first_of_model"]
+  end
+
+  test "the card and model links name the site's own host, whichever host the script came from" do
+    routes = Rails.application.routes.default_url_options
+    config = Rails.application.config
+    previous = [ routes[:host], config.force_ssl ]
+    routes[:host] = "omahcl.com"
+    config.force_ssl = true
+
+    host! "vanity.laravel.cloud"
+    post_report omarchy_payload(instance_digest: "1" * 64)
+
+    body = JSON.parse(response.body)
+    assert body["card_url"].start_with?("https://omahcl.com/cards/"), body["card_url"]
+    assert body["model_url"].start_with?("https://omahcl.com/models/"), body["model_url"]
+  ensure
+    routes[:host], config.force_ssl = previous
   end
 
   test "a machine that reports again is not a first report" do
