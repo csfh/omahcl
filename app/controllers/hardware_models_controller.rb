@@ -4,15 +4,17 @@ class HardwareModelsController < ApplicationController
   before_action :load_model, only: :show
 
   def index
+    # /models?vendor= was the vendor leaderboard for a day before it got its own page.
+    slug = Report::Vendor.slug(params[:vendor])
+    return redirect_to(vendor_path(slug), status: :moved_permanently) if slug.present?
+
     @query = params[:q].to_s
-    @vendor = params[:vendor].to_s.strip.presence
-    @models = Report.grouped_models(@query, vendor: @vendor)
-    load_vendor_rank if @vendor
+    @models, @close = search(@query)
   end
 
   def suggestions
     @query = params[:q].to_s.strip
-    @models = @query.present? ? Report.grouped_models(@query).limit(8) : []
+    @models = @query.present? ? search(@query).first.limit(8) : []
     render layout: false
   end
 
@@ -22,17 +24,14 @@ class HardwareModelsController < ApplicationController
 
   private
 
-  # Where a vendor stands among all vendors by distinct machines, for its leaderboard.
-  def load_vendor_rank
-    vendors = Report::Stats.new.vendors
-    row = vendors.find { |candidate| candidate.label.casecmp?(@vendor) }
-    return unless row
+  # Exact matches, or failing those the close ones. Returns the models and whether they
+  # are only close.
+  def search(query)
+    exact = Report.grouped_models(query)
+    return [ exact, false ] if query.blank? || exact.exists?
 
-    # Competition ranking: vendors with the same count share a rank.
-    @vendor_row = row
-    @vendor_rank = vendors.count { |other| other.count > row.count } + 1
-    @vendor_tied = vendors.count { |other| other.count == row.count } > 1
-    @vendors_count = vendors.size
+    close = Report.grouped_models(query, fuzzy: true)
+    close.exists? ? [ close, true ] : [ exact, false ]
   end
 
   def load_model

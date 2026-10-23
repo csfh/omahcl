@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   resources :hardware_models, path: "models", param: :slug, only: %i[index show] do
     get :suggestions, on: :collection
   end
+  get "vendors/:slug", to: "vendors#show", as: :vendor, constraints: { slug: /[a-z0-9]+(?:-[a-z0-9]+)*/ }
   get "cards/:key", to: "cards#show", as: :card, constraints: { key: /\h{16}/ }
   get "privacy", to: "pages#privacy", as: :privacy
   get "sitemap.xml", to: "sitemaps#show", defaults: { format: :xml }, as: :sitemap

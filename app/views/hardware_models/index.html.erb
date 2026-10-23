@@ -1,44 +1,27 @@
-<% leaderboard = @vendor_row.present? %>
-<% page_title(leaderboard ? "#{@vendor_row.label} on Omarchy" : "Machines") %>
-<% content_for :description, leaderboard ? "The #{@vendor_row.label} machines reported most often running Omarchy." : "Every machine reported running Omarchy, grouped by model. Search a vendor or model." %>
+<% page_title "Machines" %>
+<% content_for :description, "Every machine reported running Omarchy, grouped by model. Search a vendor, model, CPU or GPU." %>
 
-<% if leaderboard %>
-  <h1 class="heading-page"><%= @vendor_row.label %> on Omarchy</h1>
-  <p class="mt-2 text-muted">
-    <% if @vendor_rank == 1 %>
-      <%= @vendor_tied ? "Tied for most reported vendor." : "The most reported vendor." %>
-    <% else %>
-      <%= @vendor_tied ? "Tied at number" : "Number" %> <%= @vendor_rank %> of <%= @vendors_count %> vendors.
-    <% end %>
-    <%= pluralize(number_with_delimiter(@vendor_row.count), "machine") %> reported, most reported models first.
-    <%= link_to "All vendors", hardware_models_path %>
-  </p>
-<% else %>
-  <h1 class="heading-page">Machines that run Omarchy</h1>
-  <p class="mt-2 text-muted">Search a vendor or model. Every machine here has reported running Omarchy.</p>
-<% end %>
+<h1 class="heading-page">Machines that run Omarchy</h1>
+<p class="mt-2 text-muted">Search a vendor, model, CPU or GPU. Every machine here has reported running Omarchy.</p>
 
 <%= render "lookup_form", query: @query, submit_label: "Search" %>
 
 <% if @models.any? %>
-  <%= content_tag(leaderboard ? :ol : :ul, class: "mt-8 divide-y-2 divide-line border-y-2 border-line") do %>
-    <%# Models with the same count share a rank, so the order among them does not look earned. %>
-    <% counts = @models.map(&:machines_count) %>
+  <% if @close %>
+    <p class="mt-8 text-muted">No exact match. Close matches:</p>
+  <% end %>
+  <ul class="<%= @close ? "mt-2" : "mt-8" %> divide-y-2 divide-line border-y-2 border-line">
     <% @models.each do |model| %>
       <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-1">
-        <span class="inline-flex min-w-0 items-center gap-3">
-          <% if leaderboard %>
-            <span class="w-6 shrink-0 text-right text-sm tabular-nums text-accent"><span class="sr-only">Number </span><%= counts.index(model.machines_count) + 1 %></span>
-          <% end %>
-          <%= link_to model.display_name, hardware_model_path(model.model_slug), class: "inline-flex min-h-11 min-w-0 items-center wrap-anywhere text-paper no-underline hover:text-accent active:text-accent" %>
-        </span>
+        <%= link_to model.display_name, hardware_model_path(model.model_slug), class: "inline-flex min-h-11 min-w-0 items-center wrap-anywhere text-paper no-underline hover:text-accent active:text-accent" %>
         <span class="inline-flex items-center gap-3 text-sm text-muted">
           <%= machines_status(model.machines_count) %>
           <span><%= memory_range(model.min_memory_bytes, model.max_memory_bytes) %></span>
         </span>
       </li>
     <% end %>
-  <% end %>
+  </ul>
+  <%= render "application/first_report" if @close %>
 <% else %>
   <p class="mt-8 text-muted">Nothing matches yet. Try another name.</p>
   <%= render "application/first_report" %>

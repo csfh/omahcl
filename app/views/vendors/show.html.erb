@@ -1,0 +1,30 @@
+<% page_title "#{@vendor.label} on Omarchy" %>
+<% content_for :description, "The #{@vendor.label} machines reported most often running Omarchy." %>
+
+<p class="text-sm text-muted"><%= link_to "All machines", hardware_models_path, class: "inline-flex min-h-11 items-center" %></p>
+<h1 class="mt-2 heading-page"><%= @vendor.label %> on Omarchy</h1>
+<p class="mt-2 text-muted">
+  <% if @rank == 1 %>
+    <%= @tied ? "Tied for most reported vendor." : "The most reported vendor." %>
+  <% else %>
+    <%= @tied ? "Tied at number" : "Number" %> <%= @rank %> of <%= @vendors_count %> vendors.
+  <% end %>
+  <%= pluralize(number_with_delimiter(@vendor.count), "machine") %> reported, most reported models first.
+</p>
+
+<%# Models with the same count share a rank, so the order among them does not look earned. %>
+<% counts = @models.map(&:machines_count) %>
+<ol class="mt-8 divide-y-2 divide-line border-y-2 border-line">
+  <% @models.each do |model| %>
+    <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-1">
+      <span class="inline-flex min-w-0 items-center gap-3">
+        <span class="w-6 shrink-0 text-right text-sm tabular-nums text-accent"><span class="sr-only">Number </span><%= counts.index(model.machines_count) + 1 %></span>
+        <%= link_to model.display_name, hardware_model_path(model.model_slug), class: "inline-flex min-h-11 min-w-0 items-center wrap-anywhere text-paper no-underline hover:text-accent active:text-accent" %>
+      </span>
+      <span class="inline-flex items-center gap-3 text-sm text-muted">
+        <%= machines_status(model.machines_count) %>
+        <span><%= memory_range(model.min_memory_bytes, model.max_memory_bytes) %></span>
+      </span>
+    </li>
+  <% end %>
+</ol>

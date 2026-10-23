@@ -52,6 +52,12 @@ module Report::Vendor
     [ BRANDS[key], rest ].reject(&:empty?).join(" ")
   end
 
+  # A vendor's address on /vendors. The chart, the sitemap and the page itself all
+  # take it from here. Blank for a name with no letters or digits, which has no page.
+  def self.slug(name)
+    name.to_s.parameterize
+  end
+
   def self.brand_key(name)
     name.downcase.gsub(/[^a-z0-9]+/, " ").strip
   end

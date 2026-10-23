@@ -8,11 +8,15 @@
   <h3 id="<%= id %>" class="heading-section"><%= title %></h3>
   <ul class="flex flex-col gap-2 text-xs" role="list">
     <% rows.each do |row| %>
-      <li class="grid <%= value_width %> items-center gap-2 sm:gap-3">
-        <% href = local_assigns[:link]&.call(row) %>
-        <span class="truncate" title="<%= row.label %>"><%= href ? link_to(row.label, href, class: "block py-1 -my-1") : row.label %></span>
-        <%= block_cells(row.count, max, label: "#{row.label}: #{bar_value(row, mode)}") %>
-        <span class="text-right tabular-nums text-accent"><%= bar_value(row, mode) %></span>
+      <% href = local_assigns[:link]&.call(row) %>
+      <% classes = "grid #{value_width} items-center gap-2 sm:gap-3" %>
+      <li>
+        <%# A linked row is one target, as wide as the chart, with one name for a screen reader. %>
+        <%= content_tag(href ? :a : :div, class: (href ? "#{classes} -my-1 py-1 no-underline hover:text-accent" : classes), **(href ? { href: href, aria: { label: "#{row.label}, #{bar_value(row, mode)}. Open its page." } } : {})) do %>
+          <span class="truncate" title="<%= row.label %>"><%= row.label %></span>
+          <%= block_cells(row.count, max, label: "#{row.label}: #{bar_value(row, mode)}") %>
+          <span class="text-right tabular-nums text-accent"><%= bar_value(row, mode) %></span>
+        <% end %>
       </li>
     <% end %>
   </ul>
