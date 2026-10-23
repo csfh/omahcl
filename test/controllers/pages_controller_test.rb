@@ -138,6 +138,46 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#just-reported", count: 0
   end
 
+  test "the home page shows the top three vendors as a podium with their logos" do
+    3.times { |i| ingest_report!(omarchy_payload(product: "XPS #{i}", instance_digest: "a#{i}" + "0" * 62).deep_merge("hardware" => { "vendor" => "Dell Inc." })) }
+    2.times { |i| ingest_report!(omarchy_payload(product: "T#{i}", instance_digest: "b#{i}" + "0" * 62)) }
+    ingest_report!(omarchy_payload(product: "Air", instance_digest: "c" * 64).deep_merge("hardware" => { "vendor" => "Apple Inc." }))
+    ingest_report!(omarchy_payload(product: "Box", instance_digest: "d" * 64).deep_merge("hardware" => { "vendor" => "Zed Systems" }))
+
+    get root_path
+
+    assert_select "ol[aria-label='Most reported vendors'] li", 3
+    assert_select "ol[aria-label='Most reported vendors'] li:nth-child(1) a[href=?][aria-label^='Dell, first place, 3 machines']", vendor_path("dell")
+    assert_select "ol[aria-label='Most reported vendors'] li:nth-child(1).order-2 svg path[d]"
+    assert_select "ol[aria-label='Most reported vendors'] li:nth-child(2).order-1 a[href=?]", vendor_path("lenovo")
+    assert_select "ol[aria-label='Most reported vendors'] li:nth-child(3).order-3 a[href=?][aria-label^='Apple, third place']", vendor_path("apple")
+    assert_select "ol[aria-label='Most reported vendors'] a[href=?]", vendor_path("zed-systems"), count: 0
+  end
+
+  test "vendors with the same count stand level on the podium, and one without a logo shows its initial" do
+    ingest_report!(omarchy_payload(product: "Box", instance_digest: "1" * 64).deep_merge("hardware" => { "vendor" => "Zed Systems" }))
+    ingest_report!(omarchy_payload(product: "T1", instance_digest: "2" * 64))
+
+    get root_path
+
+    assert_select "ol[aria-label='Most reported vendors'] li", 2
+    assert_select "ol[aria-label='Most reported vendors'] li a[aria-label*='first place']", 2
+    assert_select "ol[aria-label='Most reported vendors'] li a[href=?] .font-pixel", vendor_path("zed-systems"), text: "Z"
+  end
+
+  test "there is no podium before the first report" do
+    get root_path
+
+    assert_select "ol[aria-label='Most reported vendors']", count: 0
+  end
+
+  test "the copy button stretches to the height of the command" do
+    get root_path
+
+    assert_select "[data-controller=clipboard].items-stretch button.justify-center", text: /Copy/
+    assert_select ".hero h2", text: "Get your card"
+  end
+
   test "the layout keeps the phone header on two rows and the footer legible" do
     get root_path
 

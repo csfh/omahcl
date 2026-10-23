@@ -34,6 +34,9 @@
   --color-teal-mid: #5a8f89;
   --color-teal-deep: #35524f;
   --color-line: #2d4042;
+  --color-gold: #d9b44a;
+  --color-silver: #b9c3c5;
+  --color-bronze: #b8794d;
 }
 
 /* Element defaults live in @layer base so utility classes on the element win.
