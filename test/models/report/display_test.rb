@@ -65,7 +65,6 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Lenovo 20XXS2XU00", Report::Display.model("Lenovo", "20XXS2XU00", nil)
     assert_equal "Lenovo 20XXS2XU00", Report::Display.model("Lenovo", "20XXS2XU00", "20XX S2XU00")
     assert_equal "Lenovo IdeaPad Z580", Report::Display.model("Lenovo", "IdeaPad Z580", "IDEAPAD Z580")
-    assert_equal "ASUS X510UQR", Report::Display.model("ASUS", "X510UQR", "VivoBook")
     assert_equal "Samsung 550XDA", Report::Display.model("Samsung", "550XDA", "Notebook Plus2 Pro 2")
   end
 
@@ -73,6 +72,13 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "ASUS Vivobook S 14 S5406SA", Report::Display.model("ASUS", "ASUS Vivobook S 14 S5406SA_S5406SA", "ASUS Vivobook S 14")
     assert_equal "ASUS Vivobook M3504YA", Report::Display.model("ASUS", "Vivobook_ASUSLaptop M3504YA_M3504YA", "Vivobook")
     assert_equal "ASUS Vivobook M3504YA", Report::Display.model("ASUS", "Vivobook_ASUSLaptop M3504YA_M3504YA", "Vivobook", short: true)
+  end
+
+  test "a bare ASUS model code takes its line name from the family, and no other family is trusted" do
+    assert_equal "ASUS Vivobook X510UQR", Report::Display.model("ASUS", "X510UQR", "VivoBook")
+    assert_equal "ASUS X510UQR", Report::Display.model("ASUS", "X510UQR", "ASUS Laptop")
+    assert_equal "ASUS ROG Strix G513", Report::Display.model("ASUS", "ROG Strix G513", "VivoBook")
+    assert_equal "Acer X510UQR", Report::Display.model("Acer", "X510UQR", "VivoBook")
   end
 
   test "an Intel Mac identifier reads as its marketing name, without the identifier" do
