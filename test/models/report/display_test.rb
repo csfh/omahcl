@@ -53,6 +53,22 @@ class Report::DisplayTest < ActiveSupport::TestCase
     assert_equal "Dell Dellwood 1", Report::Display.model("Dell", "Dellwood 1")
   end
 
+  test "a Lenovo machine-type code gives way to its family name, keeping the code" do
+    assert_equal "Lenovo ThinkPad X1 Carbon Gen 9 (20XXS2XU00)", Report::Display.model("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9")
+    assert_equal "Lenovo ThinkPad X220 (429143G)", Report::Display.model("Lenovo", "429143G", "ThinkPad  X220")
+    assert_equal "Lenovo Legion 5 15AHP10 (83M0)", Report::Display.model("Lenovo", "83M0", "Legion 5 15AHP10")
+    assert_equal "Lenovo ThinkPad X1 Carbon Gen 9", Report::Display.model("Lenovo", "20XXS2XU00", "ThinkPad X1 Carbon Gen 9", code: false)
+  end
+
+  test "a Lenovo code stays when the family adds nothing, and other vendors keep their product" do
+    assert_equal "Lenovo 80HR", Report::Display.model("Lenovo", "80HR", "IDEAPAD")
+    assert_equal "Lenovo 20XXS2XU00", Report::Display.model("Lenovo", "20XXS2XU00", nil)
+    assert_equal "Lenovo 20XXS2XU00", Report::Display.model("Lenovo", "20XXS2XU00", "20XX S2XU00")
+    assert_equal "Lenovo IdeaPad Z580", Report::Display.model("Lenovo", "IdeaPad Z580", "IDEAPAD Z580")
+    assert_equal "ASUS X510UQR", Report::Display.model("ASUS", "X510UQR", "VivoBook")
+    assert_equal "Samsung 550XDA", Report::Display.model("Samsung", "550XDA", "Notebook Plus2 Pro 2")
+  end
+
   test "memory is the installed size that holds what the machine reports" do
     {
       (7.34 * Report::Display::GIB) => "8 GB", (15.2 * Report::Display::GIB) => "16 GB",

@@ -25,6 +25,7 @@ class Report < ApplicationRecord
         :model_key, :model_slug,
         "MIN(vendor) AS vendor",
         "MIN(product) AS product",
+        "MIN(family) AS family",
         "COUNT(DISTINCT instance_digest) AS machines_count",
         "MIN(memory_bytes) AS min_memory_bytes",
         "MAX(memory_bytes) AS max_memory_bytes"
@@ -88,7 +89,7 @@ class Report < ApplicationRecord
   end
 
   def display_name
-    Display.model(vendor, product)
+    Display.model(vendor, product, family)
   end
 
   private

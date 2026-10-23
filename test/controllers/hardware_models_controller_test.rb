@@ -97,6 +97,19 @@ class HardwareModelsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/30\.9 GB/, response.body)
   end
 
+  test "a Lenovo type code reads as its family on the list, the model page and in search" do
+    ingest_report!(omarchy_payload(product: "20XXS2XU00", instance_digest: "f" * 64).deep_merge("hardware" => { "family" => "ThinkPad X1 Carbon Gen 9" }))
+
+    get hardware_models_path
+    assert_select "a[href=?]", hardware_model_path("lenovo-20xxs2xu00"), text: "Lenovo ThinkPad X1 Carbon Gen 9 (20XXS2XU00)"
+
+    get hardware_model_path("lenovo-20xxs2xu00")
+    assert_select "h1", text: "Lenovo ThinkPad X1 Carbon Gen 9 (20XXS2XU00)"
+
+    get hardware_models_path(q: "carbon gen 9")
+    assert_select "a", text: /ThinkPad X1 Carbon Gen 9/
+  end
+
   test "show counts distinct machines for a slug" do
     ingest_report!(omarchy_payload(product: "ThinkPad X220", instance_digest: "3" * 64))
 
