@@ -108,3 +108,13 @@ bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
 ## Privacy
 
 See `/privacy`. Serials, MACs, hostnames, and usernames are not stored. No IP address is stored with a report.
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md); [AGENTS.md](AGENTS.md) has the project's rules.
+
+## License
+
+MIT. See [LICENSE](LICENSE). Copyright (c) 2026 Christoffer Hallas.
+
+If you send a pull request or other contribution, you agree to the [CLA](CLA.md).
